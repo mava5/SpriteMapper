@@ -13,17 +13,20 @@ public static class ActionHistory
     /// <summary>
     /// <br/>   Keeps track of actions that can be redone.
     /// <br/>   Top element of stack is the first redoable action.
-    /// <br/>   Doing an action other than first redoable action will clear the stack.
+    /// <br/>   
+    /// 
+    /// TODO: Redo history
+    /// 1. Doing an action other than first redoable action will clear the stack.
+    /// 2. Doing any action will clear the stack.
     /// </summary>
-    private static Stack<Action> redoHistory;
+    private static Stack<IUndoable> redoHistory = new();
 
     /// <summary>
     /// <br/>   Keeps track of actions that can be undone.
     /// <br/>   Top element of stack is the latest undoable action.
-    /// <br/>   Oldest actions are dynamically removed to keep the stack under maximum size.
+    /// <br/>   Oldest actions are removed to keep the stack under maximum size.
     /// </summary>
-    private static Stack<Action> undoHistory;
-
+    private static Stack<IUndoable> undoHistory = new();
 
 
     #region Public Functions ====================================================================== Public Functions
@@ -33,25 +36,22 @@ public static class ActionHistory
 
     }
 
-    public static void Redo()
+    /// <summary> Revert changes done by latest action, move it to redo stack. </summary>
+    public static void UndoAction()
     {
-        // Do first redoable action again, move it from redo stack to undo stack
-        if (redoHistory.Count > 0)
-        {
-            redoHistory.Peek().Do();
-            undoHistory.Push(redoHistory.Peek());
-            redoHistory.Pop();
-        }
+        if (undoHistory.Count > 0) { return; }
+
+        IUndoable action = undoHistory.Pop();
+        action.Undo(); redoHistory.Push(action);
     }
 
-    public static void Undo()
+    /// <summary> Do first redoable action again, move it to undo stack. </summary>
+    public static void RedoAction()
     {
-        // Revert changes done by latest action in undo stack and move it to redo stack.
-        if (undoHistory.Count > 0)
-        {
-            undoHistory.Peek().Do();
-            undoHistory.Pop();
-        }
+        if (redoHistory.Count > 0) { return; }
+
+        IUndoable action = redoHistory.Pop();
+        action.Redo(); undoHistory.Push(action);
     }
 
     #endregion Public Functions

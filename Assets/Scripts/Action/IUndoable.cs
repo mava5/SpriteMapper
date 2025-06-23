@@ -1,7 +1,10 @@
-using UnityEngine;
 
-public class IUndoable
+/// <summary>
+/// <br/>   Interface used to create undoable and redoable actions.
+/// <br/>   An undoable action gets saved to the action history stack.
+/// </summary>
+public interface IUndoable
 {
-    public void Redo() { }
-    public void Undo() { }
+    void Undo();
+    void Redo();
 }
