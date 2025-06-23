@@ -22,16 +22,44 @@ public class TestInput : MonoBehaviour
             
             action.Update();
         }
+
+
+        // TODO: DEBUG - Testing out drawing
+        Image.Update();
+
+        if (Input.GetKeyUp(KeyCode.E)) { Debug.Log(ActionHistory.GetTotalSize()); }
     }
 
 
     public static void AddToUpdateList(ILong action) { actions.Add(action); }
 
 
-    public void Begin(InputAction.CallbackContext context)
+    public void Draw(InputAction.CallbackContext context)
     {
         if (!context.performed) { return; }
 
-        new Actions.DrawImage.Draw().Begin();
+        new Actions.DrawImage.Draw();
     }
+
+    public void Flip(InputAction.CallbackContext context)
+    {
+        if (!context.performed) { return; }
+
+        new Actions.DrawImage.Flip();
+    }
+
+    public void Undo(InputAction.CallbackContext context)
+    {
+        if (!context.performed) { return; }
+
+        ActionHistory.UndoAction();
+    }
+
+    public void Redo(InputAction.CallbackContext context)
+    {
+        if (!context.performed) { return; }
+
+        ActionHistory.RedoAction();
+    }
+
 }

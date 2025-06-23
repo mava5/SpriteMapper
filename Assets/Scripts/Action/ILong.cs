@@ -3,7 +3,7 @@
 /// <br/>   Interface used to create long actions.
 /// <br/>   
 /// <br/>   A long action:
-/// <br/>   • begins, gets updated each frame and ends,
+/// <br/>   • begins upon creation, gets updated each frame and ends,
 /// <br/>   • has its changes applied only when it ends,
 /// <br/>   • can get cancelled
 /// <br/>   → Cancelled action's don't apply any changes.
@@ -24,26 +24,20 @@ public interface ILong
 
 
     /// <summary>
-    /// <br/>   Called when action is begun through any means.
-    /// <br/>   Used to for example initialize a long action.
-    /// </summary>
-    public void Begin();
-
-    /// <summary>
     /// <br/>   Gets called each MonoBehaviour Update().
     /// <br/>   Only stops being called when action ends or is cancelled.
     /// </summary>
-    public void Update();
+    void Update();
 
     /// <summary>
     /// <br/>   Gets called when action's <see cref="CancelPredicate"/> is true.
     /// <br/>   Cancels any changes the action would have done.
     /// </summary>
-    public void Cancel();
+    void Cancel();
 
     /// <summary>
     /// <br/>   Gets called when action's <see cref="EndPredicate"/> is true.
     /// <br/>   Applies changes done by action.
     /// </summary>
-    public void End();
+    void End();
 }

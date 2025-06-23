@@ -1,6 +1,6 @@
 
 using System.Collections.Generic;
-
+using System.Linq;
 using UnityEngine;
 
 
@@ -31,15 +31,21 @@ public static class ActionHistory
 
     #region Public Functions ====================================================================== Public Functions
 
-    public static void SaveUndoStep(Action action)
+    public static void SaveUndoStep(IUndoable action)
     {
-
+        Debug.Log("Saving action");
+        undoHistory.Push(action);
+        redoHistory.Clear();
     }
 
     /// <summary> Revert changes done by latest action, move it to redo stack. </summary>
     public static void UndoAction()
     {
-        if (undoHistory.Count > 0) { return; }
+        Debug.Log("Undo attempt");
+        if (undoHistory.Count == 0) { return; }
+        Debug.Log("Undo success");
+
+        Debug.Log(undoHistory.Count);
 
         IUndoable action = undoHistory.Pop();
         action.Undo(); redoHistory.Push(action);
@@ -48,10 +54,26 @@ public static class ActionHistory
     /// <summary> Do first redoable action again, move it to undo stack. </summary>
     public static void RedoAction()
     {
-        if (redoHistory.Count > 0) { return; }
+        Debug.Log("Redo attempt");
+        if (redoHistory.Count == 0) { return; }
+        Debug.Log("Redo success");
+
+        Debug.Log(redoHistory.Count);
 
         IUndoable action = redoHistory.Pop();
         action.Redo(); undoHistory.Push(action);
+    }
+
+
+    /// <summary> Returns the estimated total bytes taken up by saved actions. </summary>
+    public static int GetTotalSize()
+    {
+        int totalSize = 0;
+
+        foreach (IUndoable action in undoHistory) { totalSize += action.GetSize(); }
+        foreach (IUndoable action in redoHistory) { totalSize += action.GetSize(); }
+
+        return totalSize;
     }
 
     #endregion Public Functions

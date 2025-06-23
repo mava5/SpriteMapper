@@ -6,9 +6,18 @@
             "id": "df70fa95-8a34-4494-b137-73ab6b9c7d37",
             "actions": [
                 {
-                    "name": "Begin",
+                    "name": "Draw",
                     "type": "Button",
                     "id": "21bdf0eb-8f54-4372-b047-dbbe519952a5",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Flip",
+                    "type": "Button",
+                    "id": "359f9135-4da9-4ec8-b39d-96bd236fd11c",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -41,7 +50,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": ";Keyboard&Mouse",
-                    "action": "Begin",
+                    "action": "Draw",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -79,6 +88,17 @@
                     "isPartOfComposite": true
                 },
                 {
+                    "name": "",
+                    "id": "6ca9be36-68d5-4d99-93f5-b492a0280f1c",
+                    "path": "<Keyboard>/z",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Undo",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
                     "name": "One Modifier",
                     "id": "30d0d479-e205-4678-8912-2b350d539576",
                     "path": "OneModifier(overrideModifiersNeedToBePressedFirst=true)",
@@ -110,6 +130,28 @@
                     "action": "Redo",
                     "isComposite": false,
                     "isPartOfComposite": true
+                },
+                {
+                    "name": "",
+                    "id": "ad539f9f-0938-4dcf-8bc6-49625101ee2b",
+                    "path": "<Keyboard>/y",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Redo",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "42bf35c3-17e5-4082-bf4c-5b3050e8e554",
+                    "path": "<Keyboard>/f",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Flip",
+                    "isComposite": false,
+                    "isPartOfComposite": false
                 }
             ]
         },
