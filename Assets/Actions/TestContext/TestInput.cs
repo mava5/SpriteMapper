@@ -41,7 +41,7 @@ namespace SpriteMapper
         {
             if (!context.performed) { return; }
 
-            Actions.DrawImage.Draw action = new();
+            Actions.Draw action = new();
             Debug.Log(action.IsLong + ", " + action.IsUndoable + ", " + action.Context);
         }
 
@@ -49,7 +49,7 @@ namespace SpriteMapper
         {
             if (!context.performed) { return; }
 
-            Actions.DrawImage.Flip action = new();
+            Actions.Flip action = new();
             Debug.Log(action.IsLong + ", " + action.IsUndoable + ", " + action.Context);
         }
 

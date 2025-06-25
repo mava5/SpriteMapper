@@ -12,6 +12,9 @@ namespace SpriteMapper
         LayerView,
     }
 
+    /// <summary>
+    /// <br/>   Actions are used to 
+    /// </summary>
     public class Action
     {
         public bool IsLong => this is ILong;

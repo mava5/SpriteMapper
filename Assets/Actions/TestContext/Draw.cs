@@ -1,8 +1,10 @@
 
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 
-namespace SpriteMapper.Actions.DrawImage
+namespace SpriteMapper.Actions
 {
     public class Draw : Action, ILong, IUndoable
     {
@@ -36,8 +38,6 @@ namespace SpriteMapper.Actions.DrawImage
 
         public Draw()
         {
-            Debug.Log("Start");
-
             TestInput.AddToUpdateList(this);
 
             newValues = new float[canvasSize, canvasSize];
@@ -77,13 +77,11 @@ namespace SpriteMapper.Actions.DrawImage
 
         public void Cancel()
         {
-            Debug.Log("Cancel");
+
         }
 
         public void End()
         {
-            Debug.Log("End");
-
             //for (int x = 0; x < canvasSize; x++)
             //{
             //    for (int y = 0; y < canvasSize; y++)

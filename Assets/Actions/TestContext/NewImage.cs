@@ -1,15 +1,24 @@
 
-using System;
 using UnityEngine;
 
 
 namespace SpriteMapper.Actions
 {
-    public class Flip : Action, IUndoable
+    public class NewImage : Action, IUndoable
     {
-        public Flip()
+        public override ActionContext Context => ActionContext.DrawImage;
+
+
+        private Image createdImage;
+
+
+        public NewImage(ImageType imageType)
         {
-            FlipImage();
+            switch (imageType)
+            {
+                case ImageType.Draw: createdImage = new DrawImage(); break;
+            }
+
             ActionHistory.SaveUndoStep(this);
         }
 

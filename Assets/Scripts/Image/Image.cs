@@ -4,6 +4,12 @@ using UnityEngine;
 
 namespace SpriteMapper
 {
+    public enum ImageType
+    {
+        Draw,
+        Mesh,
+    }
+
     /// <summary>
     /// <br/>   The main building block for creating normal maps.
     /// <br/>   Can contain depth and / or normal data.
