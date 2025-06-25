@@ -4,8 +4,8 @@ using UnityEngine;
 
 namespace SpriteMapper
 {
-    public class FunctionLayer
+    public class MeshImage
     {
-        
+
     }
 }

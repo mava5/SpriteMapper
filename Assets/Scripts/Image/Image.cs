@@ -2,34 +2,72 @@
 using UnityEngine;
 
 
-public static class Image
+namespace SpriteMapper
 {
-    public static int canvasSize = 200;
-    public static float[,] canvas = new float[canvasSize, canvasSize];
-
-    public static void Update()
+    /// <summary>
+    /// <br/>   The main building block for creating normal maps.
+    /// <br/>   Can contain depth and / or normal data.
+    /// </summary>
+    public class Image
     {
-        for (int x = 0; x < canvasSize; x++)
+        public Vector2Int Size { get; internal set; } = new(0, 0);
+
+        public bool HasDepthData => DepthMap != null;
+        public bool HasNormalData => NormalMap != null;
+
+        public Texture2D DepthMap { get; internal set; } = null;
+        public Texture2D NormalMap { get; internal set; } = null;
+        
+
+        // Shared Properties -------------------------------------------------- Shared Properties
+
+        /// <summary>
+        /// <br/>   Determines how many steps the range [0, 1] is split into.
+        /// <br/>   0 = No stepping
+        /// </summary>
+        public int Steps { get; set; } = 0;
+
+        /// <summary> Multiplier for the data values. </summary>
+        public float Multiplier { get; set; } = 1f;
+
+
+        // Depth Properties --------------------------------------------------- Depth Properties
+
+
+
+        // Normal Properties -------------------------------------------------- Normal Properties
+
+        public bool FlipX { get; set; } = false;
+        public bool FlipY { get; set; } = false;
+        public bool FlipZ { get; set; } = false;
+
+
+        #region Public Methods ========================================================== Public Methods
+
+        /// <summary>
+        /// <br/>   Returns a rough estimate of the amount of bytes the image takes up.
+        /// <br/>   Actual memory size is higher as only biggest data structures are accounted for.
+        /// </summary>
+        public virtual int GetMemorySize()
         {
-            for (int y = 0; y < canvasSize; y++)
-            {
-                float value = canvas[x, y];
-
-                if (value == 0) { continue; }
-
-                Vector2 p1 = new Vector2(x - 0.5f, y - 0.5f) / canvasSize - new Vector2(0.5f, 0.5f);
-                Vector2 p2 = new Vector2(x + 0.5f, y + 0.5f) / canvasSize - new Vector2(0.5f, 0.5f);
-                Vector2 p3 = new Vector2(x - 0.5f, y + 0.5f) / canvasSize - new Vector2(0.5f, 0.5f);
-                Vector2 p4 = new Vector2(x + 0.5f, y - 0.5f) / canvasSize - new Vector2(0.5f, 0.5f);
-
-                p1 *= 4;
-                p2 *= 4;
-                p3 *= 4;
-                p4 *= 4;
-
-                Debug.DrawLine(p1, p2, Color.HSVToRGB((Time.time / 3f) % 1, 0.5f, value));
-                Debug.DrawLine(p3, p4, Color.HSVToRGB((Time.time / 3f) % 1, 0.5f, value));
-            }
+            return GetTextureMemorySize();
         }
+
+        #endregion Public Methods
+
+
+        #region Private Methods ========================================================= Private Methods
+
+        private int GetTextureMemorySize()
+        {
+            int textureMemorySize = 0;
+
+            if (HasDepthData) { textureMemorySize += Size.x * Size.y * sizeof(float); }
+            if (HasNormalData) { textureMemorySize += Size.x * Size.y * sizeof(float) * 3; }
+            
+            return textureMemorySize;
+        }
+
+        #endregion Private Methods
     }
 }

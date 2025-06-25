@@ -2,10 +2,12 @@
 using UnityEngine;
 
 
-namespace Actions.DrawImage
+namespace SpriteMapper.Actions.DrawImage
 {
     public class Draw : Action, ILong, IUndoable
     {
+        public override ActionContext Context => ActionContext.DrawImage;
+
         public bool EndPredicate
         {
             get
@@ -25,7 +27,7 @@ namespace Actions.DrawImage
 
         private float brushRadius = 10f;
         private int canvasSize = 200;
-        
+
         private float[,] newValues;
         private float[,] oldValues;
 
@@ -34,6 +36,8 @@ namespace Actions.DrawImage
 
         public Draw()
         {
+            Debug.Log("Start");
+
             TestInput.AddToUpdateList(this);
 
             newValues = new float[canvasSize, canvasSize];
@@ -78,13 +82,15 @@ namespace Actions.DrawImage
 
         public void End()
         {
-            for (int x = 0; x < canvasSize; x++)
-            {
-                for (int y = 0; y < canvasSize; y++)
-                {
-                    oldValues[x, y] = Image.canvas[x, y];
-                }
-            }
+            Debug.Log("End");
+
+            //for (int x = 0; x < canvasSize; x++)
+            //{
+            //    for (int y = 0; y < canvasSize; y++)
+            //    {
+            //        oldValues[x, y] = Image.canvas[x, y];
+            //    }
+            //}
 
             ApplyNewValues();
             ActionHistory.SaveUndoStep(this);
@@ -105,7 +111,7 @@ namespace Actions.DrawImage
             ApplyNewValues();
         }
 
-        public int GetSize()
+        public int GetMemorySize()
         {
             return sizeof(float) * canvasSize * canvasSize * 2;
         }
@@ -117,28 +123,28 @@ namespace Actions.DrawImage
 
         private void ApplyNewValues()
         {
-            for (int x = 0; x < canvasSize; x++)
-            {
-                for (int y = 0; y < canvasSize; y++)
-                {
-                    float newValue = newValues[x, y];
+            //for (int x = 0; x < canvasSize; x++)
+            //{
+            //    for (int y = 0; y < canvasSize; y++)
+            //    {
+            //        float newValue = newValues[x, y];
 
-                    if (newValue == 0) { continue; }
+            //        if (newValue == 0) { continue; }
 
-                    Image.canvas[x, y] = newValue;
-                }
-            }
+            //        Image.canvas[x, y] = newValue;
+            //    }
+            //}
         }
 
         private void ApplyOldValues()
         {
-            for (int x = 0; x < canvasSize; x++)
-            {
-                for (int y = 0; y < canvasSize; y++)
-                {
-                    Image.canvas[x, y] = oldValues[x, y];
-                }
-            }
+            //for (int x = 0; x < canvasSize; x++)
+            //{
+            //    for (int y = 0; y < canvasSize; y++)
+            //    {
+            //        Image.canvas[x, y] = oldValues[x, y];
+            //    }
+            //}
         }
 
         #endregion Private Methods

@@ -2,7 +2,7 @@
 using UnityEngine;
 
 
-namespace Actions.DrawImage
+namespace SpriteMapper.Actions.DrawImage
 {
     public class Flip : Action, IUndoable
     {
@@ -19,7 +19,7 @@ namespace Actions.DrawImage
 
         public void Redo() { FlipImage(); }
 
-        public int GetSize() { return 0; }
+        public int GetMemorySize() { return 0; }
 
         #endregion Public Methods
 
@@ -28,15 +28,15 @@ namespace Actions.DrawImage
 
         private void FlipImage()
         {
-            float[,] oldValues = (float[,])Image.canvas.Clone();
+        //    float[,] oldValues = (float[,])Image.canvas.Clone();
 
-            for (int x = 0; x < Image.canvasSize; x++)
-            {
-                for (int y = 0; y < Image.canvasSize; y++)
-                {
-                    Image.canvas[x, y] = oldValues[Image.canvasSize - 1 - x, y];
-                }
-            }
+        //    for (int x = 0; x < Image.canvasSize; x++)
+        //    {
+        //        for (int y = 0; y < Image.canvasSize; y++)
+        //        {
+        //            Image.canvas[x, y] = oldValues[Image.canvasSize - 1 - x, y];
+        //        }
+        //    }
         }
 
         #endregion Private Methods

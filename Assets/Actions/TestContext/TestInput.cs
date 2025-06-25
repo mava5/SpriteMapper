@@ -5,61 +5,66 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 
-public class TestInput : MonoBehaviour
+namespace SpriteMapper
 {
-    private static List<ILong> actions = new();
-
-
-    private void Update()
+    public class TestInput : MonoBehaviour
     {
-        for (int i = 0; i < actions.Count; i++)
-        {
-            ILong action = actions[i];
+        private static List<ILong> actions = new();
 
-            // Cancel or end action based on its corresponding predicates
-            if (action.CancelPredicate) { action.Cancel(); actions.RemoveAt(i--); continue; }
-            else if (action.EndPredicate) { action.End(); actions.RemoveAt(i--); continue; }
-            
-            action.Update();
+
+        private void Update()
+        {
+            for (int i = 0; i < actions.Count; i++)
+            {
+                ILong action = actions[i];
+
+                // Cancel or end action based on its corresponding predicates
+                if (action.CancelPredicate) { action.Cancel(); actions.RemoveAt(i--); continue; }
+                else if (action.EndPredicate) { action.End(); actions.RemoveAt(i--); continue; }
+
+                action.Update();
+            }
+
+
+
+            // TODO: DEBUG - Testing out drawing
+            //Image.Update();
+
+            if (Input.GetKeyUp(KeyCode.E)) { Debug.Log(ActionHistory.GetTotalSize()); }
         }
 
 
-        // TODO: DEBUG - Testing out drawing
-        Image.Update();
+        public static void AddToUpdateList(ILong action) { actions.Add(action); }
 
-        if (Input.GetKeyUp(KeyCode.E)) { Debug.Log(ActionHistory.GetTotalSize()); }
+
+        public void Draw(InputAction.CallbackContext context)
+        {
+            if (!context.performed) { return; }
+
+            Actions.DrawImage.Draw action = new();
+            Debug.Log(action.IsLong + ", " + action.IsUndoable + ", " + action.Context);
+        }
+
+        public void Flip(InputAction.CallbackContext context)
+        {
+            if (!context.performed) { return; }
+
+            Actions.DrawImage.Flip action = new();
+            Debug.Log(action.IsLong + ", " + action.IsUndoable + ", " + action.Context);
+        }
+
+        public void Undo(InputAction.CallbackContext context)
+        {
+            if (!context.performed) { return; }
+
+            ActionHistory.UndoAction();
+        }
+
+        public void Redo(InputAction.CallbackContext context)
+        {
+            if (!context.performed) { return; }
+
+            ActionHistory.RedoAction();
+        }
     }
-
-
-    public static void AddToUpdateList(ILong action) { actions.Add(action); }
-
-
-    public void Draw(InputAction.CallbackContext context)
-    {
-        if (!context.performed) { return; }
-
-        new Actions.DrawImage.Draw();
-    }
-
-    public void Flip(InputAction.CallbackContext context)
-    {
-        if (!context.performed) { return; }
-
-        new Actions.DrawImage.Flip();
-    }
-
-    public void Undo(InputAction.CallbackContext context)
-    {
-        if (!context.performed) { return; }
-
-        ActionHistory.UndoAction();
-    }
-
-    public void Redo(InputAction.CallbackContext context)
-    {
-        if (!context.performed) { return; }
-
-        ActionHistory.RedoAction();
-    }
-
 }
