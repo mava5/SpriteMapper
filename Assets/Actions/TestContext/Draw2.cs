@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace SpriteMapper.Actions
 {
-    public class Draw : Action, ILong, IUndoable, IUserExecutable
+    public class Draw2 : Action, ILong, IUndoable, IUserExecutable
     {
         public UserActionInfo Info { get; set; }
 
@@ -34,7 +34,7 @@ namespace SpriteMapper.Actions
 
         #region Action ================================================================== Action
 
-        public Draw()
+        public Draw2()
         {
             TestInput.AddToUpdateList(this);
 

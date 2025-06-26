@@ -1,47 +1,46 @@
 ﻿
 using System;
+using System.Linq;
+using System.Reflection;
 using System.Collections.Generic;
 
 using UnityEditor;
 using UnityEngine;
+using Unity.VisualScripting;
+using UnityEditor.Rendering.LookDev;
 
 
 namespace SpriteMapper
 {
     /// <summary>
-    /// <br/>   All actions have name and context. This class links the combination of the two to a <see cref="ActionInfo"/>.
-    /// <br/>   Actions' infos can be modified in the Unity Resources file where a singleton of this class resides.
-    /// <br/>   Any <see cref="ActionInfo"/> can be accessed with an indexer.
+    /// <br/>   All (<see cref="IUserExecutable"/>) actions, that the user can perform have a name and context.
+    /// <br/>   This class links the combination of the two to a <see cref="UserActionInfo"/>.
+    /// <br/>   These infos can be modified in the Unity Resources file where a singleton of this class resides.
+    /// <br/>   Any <see cref="UserActionInfo"/> can be accessed with an indexer.
     /// </summary>
-    [CreateAssetMenu(fileName = "ActionDictionary", menuName = "SO Singletons/ActionDictionary")]
-    public class ActionDictionary : ScriptableObject
+    [CreateAssetMenu(fileName = "UserActionDictionary", menuName = "SO Singletons/UserActionDictionary")]
+    public class UserActionDictionary : ScriptableObject
     {
-        public static ActionDictionary Instance { get; private set; }
+        public static UserActionDictionary Instance { get; private set; }
 
-        // Note: Dictionaries cannot be serialized, instead we can serialize two lists separately.
-        //       One list is for dictionary's keys and the other is for its values.
-        //       These lists are then combined into an actual dictionary when runtime starts.
-
-        // Keys are a combination of action's context and name
-        // For example: "Public/Save", "DrawImage/Flip", "LayerView/NewLayer"
-
-        /// <summary> Used by <see cref="ActionDictionaryEditor"/>. Consists of action context + name. </summary>
-        [field: SerializeField] public List<string> Keys { get; set; } = new();
-        /// <summary> Used by <see cref="ActionDictionaryEditor"/>. Consists of bullet specific data. </summary>
-        [field: SerializeField] public List<ActionInfo> Values { get; set; } = new();
+        /// <summary> List of all action contexts. </summary>
+        [field: SerializeField] public List<string> Contexts { get; private set; } = new();
+        
+        /// <summary> List of all <see cref="IUserExecutable"/> action infos. </summary>
+        [field: SerializeField] public List<UserActionInfo> Infos { get; private set; } = new();
 
 
         // An actual dictionary created based on keys and values lists
-        private Dictionary<(string context, string name), ActionInfo> data = new();
+        private Dictionary<(string context, string name), UserActionInfo> data = new();
 
 
-        #region Indexer =================================================================================================== Indexer
+        #region Indexer =============================================================================================== Indexer
 
         /// <summary>
-        /// <br/>   Returns <see cref="ActionInfo"/> stored to dictionary with action's context + name key.
+        /// <br/>   Returns <see cref="ExecutableActionInfo"/> stored to dictionary with action's context + name key.
         /// <br/>   Using this indexer for the first time initializes the actual dictionary based on serialized lists.
         /// </summary>
-        public ActionInfo this[string context, string name]
+        public UserActionInfo this[string context, string name]
         {
             get
             {
@@ -60,20 +59,28 @@ namespace SpriteMapper
         #endregion Indexer
 
 
-        #region Private Methods ========================================================================================= Private Methods
+        #region Public Methods ======================================================================================== Public Methods
+
+        public void SetContexts(List<string> contexts) { Contexts = contexts; }
+        public void SetInfos(List<UserActionInfo> infos) { Infos = infos; }
+
+        #endregion Public Methods
+
+
+        #region Private Methods ======================================================================================= Private Methods
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void InitializeInstance()
         {
             // Get all ScriptableObjects from Unity Resources
-            ActionDictionary[] assets = Resources.LoadAll<ActionDictionary>("");
+            UserActionDictionary[] assets = Resources.LoadAll<UserActionDictionary>("");
             if (assets == null || assets.Length == 0)
             {
-                Debug.LogWarning($"No ActionDictionary in Unity Resources.");
+                Debug.LogWarning($"No UserActionDictionary in Unity Resources.");
             }
             else if (assets.Length > 1)
             {
-                Debug.LogWarning($"Multiple ActionDictionaries in Unity Resources.");
+                Debug.LogWarning($"Multiple UserActionDictionaries in Unity Resources.");
             }
             else { Instance = assets[0]; }
 
@@ -83,158 +90,229 @@ namespace SpriteMapper
 
         private void InitializeActualDictionary()
         {
-            for (int i = 0; i < Keys.Count; i++)
-            {
-                string[] keySplit = Keys[i].Split("/");
-                data.Add((keySplit[0], keySplit[1]), Values[i]);
-            }
+        //    for (int i = 0; i < Keys.Count; i++)
+        //    {
+        //        string[] keySplit = Keys[i].Split("/");
+        //        data.Add((keySplit[0], keySplit[1]), Values[i]);
+        //    }
         }
 
         #endregion Private Methods
     }
 
 
-    /// <summary> Contains necessary information for an <see cref="Action"/>. </summary>
+    /// <summary> Contains necessary information for an <see cref="IUserExecutable"/> <see cref="Action"/>. </summary>
     [Serializable]
-    public class ActionInfo
+    public class UserActionInfo
     {
-        public string Name;
-        public string Context;
+        public string Name = "";
+        public string Context = "Unassigned";
+        public Shortcut DefaultShortcut = new();
 
-        // TODO: Add Shortcut class
-        public string DefaultShortcut;
+        /// <summary> Tells if the info actually points to an <see cref="Action"/>. </summary>
+        public bool PointsToAction = false;
+
+
+        public UserActionInfo() { }
+
+        public UserActionInfo(string name, string context, Shortcut defaultShortcut)
+        { (Name, Context, DefaultShortcut) = (name, context, defaultShortcut); }
+    }
+
+
+    /// <summary> Shortcuts used by user in the application. </summary>
+    [Serializable]
+    public class Shortcut
+    {
+        public bool Shift = false;
+        public bool Ctrl = false;
+        public bool Alt = false;
+        public string Binding = "None";
+
+
+        public Shortcut() { }
+
+        public Shortcut(bool shift, bool ctrl, bool alt, string binding)
+        { (Shift, Ctrl, Alt, Binding) = (shift, ctrl, alt, binding); }
     }
 
 
 
 #if UNITY_EDITOR
 
-    [CustomEditor(typeof(ActionDictionary))]
-    public class ActionDictionaryEditor : Editor
+    [CustomEditor(typeof(UserActionDictionary))]
+    public class UserActionDictionaryEditor : Editor
     {
-        private ActionDictionary data;
+        private UserActionDictionary data;
 
         // Keeps track of each contexts' foldout menu open state
-        private static List<bool> foldoutStates = new();
+        private static Dictionary<string, bool> foldoutStates = new();
+
+        private static List<string> testContexts = new()
+        {
+            "Unassigned",
+            "Global",
+            "DrawImage",
+            "Hmm",
+            "Woah",
+            "Woah2"
+        };
+
+        private static List<UserActionInfo> testInfos = new()
+        {
+            new("Save", "Global", new(false, true, false, "<KeyBoard>/S")),
+            new("Flip", "DrawImage", new(false, false, false, "<KeyBoard>/F")),
+            new("Draw", "DrawImage", new(false, false, false, "<Mouse>/RightButton")),
+            new("Test1", "Hmm", new(false, true, false, "<Mouse>/MiddleButton")),
+            new("Test2", "Woah", new(true, false, true, "<Mouse>/MiddleButton")),
+        };
 
 
-        private void OnEnable() { data = (ActionDictionary)target; }
+        private void OnEnable() { data = (UserActionDictionary)target; }
         private void OnDisable() { EditorInputControls.StopReading(); }
 
         private string testBinding = KeyCode.None.ToString();
 
 
-        #region Inspector GUI ============================================================================================= Inspector GUI
+        #region Inspector GUI ========================================================================================= Inspector GUI
 
         public override void OnInspectorGUI()
         {
             bool valuesChanged = false;
 
-            GUIStyle keyFieldBorder = GUIStyle.none;
-            keyFieldBorder.border = new(1, 1, 1, 1);
+            var infosInContexts = GetActionInfosInContexts();
+            UpdateContextFoldoutStates(infosInContexts);
+            
+            foreach ((string context, List<UserActionInfo> infos) in infosInContexts)
+            {
+                // Contain whole list of action infos in a box
+                GUI.backgroundColor = new(0.1f, 0.1f, 0.1f);
+                GUILayout.BeginVertical(EditorStyles.helpBox);
+                GUI.backgroundColor = Color.white;
 
-            GUI.backgroundColor = new(0.1f, 0.1f, 0.1f);
-            GUILayout.BeginVertical(EditorStyles.helpBox);
-            GUI.backgroundColor = Color.white;
+
+                if (context == "Unassigned" || context == "Global")
+                {
+                    DrawUneditableContextField(context);
+
+                    // Create fields for each action info
+                    for (int i = 0; i < infos.Count; i++)
+                    {
+                        infos[i] = HandleActionInfoField(infos[i]);
+                    }
+                }
+                else
+                {
+                    (bool toBeDeleted, string newContext) = DrawEditableContextTitle(context);
+
+                    // Delete context list and continue to next one
+                    if (toBeDeleted)
+                    {
+                        // TODO: Undo here
+                        foreach (UserActionInfo info in infos) { info.Context = "Unassigned"; }
+                        testContexts.Remove(context);
+                        continue;
+                    }
+
+                    // Only continue with new context name if it's unique
+                    // TODO: Undo here
+                    if (testContexts.Contains(newContext)) { newContext = context; }
+                    else { testContexts[testContexts.IndexOf(context)] = newContext; }
+
+                    // Create fields for each action info
+                    for (int i = 0; i < infos.Count; i++)
+                    {
+                        infos[i].Context = newContext;
+                        infos[i] = HandleActionInfoField(infos[i]);
+                    }
+                }
 
 
-            EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
+                // End action infos list
+                GUILayout.EndVertical();
+            }
 
-            EditorGUILayout.LabelField("", GUILayout.Height(20), GUILayout.Width(14));
-            Rect startRect = GUILayoutUtility.GetLastRect();
+            //foreach ((string context, List<UserActionInfo> actions) in infosInContexts)
+            //{
+            //    (foldoutStates[i], currentContext) = BeginContextList(context, foldoutStates[i]);
 
-            EditorGUILayout.TextField("TEST", GUILayout.Height(20), GUILayout.ExpandWidth(true));
+            //    GUILayout.EndVertical();
+            //}
 
-            Rect foldoutRect = new(startRect);
-            foldoutRect.x += 14;
-            EditorGUI.Foldout(foldoutRect, true, "");
+            //for (int i = 0; i < testValues.Count; i++)
+            //{
+            //    UserActionInfo info = testValues[i];
 
-            EditorGUILayout.EndHorizontal();
+            //    string name = info.Name;
+            //    string context = info.Context;
+            //    Shortcut shortcut = info.DefaultShortcut;
 
+            //    // Context changed -> begin new context's action list
+            //    if (info.Context != currentContext)
+            //    {
+
+
+            //    }
+
+
+            //    // End last context list begun in BeginContextList() start
+            //    if (i == testValues.Count - 1) { GUILayout.EndVertical(); }
+            //}
+
+            return;
 
             for (int i = 0; i < 100; i++)
             {
-                EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
-                EditorGUILayout.LabelField("|| Test", GUILayout.Width(100));
-
-                GUILayout.Toggle(true, "S", "Button", GUILayout.Width(20));
-                GUILayout.Toggle(false, "C", "Button", GUILayout.Width(20));
-                GUILayout.Toggle(true, "A", "Button", GUILayout.Width(20));
-
-                GUILayout.Label("", GUILayout.ExpandWidth(true));
-
-                Rect keyRect = GUILayoutUtility.GetLastRect();
-                keyRect.height = 19;
-                keyRect.width -= 4;
-                keyRect.x += 4;
-
-                if (EditorInputControls.Reading && i.ToString() == EditorInputControls.Identifier)
-                {
-                    Rect focusRect = new(keyRect) { width = 1 };
-                    focusRect.x -= 5;
-                    EditorGUI.DrawRect(focusRect, Color.HSVToRGB(0, 0.8f, 1));
-                    focusRect.x += 1;
-                    EditorGUI.DrawRect(focusRect, Color.HSVToRGB(0, 0.8f, 0.75f));
-                }
-                testBinding = EditorInputControls.ActionBindingField(keyRect, testBinding, i.ToString());
-
-
-                //EditorGUILayout.ToggleLeft("S", true, EditorStyles.iconButton, GUILayout.ExpandWidth(false));
-                //EditorGUILayout.ToggleLeft("C", true, EditorStyles.iconButton, GUILayout.ExpandWidth(false));
-                //EditorGUILayout.ToggleLeft("A", true, EditorStyles.iconButton, GUILayout.ExpandWidth(false));
-                //EditorGUILayout.
-
-                EditorGUILayout.EndHorizontal();
             }
 
-            Rect lineRect = new(startRect) { width = 1, height = 101 * 27 };
+            //Rect lineRect = new(startRect) { width = 1, height = 101 * 27 };
             
-            lineRect.x -= 20;
-            lineRect.y -= 3;
+            //lineRect.x -= 20;
+            //lineRect.y -= 3;
 
-            EditorGUI.DrawRect(lineRect, EditorStyles.label.normal.textColor);
-            lineRect.x += 1;
-            EditorGUI.DrawRect(lineRect, EditorStyles.label.normal.textColor * 0.75f);
-            lineRect.x += 3;
-            EditorGUI.DrawRect(lineRect, EditorStyles.label.normal.textColor);
-            lineRect.x += 1;
-            EditorGUI.DrawRect(lineRect, EditorStyles.label.normal.textColor * 0.75f);
-
-
-
-            // Draw foldout menus for each action info
-            for (int i = 0; i < data.Keys.Count; i++)
-            {
-                string[] keySplit = data.Keys[i].Split("/");
-                string context = keySplit[0], name = keySplit[1];
-                ActionInfo info = data.Values[i];
+            //EditorGUI.DrawRect(lineRect, EditorStyles.label.normal.textColor);
+            //lineRect.x += 1;
+            //EditorGUI.DrawRect(lineRect, EditorStyles.label.normal.textColor * 0.75f);
+            //lineRect.x += 3;
+            //EditorGUI.DrawRect(lineRect, EditorStyles.label.normal.textColor);
+            //lineRect.x += 1;
+            //EditorGUI.DrawRect(lineRect, EditorStyles.label.normal.textColor * 0.75f);
 
 
-                GUILayout.Space(8);
 
-                // Toggle context foldout menu, stop here if foldout menu was closed
-                foldoutStates[i] = EditorGUILayout.Foldout(foldoutStates[i], context);
-                if (!foldoutStates[i]) { GUILayout.EndVertical(); continue; }
-
-
-                //GUI.backgroundColor = new(0.5f, 0.5f, 0.5f);
-                //GUILayout.BeginVertical("box");
-                //GUI.backgroundColor = Color.white;
-
-                Undo.RecordObject(data, "ActionInfo: Shortcut changed");
-                data.Values[i].DefaultShortcut = EditorGUILayout.TextField("Shortcut", info.DefaultShortcut);
+            //// Draw foldout menus for each action info
+            //for (int i = 0; i < data.Keys.Count; i++)
+            //{
+            //    string[] keySplit = data.Keys[i].Split("/");
+            //    string context = keySplit[0], name = keySplit[1];
+            //    UserActionInfo info = data.Values[i];
 
 
-                //Undo.RecordObject(data, "BDD: icon changed");
-                //EditorGUILayout.BeginHorizontal();
-                //GUILayout.Label(factionName + " icon");
-                //data.BDValues[keyIndex].Icon = (Sprite)EditorGUILayout.ObjectField(
-                //    data.BDValues[keyIndex].Icon, typeof(Sprite), true, GUILayout.Width(64), GUILayout.Height(64));
-                //EditorGUILayout.EndHorizontal();
+            //    GUILayout.Space(8);
 
-            }
+            //    // Toggle context foldout menu, stop here if foldout menu was closed
+            //    foldoutStates[i] = EditorGUILayout.Foldout(foldoutStates[i], context);
+            //    if (!foldoutStates[i]) { GUILayout.EndVertical(); continue; }
 
-            EditorGUILayout.EndVertical();
+
+            //    //GUI.backgroundColor = new(0.5f, 0.5f, 0.5f);
+            //    //GUILayout.BeginVertical("box");
+            //    //GUI.backgroundColor = Color.white;
+
+            //    //Undo.RecordObject(data, "ActionInfo: Shortcut changed");
+            //    //data.Values[i].DefaultShortcut = EditorGUILayout.TextField("Shortcut", info.DefaultShortcut);
+
+
+            //    //Undo.RecordObject(data, "BDD: icon changed");
+            //    //EditorGUILayout.BeginHorizontal();
+            //    //GUILayout.Label(factionName + " icon");
+            //    //data.BDValues[keyIndex].Icon = (Sprite)EditorGUILayout.ObjectField(
+            //    //    data.BDValues[keyIndex].Icon, typeof(Sprite), true, GUILayout.Width(64), GUILayout.Height(64));
+            //    //EditorGUILayout.EndHorizontal();
+
+            //}
+
+            GUILayout.EndVertical();
 
 
             // Set action dictionary dirty for the changes to be saved properly
@@ -244,89 +322,189 @@ namespace SpriteMapper
         #endregion Inspector GUI
 
 
-        #region Private Methods ===================================================================== Private Methods
+        #region Private Methods ======================================================================================= Private Methods
 
         /// <summary>
-        /// <br/>   Updates keys list to track modifications done to <see cref="Temp_BulletType"/> and <see cref="Faction"/>.
-        /// <br/>   Updates values list and foldout states list based on changes done to keys list.
+        /// <br/>   Returns dictionary with each context paired with its respective actions.
+        /// <br/>   Always contains "Unassigned" and "Global" contexts even if they're empty.
         /// </summary>
-        //private void UpdateLists()
-        //{
-        //    Temp_BulletType[] bulletTypes = (Temp_BulletType[])Enum.GetValues(typeof(Temp_BulletType));
-        //    Faction[] factions = (Faction[])Enum.GetValues(typeof(Faction));
+        private Dictionary<string, List<UserActionInfo>> GetActionInfosInContexts()
+        {
+            Dictionary<string, List<UserActionInfo>> infosInContexts = new()
+            {
+                { "Unassigned", new() },
+                { "Global", new() },
+            };
 
-        //    List<string> updatedKeys = new();
-        //    List<BulletData> updatedBDValues = new();
-        //    List<BulletTypeData> updatedSharedBDValues = new();
-
-
-        //    // Note: By storing keys as strings instead of enums,
-        //    //       keys will point to correct values even if the enums' orders are changed
-
-        //    // Update keys and values lists based on BulletType enums
-        //    for (int typeIndex = 0; typeIndex < bulletTypes.Length; typeIndex++)
-        //    {
-        //        for (int factionIndex = 0; factionIndex < factions.Length; factionIndex++)
-        //        {
-        //            // Concatenate BulletType and Faction to form current key
-        //            string currentKey = bulletTypes[typeIndex].ToString() + "/" + factions[factionIndex].ToString();
-
-        //            // Check if key is already in the Keys, if it is we can reuse the previously stored value
-        //            int previouslyStoredIndex = data.Keys.IndexOf(currentKey);
+            // Try to add already existing contexts to the dictionary
+            // TryAdd is used as Unassigned and Global contexts may already exist
+            foreach (string context in testContexts)
+            {
+                infosInContexts.TryAdd(context, new());
+            }
 
 
-        //            // Add new value as one doesn't exist for current key yet
-        //            if (previouslyStoredIndex == -1 || data.BDValues.Count <= previouslyStoredIndex)
-        //            {
-        //                updatedKeys.Add(currentKey);
-        //                updatedBDValues.Add(new());
-        //            }
-        //            // Add previously stored value instead of creating new one
-        //            else
-        //            {
-        //                updatedKeys.Add(currentKey);
-        //                updatedBDValues.Add(data.BDValues[previouslyStoredIndex]);
-        //            }
-        //        }
+            // Create a list of all the UserActionInfos, both pre-existing and new
+            // These are then at the end added to their respective contexts
+            Dictionary<string, UserActionInfo> infosByName = new();
 
-        //        // Create new shared bullet data if one wasn't previously stored
-        //        if (data.BTDValues.Count <= typeIndex) { updatedSharedBDValues.Add(null); }
-        //        else { updatedSharedBDValues.Add(data.BTDValues[typeIndex]); }
-        //    }
+            // 1. Add pre-existing infos, assume that it doesn't point to an Action
+            foreach (UserActionInfo info in testInfos)
+            {
+                info.PointsToAction = false;
+                infosByName.Add(info.Name, info);
+            }
 
-        //    data.Keys = updatedKeys;
-        //    data.BDValues = updatedBDValues;
-        //    data.BTDValues = updatedSharedBDValues;
+            // 2. Add infos for each valid Action, if there isn't a pre-existing one already
+            foreach (Type type in Assembly.GetExecutingAssembly().GetTypes())
+            {
+                // Only check for player executable actions
+                if (!type.IsClass || type.Namespace != "SpriteMapper.Actions"
+                    || !typeof(IUserExecutable).IsAssignableFrom(type)) { continue; }
+
+                // Skip action if it has a pre-existing info
+                // Now we know that the info points to an Action
+                if (infosByName.TryGetValue(type.Name, out UserActionInfo info))
+                {
+                    info.PointsToAction = true;
+                    continue;
+                }
+
+                // Create new UserActionInfo and add action to Unassigned context
+                infosByName.Add(type.Name, new() { Name = type.Name });
+            }
 
 
-        //    // Make sure all bullet types have a foldout menu boolean list
-        //    int boolListDelta = updatedKeys.Count - foldoutMenuStates.Count;
-        //    if (boolListDelta != 0)
-        //    {
-        //        for (int i = 0; i < Mathf.Abs(boolListDelta); i++)
-        //        {
-        //            if (boolListDelta > 0)
-        //            {
-        //                // Add an element for each faction as well as one for whole bullet type foldout menu
-        //                foldoutMenuStates.Add(Enumerable.Repeat(false, 1 + factions.Length).ToList());
-        //            }
-        //            else { foldoutMenuStates.RemoveAt(updatedKeys.Count - i); }
-        //        }
-        //    }
+            // Now we can match the action infos to their corresponding contexts
+            foreach ((string _, UserActionInfo info) in infosByName)
+            {
+                infosInContexts[info.Context].Add(info);
+            }
 
-        //    // Make sure all bullet type foldout menus have enough booleans for factions
-        //    for (int i = 0; i < foldoutMenuStates.Count; i++)
-        //    {
-        //        // +1 for boolean which tells if whole bullet type foldout menu is open
-        //        int boolDelta = 1 + factions.Length - foldoutMenuStates[i].Count;
+            return infosInContexts;
+        }
 
-        //        // Discard excess booleans
-        //        if (boolDelta < 0) { foldoutMenuStates[i] = foldoutMenuStates[i].Take(1 + factions.Length).ToList(); }
+        /// <summary> Updates each context's foldout menu state based on context name. </summary>
+        private void UpdateContextFoldoutStates(Dictionary<string, List<UserActionInfo>> infosInContexts)
+        {
+            Dictionary<string, bool> newContextFoldoutStates = new();
 
-        //        // Add false for each missing boolean
-        //        else { foldoutMenuStates[i].AddRange(Enumerable.Repeat(false, boolDelta)); }
-        //    }
-        //}
+            foreach ((string context, List<UserActionInfo> _) in infosInContexts)
+            {
+                if (foldoutStates.TryGetValue(context, out bool state))
+                {
+                    newContextFoldoutStates[context] = state;
+                }
+                else
+                {
+                    newContextFoldoutStates[context] = false;
+                }
+            }
+
+            foldoutStates = new(newContextFoldoutStates);
+        }
+
+
+        /// <summary> Draws title label for a given context. </summary>
+        private void DrawUneditableContextField(string context)
+        {
+            GUILayout.BeginHorizontal(EditorStyles.helpBox);
+
+            // Offset context title to make room for foldout arrow button
+            GUILayout.Label("", GUILayout.Height(20), GUILayout.Width(14));
+
+            GUILayout.Label(context, GUILayout.Height(20), GUILayout.ExpandWidth(true), GUILayout.MinWidth(0));
+
+            // Create foldout with just the arrow button
+            Rect foldoutRect = GUILayoutUtility.GetLastRect();
+            foldoutRect.x -= 4;
+            foldoutStates[context] = EditorGUI.Foldout(foldoutRect, foldoutStates[context], "");
+
+            GUILayout.EndHorizontal();
+        }
+
+        /// <summary>
+        /// <br/>   Draws title text field and delete button for given context.
+        /// <br/>   Returns new context name and boolean which tells if list was deleted.
+        /// </summary>
+        private (bool, string) DrawEditableContextTitle(string context)
+        {
+            GUILayout.BeginHorizontal(EditorStyles.helpBox);
+
+            bool toBeDeleted = false;
+
+            // Offset context title to make room for foldout arrow button
+            GUILayout.Label("", GUILayout.Height(20), GUILayout.Width(14));
+
+            // Get rect for context title by creating an empty label
+            GUILayout.Label("", GUILayout.Height(20), GUILayout.ExpandWidth(true), GUILayout.MinWidth(0));
+            Rect titleRect = GUILayoutUtility.GetLastRect();
+            titleRect.width -= 21;
+
+            context = EditorGUI.TextField(titleRect, context);
+
+            // Create a delete button at the right of the text field
+            titleRect.x += titleRect.width + 2;
+            titleRect.width = 20;
+            GUI.backgroundColor = Color.HSVToRGB(0, 0.8f, 1);
+            if (GUI.Button(titleRect, "X")) { toBeDeleted = true; }
+            GUI.backgroundColor = Color.white;
+
+            // Create foldout with just the arrow button
+            Rect foldoutRect = GUILayoutUtility.GetLastRect();
+            foldoutRect.x -= 4;
+            foldoutStates[context] = EditorGUI.Foldout(foldoutRect, foldoutStates[context], "");
+
+            GUILayout.EndHorizontal();
+
+            return (toBeDeleted, context);
+        }
+
+
+        /// <summary> Handles the drawing and modification of a given action info. </summary>
+        private UserActionInfo HandleActionInfoField(UserActionInfo info)
+        {
+            GUILayout.BeginHorizontal(EditorStyles.helpBox);
+
+            GUILayout.Label("|| " + info.Name, GUILayout.Width(100));
+
+            // Stop here if info doesn't point to any existing action
+            if (!info.PointsToAction)
+            {
+                GUILayout.Label($"No action found", GUILayout.ExpandWidth(true), GUILayout.MinWidth(0));
+                GUILayout.EndHorizontal();
+                return info;
+            }
+
+
+            ref Shortcut shortcut = ref info.DefaultShortcut;
+            // TODO: Undo here
+            shortcut.Shift = GUILayout.Toggle(shortcut.Shift, "S", "Button", GUILayout.Width(20));
+            shortcut.Ctrl = GUILayout.Toggle(shortcut.Ctrl, "C", "Button", GUILayout.Width(20));
+            shortcut.Alt = GUILayout.Toggle(shortcut.Alt, "A", "Button", GUILayout.Width(20));
+
+            GUILayout.Label("", GUILayout.ExpandWidth(true));
+            Rect keyRect = GUILayoutUtility.GetLastRect();
+            keyRect.height = 19;
+            keyRect.width -= 4;
+            keyRect.x += 4;
+
+            string identifier = info.Name + info.Context;
+            if (EditorInputControls.Reading && identifier == EditorInputControls.Identifier)
+            {
+                Rect focusRect = new(keyRect) { width = 1 };
+                focusRect.x -= 5;
+                EditorGUI.DrawRect(focusRect, Color.HSVToRGB(0, 0.8f, 1));
+                focusRect.x += 1;
+                EditorGUI.DrawRect(focusRect, Color.HSVToRGB(0, 0.8f, 0.75f));
+            }
+            // TODO: Undo here
+            shortcut.Binding = EditorInputControls.ActionBindingField(keyRect, shortcut.Binding, identifier);
+
+            GUILayout.EndHorizontal();
+
+            return info;
+        }
 
         #endregion Private Methods
     }

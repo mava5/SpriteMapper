@@ -4,13 +4,15 @@ using UnityEngine;
 
 namespace SpriteMapper.Actions
 {
-    public class NewImage : Action, IUndoable
+    public class NewImage : Action, IUndoable, IUserExecutable
     {
-        public override ActionContext Context => ActionContext.DrawImage;
+        public UserActionInfo Info { get; set; }
 
 
         private Image createdImage;
 
+
+        #region Action ================================================================== Action
 
         public NewImage(ImageType imageType)
         {
@@ -22,33 +24,17 @@ namespace SpriteMapper.Actions
             ActionHistory.SaveUndoStep(this);
         }
 
+        #endregion Action
 
-        #region Public Methods ========================================================== Public Methods
 
-        public void Undo() { FlipImage(); }
+        #region Undo Logic ============================================================== Undo Logic
 
-        public void Redo() { FlipImage(); }
+        public void Undo() { }
+
+        public void Redo() { }
 
         public int GetMemorySize() { return 0; }
 
-        #endregion Public Methods
-
-
-        #region Private Methods ========================================================= Private Methods
-
-        private void FlipImage()
-        {
-        //    float[,] oldValues = (float[,])Image.canvas.Clone();
-
-        //    for (int x = 0; x < Image.canvasSize; x++)
-        //    {
-        //        for (int y = 0; y < Image.canvasSize; y++)
-        //        {
-        //            Image.canvas[x, y] = oldValues[Image.canvasSize - 1 - x, y];
-        //        }
-        //    }
-        }
-
-        #endregion Private Methods
+        #endregion Undo Logic
     }
 }

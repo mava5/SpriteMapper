@@ -1,20 +1,23 @@
 
-using System;
-using UnityEngine;
-
-
 namespace SpriteMapper.Actions
 {
-    public class Flip : Action, IUndoable
+    public class Flip : Action, IUndoable, IUserExecutable
     {
+        public UserActionInfo Info { get; set; }
+
+
+        #region Action ================================================================== Action
+
         public Flip()
         {
             FlipImage();
             ActionHistory.SaveUndoStep(this);
         }
 
+        #endregion Action
 
-        #region Public Methods ========================================================== Public Methods
+
+        #region Undo Logic ============================================================== Undo Logic
 
         public void Undo() { FlipImage(); }
 
@@ -22,7 +25,7 @@ namespace SpriteMapper.Actions
 
         public int GetMemorySize() { return 0; }
 
-        #endregion Public Methods
+        #endregion Undo Logic
 
 
         #region Private Methods ========================================================= Private Methods
