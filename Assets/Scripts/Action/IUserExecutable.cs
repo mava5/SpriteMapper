@@ -1,16 +1,19 @@
 
 namespace SpriteMapper
 {
-    /// <summary>
-    /// <br/>   Interface used to create actions, that the user can execute with shortcuts.
-    /// <br/>   These actions have a shortcut assigned to them and thus appear in the rebinding menu.
-    /// </summary>
+    /// <summary> Interface used to create actions, that the user can execute with shortcuts. </summary>
     public interface IUserExecutable
     {
+        /// <summary>  </summary>
+        public static string Description => "";
+
         /// <summary>
-        /// <br/>   Contains information for the context in which user can execute the action.
-        /// <br/>   Also contains the shortcut, with which the action is executed.
+        /// <br/>   The key or key combination the user presses to execute this action.
+        /// <br/>   Contains <see cref="Shortcut.Binding"/>, which is an action binding for the Input System.
         /// </summary>
-        public UserActionInfo Info { get; set; }
+        public static Shortcut Shortcut { get; private set; }
+
+        /// <summary> Rebinds the action's shortcut. </summary>
+        public static void Rebind(Shortcut newShortcut) { Shortcut = newShortcut; }
     }
 }

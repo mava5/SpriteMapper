@@ -6,9 +6,6 @@ namespace SpriteMapper.Actions
 {
     public class NewImage : Action, IUndoable, IUserExecutable
     {
-        public UserActionInfo Info { get; set; }
-
-
         private Image createdImage;
 
 

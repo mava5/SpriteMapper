@@ -6,8 +6,6 @@ namespace SpriteMapper.Actions
 {
     public class Draw2 : Action, ILong, IUndoable, IUserExecutable
     {
-        public UserActionInfo Info { get; set; }
-
         public bool EndPredicate
         {
             get

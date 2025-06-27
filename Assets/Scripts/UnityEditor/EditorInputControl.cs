@@ -1,126 +1,183 @@
 
-// Part of code from: https://discussions.unity.com/t/custom-inspector-to-capture-a-single-key-press/713848/6
+// Code help from: https://discussions.unity.com/t/custom-inspector-to-capture-a-single-key-press/713848/6
+
+using System.Linq;
+using System.Collections.Generic;
 
 using UnityEngine;
-using UnityEditor;
+
+using SpriteMapper;
 
 
 public static class EditorInputControls
 {
-    public static string Identifier { get; private set; } = "";
-    public static bool Reading { get; private set; } = false;
+    private static bool reading = false;
+    private static int focusedControl = 0;
 
+    private static Dictionary<KeyCode, bool> heldModifierKeys = new()
+    {
+        { KeyCode.LeftShift,    false }, { KeyCode.RightShift,   false },
+        { KeyCode.LeftControl,  false }, { KeyCode.RightControl, false },
+        { KeyCode.LeftAlt,      false }, { KeyCode.RightAlt,     false },
+        { KeyCode.LeftCommand,  false }, { KeyCode.RightCommand, false },
+        { KeyCode.AltGr,        false },
+    };
+
+
+    /// <summary> Force ends the current shortcut reading </summary>
+    public static void StopReadingShortcut()
+    {
+        if (reading) { GUIUtility.keyboardControl = 0; }
+        if (GUIUtility.hotControl == focusedControl) { GUIUtility.hotControl = 0; }
+
+        heldModifierKeys.Keys.ToList().ForEach(key => heldModifierKeys[key] = false);
+
+        reading = false; focusedControl = 0;
+    }
 
     /// <summary>
-    /// <br/>   Draws a text field with given rect.
-    /// <br/>   Will start listening for a keyboard or mouse action when selected.
-    /// <br/>   Returns pressed keyboard key or mouse button as a binding string.
-    /// <br/>   For example: "&lt;Keyboard&gt;/F", "&lt;Mouse&gt;/LeftButton"
+    /// <br/>   Draws a text field with given rect for inputting a <see cref="Shortcut"/>.
+    /// <br/>   Will start listening for a keyboard or mouse inputs when selected.
+    /// <br/>   Returns boolean, which tells if the shortcut field is focused.
+    /// <br/>   Also returns the modified shortcut.
     /// </summary>
-    public static string ActionBindingField(Rect controlRect, string startBinding, string identifier)
+    public static (bool, Shortcut) ShortcutField(Rect controlRect, Shortcut shortcut)
     {
-        string newBinding = startBinding;
-
-        int controlID = GUIUtility.GetControlID(FocusType.Keyboard);
+        int control = GUIUtility.GetControlID(FocusType.Keyboard);
 
         Event evt = Event.current;
-        EventType evtType = evt.GetTypeForControl(controlID);
+        EventType evtType = evt.GetTypeForControl(control);
 
 
-        // Repaint
+        // Repaint control
         if (evtType == EventType.Repaint)
         {
             GUIStyle style = GUI.skin.GetStyle("TextField");
-            style.Draw(controlRect, new GUIContent(newBinding), controlID);
+            style.Draw(controlRect, new GUIContent(shortcut.View), control);
+            
+            return (false, shortcut);
         }
 
-        // Keyboard key
-        else if (evt.isKey)
+        // Focus shortcut field
+        if (!reading)
         {
-            if (GUIUtility.keyboardControl == controlID)
+            if (evtType == EventType.MouseDown)
             {
-                Reading = false;
-                newBinding = "<Keyboard>/" + evt.keyCode.ToString();
-
-                GUIUtility.hotControl = 0;
-                GUIUtility.keyboardControl = 0;
-                evt.Use();
-            }
-        }
-        
-        // Mouse button
-        else if (evt.isMouse)
-        {
-            // Focus action binding field
-            if (!Reading)
-            {
-                if (evtType == EventType.MouseDown)
+                if (controlRect.Contains(evt.mousePosition) &&
+                    evt.button == 0 && GUIUtility.hotControl == 0)
                 {
-                    if (controlRect.Contains(evt.mousePosition) &&
-                        evt.button == 0 && GUIUtility.hotControl == 0)
-                    {
-                        GUIUtility.hotControl = controlID;
-                        GUIUtility.keyboardControl = controlID;
-                        evt.Use();
-                    }
-                }
-                else if (evtType == EventType.MouseUp)
-                {
-                    if (GUIUtility.hotControl == controlID)
-                    {
-                        Reading = true;
-                        Identifier = identifier;
-
-                        GUIUtility.hotControl = 0;
-                        evt.Use();
-                    }
+                    GUIUtility.hotControl = control;
+                    GUIUtility.keyboardControl = control;
+                    evt.Use();
                 }
             }
-
-            // Get new binding based on pressed mouse button
-            else
+            if (evtType == EventType.MouseUp)
             {
-                bool bindingRead = false;
-
-                switch (evt.button)
+                if (GUIUtility.hotControl == control)
                 {
-                    // Left mouse button
-                    case 0: bindingRead = true; newBinding = "<Mouse>/LeftButton"; break;
+                    reading = true;
+                    focusedControl = control;
 
-                    // Right mouse button
-                    case 1: bindingRead = true; newBinding = "<Mouse>/RightButton"; break;
-
-                    // Middle mouse button
-                    case 2: bindingRead = true; newBinding = "<Mouse>/MiddleButton"; break;
-
-                    // Back
-                    case 3: bindingRead = true; newBinding = "<Mouse>/Back"; break;
-
-                    // Forward
-                    case 4: bindingRead = true; newBinding = "<Mouse>/Forward"; break;
-                }
-
-                if (bindingRead)
-                {
-                    Reading = false;
+                    // Reset shortcut
+                    shortcut = new();
 
                     GUIUtility.hotControl = 0;
                     evt.Use();
                 }
             }
+
+            return (control == focusedControl, shortcut);
         }
 
-        return newBinding;
+        Debug.Log("TEST");
+
+        // Stop reading if escape key is pressed
+        if (evt.isKey && evtType == EventType.KeyUp && evt.keyCode == KeyCode.Escape)
+        {
+            StopReadingShortcut();
+            return (false, shortcut);
+        }
+
+        // Skip controls that aren't focused
+        if (reading && control != focusedControl)
+        {
+            return (false, shortcut);
+        }
+
+
+        // Handle keyboard key
+        if (evt.isKey) { HandleKeyboardInput(ref shortcut, ref evt, evtType); }
+        
+        // Handle mouse button
+        else if (evt.isMouse) { HandleMouseInput(ref shortcut, ref evt, evtType); }
+
+        return (control == focusedControl, shortcut);
     }
 
-    public static string ActionBindingFieldLayout(string initialKey, string identifier)
+
+    #region Private Methods ======================================================================= Private Methods
+
+    /// <summary>
+    /// <br/>   Reads keyboard key and updates referenced shortcut accordingly.
+    /// <br/>   Uses referenced event to prevent Unity from picking it up.
+    /// </summary>
+    private static void HandleKeyboardInput(ref Shortcut shortcut, ref Event evt, EventType evtType)
     {
-        return ActionBindingField(EditorGUILayout.GetControlRect(), initialKey, identifier);
+        if (evtType == EventType.KeyDown)
+        {
+            if (heldModifierKeys.ContainsKey(evt.keyCode))
+            {
+                heldModifierKeys[evt.keyCode] = true;
+                UpdateShortcutModifierKeys(ref shortcut);
+            }
+        }
+        else if (evtType == EventType.KeyUp)
+        {
+            if (heldModifierKeys.ContainsKey(evt.keyCode))
+            {
+                heldModifierKeys[evt.keyCode] = false;
+                UpdateShortcutModifierKeys(ref shortcut);
+            }
+            else
+            {
+                shortcut.Binding = "<Keyboard>/" + evt.keyCode;
+                StopReadingShortcut();
+            }
+        }
+
+        evt.Use();
     }
-    
-    public static void StopReading()
+
+    /// <summary>
+    /// <br/>   Reads mouse button and updates referenced shortcut accordingly.
+    /// <br/>   Uses referenced event to prevent Unity from picking it up.
+    /// </summary>
+    private static void HandleMouseInput(ref Shortcut shortcut, ref Event evt, EventType evtType)
     {
-        Reading = false;
-        Identifier = "";
+        if (evtType == EventType.MouseUp)
+        {
+            switch (evt.button)
+            {
+                case 0: StopReadingShortcut(); shortcut.Binding = "<Mouse>/LeftButton"; break;
+                case 1: StopReadingShortcut(); shortcut.Binding = "<Mouse>/RightButton"; break;
+                case 2: StopReadingShortcut(); shortcut.Binding = "<Mouse>/MiddleButton"; break;
+                case 3: StopReadingShortcut(); shortcut.Binding = "<Mouse>/Back"; break;
+                case 4: StopReadingShortcut(); shortcut.Binding = "<Mouse>/Forward"; break;
+            }
+        }
+
+        evt.Use();
     }
+
+
+    /// <summary> Updates referenced shortcut's modifier key booleans based on held modifier keys. </summary>
+    private static void UpdateShortcutModifierKeys(ref Shortcut shortcut)
+    {
+        shortcut.Shift =    heldModifierKeys[KeyCode.LeftShift]     || heldModifierKeys[KeyCode.RightShift];
+        shortcut.Ctrl =     heldModifierKeys[KeyCode.LeftControl]   || heldModifierKeys[KeyCode.RightControl]   || heldModifierKeys[KeyCode.AltGr];
+        shortcut.Alt =      heldModifierKeys[KeyCode.LeftAlt]       || heldModifierKeys[KeyCode.RightAlt]       || heldModifierKeys[KeyCode.AltGr];
+        shortcut.Cmd =      heldModifierKeys[KeyCode.LeftCommand]   || heldModifierKeys[KeyCode.RightCommand];
+    }
+
+    #endregion Private Methods
 }

@@ -3,9 +3,6 @@ namespace SpriteMapper.Actions
 {
     public class Flip : Action, IUndoable, IUserExecutable
     {
-        public UserActionInfo Info { get; set; }
-
-
         #region Action ================================================================== Action
 
         public Flip()

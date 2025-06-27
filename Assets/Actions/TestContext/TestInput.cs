@@ -42,7 +42,6 @@ namespace SpriteMapper
             if (!context.performed) { return; }
 
             Actions.Draw action = new();
-            Debug.Log(action.IsLong + ", " + action.IsUndoable + ", " + action.Context);
         }
 
         public void Flip(InputAction.CallbackContext context)
@@ -50,7 +49,6 @@ namespace SpriteMapper
             if (!context.performed) { return; }
 
             Actions.Flip action = new();
-            Debug.Log(action.IsLong + ", " + action.IsUndoable + ", " + action.Context);
         }
 
         public void Undo(InputAction.CallbackContext context)
