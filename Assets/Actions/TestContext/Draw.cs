@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace SpriteMapper.Actions
 {
+    [ActionContext(Context.Global)]
     public class Draw : Action, ILong, IUndoable, IUserExecutable
     {
         public bool EndPredicate

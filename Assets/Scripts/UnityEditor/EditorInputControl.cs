@@ -55,8 +55,9 @@ public static class EditorInputControls
             GUIStyle style = GUI.skin.GetStyle("TextField");
             style.Draw(controlRect, new GUIContent(shortcut.View), control);
             
-            return (false, shortcut);
+            return (control == focusedControl, shortcut);
         }
+
 
         // Focus shortcut field
         if (!reading)
@@ -89,7 +90,6 @@ public static class EditorInputControls
             return (control == focusedControl, shortcut);
         }
 
-        Debug.Log("TEST");
 
         // Stop reading if escape key is pressed
         if (evt.isKey && evtType == EventType.KeyUp && evt.keyCode == KeyCode.Escape)
@@ -99,16 +99,10 @@ public static class EditorInputControls
         }
 
         // Skip controls that aren't focused
-        if (reading && control != focusedControl)
-        {
-            return (false, shortcut);
-        }
+        if (control != focusedControl) { return (false, shortcut); }
 
 
-        // Handle keyboard key
         if (evt.isKey) { HandleKeyboardInput(ref shortcut, ref evt, evtType); }
-        
-        // Handle mouse button
         else if (evt.isMouse) { HandleMouseInput(ref shortcut, ref evt, evtType); }
 
         return (control == focusedControl, shortcut);
