@@ -35,14 +35,14 @@ namespace SpriteMapper.Actions
 
         public Draw()
         {
-            TestInput.AddToUpdateList(this);
-
             newValues = new float[canvasSize, canvasSize];
             oldValues = new float[canvasSize, canvasSize];
         }
 
         public void Update()
         {
+            Debug.Log("Update");
+
             int radiusCeiled = Mathf.CeilToInt(brushRadius);
 
             Vector2 mousePos = Input.mousePosition;
@@ -74,11 +74,13 @@ namespace SpriteMapper.Actions
 
         public void Cancel()
         {
-
+            Debug.Log("Cancel");
         }
 
         public void End()
         {
+            Debug.Log("End");
+
             //for (int x = 0; x < canvasSize; x++)
             //{
             //    for (int y = 0; y < canvasSize; y++)

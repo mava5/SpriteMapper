@@ -15,18 +15,18 @@ namespace SpriteMapper
     }
 
     /// <summary> Handles the storing and modification of different selections. </summary>
-    public static class SelectionManager
+    public class SelectionHandler
     {
-        public static List<Image> ImageSelection { get; private set; } = new();
-        public static List<FunctionLayer> LayerSelection { get; private set; } = new();
+        public List<Image> ImageSelection { get; private set; } = new();
+        public List<FunctionLayer> LayerSelection { get; private set; } = new();
 
         // TODO: Make custom Mesh class
-        public static List<Object> MeshSelection { get; private set; } = new();
+        public List<Object> MeshSelection { get; private set; } = new();
 
         /// <summary>
         /// <br/>   Selected pixels are stored as floats within range [0, 1].
         /// <br/>   The float determines how much an action affects the pixel.
         /// </summary>
-        public static float[,] PixelSelection { get; private set; } = new float[0, 0];
+        public float[,] PixelSelection { get; private set; } = new float[0, 0];
     }
 }

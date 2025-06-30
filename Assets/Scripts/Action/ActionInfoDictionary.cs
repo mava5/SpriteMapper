@@ -40,6 +40,26 @@ namespace SpriteMapper
         private Dictionary<Type, ActionInfo> data = new();
 
 
+        #region Initialization ======================================================================================== Initialization
+
+        public static void Initialize()
+        {
+            // Get all ScriptableObjects from Unity Resources
+            ActionInfoDictionary[] assets = Resources.LoadAll<ActionInfoDictionary>("");
+            if (assets == null || assets.Length == 0)
+            {
+                Debug.LogWarning($"No ActionInfoDictionary in Unity Resources.");
+            }
+            else if (assets.Length > 1)
+            {
+                Debug.LogWarning($"Multiple ActionInfoDictionaries in Unity Resources.");
+            }
+            else { Instance = assets[0]; }
+        }
+
+        #endregion Initialization
+
+
         #region Indexer =============================================================================================== Indexer
 
         /// <summary> Returns a <see cref="ActionInfo"/> for given <see cref="Action"/> type. </summary>
@@ -63,29 +83,6 @@ namespace SpriteMapper
         }
 
         #endregion Indexer
-
-
-        #region Private Methods ======================================================================================= Private Methods
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void InitializeInstance()
-        {
-            // Get all ScriptableObjects from Unity Resources
-            ActionInfoDictionary[] assets = Resources.LoadAll<ActionInfoDictionary>("");
-            if (assets == null || assets.Length == 0)
-            {
-                Debug.LogWarning($"No ActionInfoDictionary in Unity Resources.");
-            }
-            else if (assets.Length > 1)
-            {
-                Debug.LogWarning($"Multiple ActionInfoDictionary in Unity Resources.");
-            }
-            else { Instance = assets[0]; }
-
-            //ControlsInitializer.Initialize(data);
-        }
-
-        #endregion Private Methods
     }
 
 
@@ -157,8 +154,8 @@ namespace SpriteMapper
             (Binding.Contains("/") ? Binding.Split("/")[1] : "");
 
         /// <summary> Input System readable binding. </summary>
-        // Code from: https://stackoverflow.com/a/21755933
-        public string ActionBinding =>
+        // Code help from: https://stackoverflow.com/a/21755933
+        public string InputBinding =>
             string.IsNullOrEmpty(Binding) ?
                 "" :
                 (Binding.Length == 1 ?
@@ -362,13 +359,13 @@ namespace SpriteMapper
         {
             // Organize pre-existing ActionInfos into a dictionary based on their stored ActionFullNames
             // This helps speed up matching Action types found via reflection to already existing ActionInfos
-            Dictionary<string, ActionInfo> actionInfosByFullName = new();
+            Dictionary<string, ActionInfo> infosByFullName = new();
             
             foreach (ActionInfo info in data.ActionInfos)
             {
-                actionInfosByFullName[info.ActionFullName] = info;
+                infosByFullName[info.ActionFullName] = info;
 
-                // Assume that info doesn't point to an action
+                // Assume that ActionInfo doesn't point to an Action type
                 // Later when iterating through Action types with reflection, we can reassign the boolean
                 // This way the ActionInfos that don't point to any Action type will be easily differentiated
                 info.PointsToAnAction = false;
@@ -382,9 +379,8 @@ namespace SpriteMapper
                     !type.Namespace.StartsWith("SpriteMapper.Actions")) { continue; }
 
 
-                // Use pre-existing action info if there is one
-                ActionInfo actionInfo;
-                if (!actionInfosByFullName.TryGetValue(type.FullName, out actionInfo)) { actionInfo = new(); }
+                // Use pre-existing ActionInfo if there is one, otherwise create a new one
+                if (!infosByFullName.TryGetValue(type.FullName, out ActionInfo info)) { info = new(); }
 
                 Context context = type.HasAttribute<ActionContext>() ?
                     type.GetCustomAttribute<ActionContext>().Context : Context.Unassigned;
@@ -393,14 +389,14 @@ namespace SpriteMapper
                 bool isUndoable = typeof(IUndoable).IsAssignableFrom(type);
                 bool isUserExecutable = typeof(IUserExecutable).IsAssignableFrom(type);
 
-                actionInfo.PointsToAnAction = true;
-                actionInfo.SetIdentifiers(context, type.FullName, type.Name);
-                actionInfo.SetModifiers(isLong, isUndoable, isUserExecutable);
+                info.PointsToAnAction = true;
+                info.SetIdentifiers(context, type.FullName, type.Name);
+                info.SetModifiers(isLong, isUndoable, isUserExecutable);
 
-                actionInfosByFullName[type.FullName] = actionInfo;
+                infosByFullName[type.FullName] = info;
             }
 
-            data.ActionInfos = actionInfosByFullName.Values.ToList();
+            data.ActionInfos = infosByFullName.Values.ToList();
         }
 
         /// <summary>

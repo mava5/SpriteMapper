@@ -14,7 +14,7 @@ namespace SpriteMapper
     }
 
     /// <summary> Handles switching between different contexts. </summary>
-    public static class ContextManager
+    public class ContextHandler
     {
 
     }

@@ -34,8 +34,6 @@ namespace SpriteMapper.Actions
 
         public Draw1()
         {
-            TestInput.AddToUpdateList(this);
-
             newValues = new float[canvasSize, canvasSize];
             oldValues = new float[canvasSize, canvasSize];
         }

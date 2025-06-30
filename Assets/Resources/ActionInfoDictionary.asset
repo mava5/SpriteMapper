@@ -39,7 +39,7 @@ MonoBehaviour:
       Ctrl: 0
       Alt: 0
       Cmd: 0
-      Binding: 
+      Binding: <Keyboard>/F
     PointsToAnAction: 1
   - <Context>k__BackingField: 0
     <ActionName>k__BackingField: NewImage
@@ -50,10 +50,10 @@ MonoBehaviour:
     <IsUserExecutable>k__BackingField: 1
     <Shortcut>k__BackingField:
       Shift: 0
-      Ctrl: 0
+      Ctrl: 1
       Alt: 0
       Cmd: 0
-      Binding: 
+      Binding: <Keyboard>/N
     PointsToAnAction: 1
   - <Context>k__BackingField: 0
     <ActionName>k__BackingField: Draw1
@@ -81,5 +81,33 @@ MonoBehaviour:
       Ctrl: 0
       Alt: 0
       Cmd: 0
-      Binding: 
+      Binding: <Mouse>/LeftButton
+    PointsToAnAction: 1
+  - <Context>k__BackingField: 1
+    <ActionName>k__BackingField: Redo
+    <ActionFullName>k__BackingField: SpriteMapper.Actions.Redo
+    <Description>k__BackingField: 
+    <IsLong>k__BackingField: 0
+    <IsUndoable>k__BackingField: 0
+    <IsUserExecutable>k__BackingField: 1
+    <Shortcut>k__BackingField:
+      Shift: 0
+      Ctrl: 1
+      Alt: 0
+      Cmd: 0
+      Binding: <Keyboard>/Y
+    PointsToAnAction: 1
+  - <Context>k__BackingField: 1
+    <ActionName>k__BackingField: Undo
+    <ActionFullName>k__BackingField: SpriteMapper.Actions.Undo
+    <Description>k__BackingField: 
+    <IsLong>k__BackingField: 0
+    <IsUndoable>k__BackingField: 0
+    <IsUserExecutable>k__BackingField: 1
+    <Shortcut>k__BackingField:
+      Shift: 0
+      Ctrl: 1
+      Alt: 0
+      Cmd: 0
+      Binding: <Keyboard>/Z
     PointsToAnAction: 1

@@ -33,7 +33,7 @@ namespace SpriteMapper
         }
 
         /// <summary> Revert changes done by latest action, move it to redo stack. </summary>
-        public static void UndoAction()
+        public static void Undo()
         {
             if (undoHistory.Count == 0) { return; }
 
@@ -42,7 +42,7 @@ namespace SpriteMapper
         }
 
         /// <summary> Do first redoable action again, move it to undo stack. </summary>
-        public static void RedoAction()
+        public static void Redo()
         {
             if (redoHistory.Count == 0) { return; }
 
