@@ -50,18 +50,6 @@ namespace SpriteMapper
             action.Redo(); undoHistory.Push(action);
         }
 
-
-        /// <summary> Returns the estimated total bytes taken up by saved actions. </summary>
-        public static int GetTotalSize()
-        {
-            int totalSize = 0;
-
-            foreach (IUndoable action in undoHistory) { totalSize += action.GetMemorySize(); }
-            foreach (IUndoable action in redoHistory) { totalSize += action.GetMemorySize(); }
-
-            return totalSize;
-        }
-
         #endregion Public Functions
     }
 }

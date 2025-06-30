@@ -1,7 +1,4 @@
 
-using UnityEngine;
-
-
 namespace SpriteMapper
 {
     [System.AttributeUsage(System.AttributeTargets.Class)]
@@ -12,9 +9,14 @@ namespace SpriteMapper
         public ActionContext(Context context) { Context = context; }
     }
 
-    /// <summary> Actions are used to interact with different parts of the program. </summary>
+    /// <summary> Actions are used to interact with different parts of the application. </summary>
     public class Action
     {
-        public static ActionInfo Info => ActionInfoDictionary.Instance[typeof(ActionInfo)];
+        public static ActionInfo Info
+        {
+            get => info ??= ActionInfoDictionary.Instance[typeof(ActionInfo)];
+        }
+
+        private static ActionInfo info = null;
     }
 }

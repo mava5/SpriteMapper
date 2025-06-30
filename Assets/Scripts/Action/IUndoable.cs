@@ -9,13 +9,5 @@ namespace SpriteMapper
     {
         public void Undo();
         public void Redo();
-
-        /// <summary>
-        /// <br/>   Returns the amount of memory taken by action in bytes.
-        /// <br/>   
-        /// <br/>   Only big data structures are take to account so actual size is higher.
-        /// <br/>   Right now only returns size of chosen variables with sizeof().
-        /// </summary>
-        public int GetMemorySize();
     }
 }

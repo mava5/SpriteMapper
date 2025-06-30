@@ -6,6 +6,7 @@ namespace SpriteMapper
 {
     public enum ImageType
     {
+        None,
         Draw,
         Mesh,
     }
@@ -14,16 +15,19 @@ namespace SpriteMapper
     /// <br/>   The main building block for creating normal maps.
     /// <br/>   Can contain depth and / or normal data.
     /// </summary>
-    public class Image
+    public abstract class Image
     {
-        public Vector2Int Size { get; internal set; } = new(0, 0);
-
-        public bool HasDepthData => DepthMap != null;
-        public bool HasNormalData => NormalMap != null;
-
-        public Texture2D DepthMap { get; internal set; } = null;
-        public Texture2D NormalMap { get; internal set; } = null;
+        public ImageType Type { get; internal set; } = ImageType.None;
         
+        public int Width { get; internal set; } = 0;
+        public int Height { get; internal set; } = 0;
+
+        public bool HasDepthData { get; internal set; } = false;
+        public bool HasNormalData { get; internal set; } = false;
+
+        /// <summary> Low resolution version of the Image for previewing purposes. </summary>
+        public Texture2D Preview { get; internal set; } = null;
+
 
         // Shared Properties -------------------------------------------------- Shared Properties
 
@@ -48,32 +52,16 @@ namespace SpriteMapper
         public bool FlipZ { get; set; } = false;
 
 
-        #region Public Methods ========================================================== Public Methods
+        public Image(int width, int height) { Width = width; Height = height; }
 
-        /// <summary>
-        /// <br/>   Returns a rough estimate of the amount of bytes the image takes up.
-        /// <br/>   Actual memory size is higher as only biggest data structures are accounted for.
-        /// </summary>
-        public virtual int GetMemorySize()
-        {
-            return GetTextureMemorySize();
-        }
+
+        #region Public Methods ==================================================================== Public Methods
+
+        public abstract Texture2D GetDepthData();
+        public abstract Texture2D GetNormalData();
+
+        public abstract void Destroy();
 
         #endregion Public Methods
-
-
-        #region Private Methods ========================================================= Private Methods
-
-        private int GetTextureMemorySize()
-        {
-            int textureMemorySize = 0;
-
-            if (HasDepthData) { textureMemorySize += Size.x * Size.y * sizeof(float); }
-            if (HasNormalData) { textureMemorySize += Size.x * Size.y * sizeof(float) * 3; }
-            
-            return textureMemorySize;
-        }
-
-        #endregion Private Methods
     }
 }

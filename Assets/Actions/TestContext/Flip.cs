@@ -20,8 +20,6 @@ namespace SpriteMapper.Actions
 
         public void Redo() { FlipImage(); }
 
-        public int GetMemorySize() { return 0; }
-
         #endregion Undo Logic
 
 

@@ -108,11 +108,6 @@ namespace SpriteMapper.Actions
             ApplyNewValues();
         }
 
-        public int GetMemorySize()
-        {
-            return sizeof(float) * canvasSize * canvasSize * 2;
-        }
-
         #endregion Undo Logic
 
 

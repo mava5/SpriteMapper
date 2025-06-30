@@ -50,7 +50,7 @@ MonoBehaviour:
     <IsUserExecutable>k__BackingField: 1
     <Shortcut>k__BackingField:
       Shift: 0
-      Ctrl: 1
+      Ctrl: 0
       Alt: 0
       Cmd: 0
       Binding: <Keyboard>/N
@@ -92,7 +92,7 @@ MonoBehaviour:
     <IsUserExecutable>k__BackingField: 1
     <Shortcut>k__BackingField:
       Shift: 0
-      Ctrl: 1
+      Ctrl: 0
       Alt: 0
       Cmd: 0
       Binding: <Keyboard>/Y
@@ -106,7 +106,7 @@ MonoBehaviour:
     <IsUserExecutable>k__BackingField: 1
     <Shortcut>k__BackingField:
       Shift: 0
-      Ctrl: 1
+      Ctrl: 0
       Alt: 0
       Cmd: 0
       Binding: <Keyboard>/Z
