@@ -37,7 +37,7 @@ namespace SpriteMapper
             return null;
         }
 
-        public override void Destroy()
+        public override void Dispose()
         {
             
         }

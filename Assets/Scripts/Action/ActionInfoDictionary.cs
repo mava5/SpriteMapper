@@ -21,23 +21,17 @@ namespace SpriteMapper
     {
         public static ActionInfoDictionary Instance { get; private set; }
 
+        /// <summary> Contains an <see cref="ActionInfo"/> for each <see cref="Action"/>. </summary>
+        public static Dictionary<Type, ActionInfo> Data => Instance.data;
+
         /// <summary>
-        /// <br/>   Contains an <see cref="ActionInfo"/> for each <see cref="Action"/>.
+        /// <br/>   Contains an <see cref="SerializedActionInfo"/> for each <see cref="Action"/>.
         /// <br/>   Edited in Inspector with <see cref="ActionInfoDictionaryEditor"/>.
-        /// <br/>   Setter only works in Unity Editor.
         /// </summary>
-        public List<ActionInfo> ActionInfos
-        {
-            get => actionInfos;
-
-            set { if (Application.isEditor) { actionInfos = value; } } 
-        }
+        public List<SerializedActionInfo> SerializedActionInfos = new();
 
 
-        [SerializeField] private List<ActionInfo> actionInfos = new();
-
-        // An actual dictionary created based on keys and values lists
-        private Dictionary<Type, ActionInfo> data = new();
+        public Dictionary<Type, ActionInfo> data { get; private set; } = new();
 
 
         #region Initialization ======================================================================================== Initialization
@@ -70,9 +64,9 @@ namespace SpriteMapper
                 // Initialize data dictionary if it's accessed for the first time
                 if (data.Count == 0)
                 {
-                    foreach (ActionInfo info in actionInfos)
+                    foreach (SerializedActionInfo info in SerializedActionInfos)
                     {
-                        data.Add(Type.GetType(info.ActionFullName), info);
+                        data.Add(Type.GetType(info.ActionFullName), new ActionInfo(info));
                     }
                 }
 
@@ -86,52 +80,67 @@ namespace SpriteMapper
     }
 
 
-    /// <summary> Contains necessary information for any action. </summary>
-    [Serializable]
+    /// <summary> Contains necessary information for an <see cref="Action"/>. </summary>
     public class ActionInfo
     {
         /// <summary> The context, in which action can be used. </summary>
-        [field: SerializeField] public Context Context { get; private set; } = Context.Unassigned;
+        public readonly Context Context;
 
-        /// <summary> For example "Save". </summary>
-        [field: SerializeField] public string ActionName { get; private set; } = "";
-
-        /// <summary> For example "SpriteMapper.Actions.Global.Save" </summary>
-        [field: SerializeField] public string ActionFullName { get; private set; } = "";
+        /// <summary> The type of the action the info points to. </summary>
+        public readonly Type ActionType;
 
         /// <summary> Explanation for how the action works, used for action's tooltip. </summary>
-        [field: SerializeField] public string Description { get; private set; } = "";
+        public readonly string Description;
 
-        [field: SerializeField] public bool IsLong { get; private set; } = false;
-        [field: SerializeField] public bool IsUndoable { get; private set; } = false;
-        [field: SerializeField] public bool IsUserExecutable { get; private set; } = false;
+        public readonly bool IsLong;
+        public readonly bool IsUndoable;
+        public readonly bool IsUserExecutable;
 
         /// <summary> Shortcut for executing an <see cref="IUserExecutable"/> action. </summary>
-        [field: SerializeField] public Shortcut Shortcut { get; private set; } = null;
+        public Shortcut Shortcut { get; private set; } = null;
 
-        [SerializeField] public bool PointsToAnAction = false;
+
+        public ActionInfo(SerializedActionInfo serializedInfo)
+        {
+            Context = serializedInfo.Context;
+            ActionType = Type.GetType(serializedInfo.ActionFullName);
+            Description = serializedInfo.Description;
+
+            IsLong = serializedInfo.IsLong;
+            IsUndoable = serializedInfo.IsUndoable;
+            IsUserExecutable = serializedInfo.IsUserExecutable;
+
+            Shortcut = serializedInfo.Shortcut;
+        }
 
 
         /// <summary> Rebinds the action's shortcut. </summary>
         public void Rebind(Shortcut newShortcut)
         { if (IsUserExecutable) { Shortcut = newShortcut; } }
+    }
 
 
-        public void SetIdentifiers(Context context, string actionFullName, string actionName)
-        { (Context, ActionFullName, ActionName) = (context, actionFullName, actionName); }
+    /// <summary>
+    /// <br/>   Serializes <see cref="Action"/> specific information.
+    /// <br/>   Gets turned into a <see cref="ActionInfo"/> in runtime.
+    /// </summary>
+    [Serializable]
+    public class SerializedActionInfo
+    {
+        public int Index = 0;
+        public Context Context = Context.Unassigned;
+        
+        public bool PointsToAnAction = false;
+        public string ActionName = "";
+        public string ActionFullName = "";
 
-        public void SetDescription(string description)
-        { Description = description; }
+        public string Description = "";
 
-        public void SetModifiers(bool isLong, bool isUndoable, bool isUserExecutable)
-        {
-            (IsLong, IsUndoable, IsUserExecutable) = (isLong, isUndoable, isUserExecutable);
+        public bool IsLong = false;
+        public bool IsUndoable = false;
+        public bool IsUserExecutable = false;
 
-            // Remove shortcut from actions that don't need it
-            // Also make sure the action has a shortcut if it needs one
-            if (!IsUserExecutable) { Shortcut = null; }
-            else if (Shortcut == null) { Shortcut = new(); }
-        }
+        public Shortcut Shortcut = null;
     }
 
 
@@ -175,7 +184,7 @@ namespace SpriteMapper
         // Keeps track of each context's foldout menu open state
         private static Dictionary<Context, bool> menuStates = new();
 
-        private static ActionInfo selectedInfo = null;
+        private static SerializedActionInfo selectedInfo = null;
 
         private static Vector2 scroll = new();
 
@@ -194,7 +203,8 @@ namespace SpriteMapper
 
         private int width = 0, height = 0;
 
-        private GUIStyle customPadding;
+        private GUIStyle normalPadding;
+        private GUIStyle smallPadding;
         private GUIStyle scrollView;
         private GUIStyle smallText;
         private GUIStyle button;
@@ -209,8 +219,8 @@ namespace SpriteMapper
             RectOffset paddingRect = new(PAD, PAD, PAD, PAD);
             RectOffset smallPaddingRect = new(S_PAD, S_PAD, S_PAD, S_PAD);
             
-            customPadding = new();
-            customPadding.padding = paddingRect;
+            normalPadding = new() { padding = paddingRect };
+            smallPadding = new() { padding = smallPaddingRect };
 
             scrollView = new("LODBlackBox");
             scrollView.padding = paddingRect;
@@ -248,7 +258,7 @@ namespace SpriteMapper
             width = Mathf.Max(Mathf.RoundToInt(EditorGUIUtility.currentViewWidth), 0) - PAD * 2;
             height = Screen.height - 170 - PAD * 2;
 
-            GUILayout.BeginVertical(customPadding);
+            GUILayout.BeginVertical(normalPadding);
             {
                 HandleTopBarGUI();
                 HandleScrollViewGUI();
@@ -297,26 +307,8 @@ namespace SpriteMapper
             List<Context> validContexts = ((Context[])Enum.GetValues(typeof(Context))).ToList();
             UpdateFoldoutStates(validContexts);
 
-            // Update ActionInfo list so that:
-            //
-            // 1. Pre-existing ActionInfos point to correct Action types.
-            // 2. Pre-existing ActionInfos that no longer point to Action types have their action names removed.
-            //    → The ActionInfos won't be removed so the user can transfer their information to another
-            //      ActionInfo, that actually points to an existing Action type.
-            // 3. New ActionInfos are created for those Action types, that don't have ones yet.
-            //
-            UpdateActionInfoListContents();
-
-            // Sort ActionInfo list by following priority:
-            //
-            // 1. Context, actionInfos with an invalid context will be moved to Unassigned context.
-            // 2. IsUserExecutable, first user executable actions, then the rest.
-            // 3. Alphabetically based on ActionName.
-            //
-            data.ActionInfos = data.ActionInfos.
-            /* 1 */ OrderBy(info => validContexts.Contains(info.Context) ? info.Context : Context.Unassigned).
-            /* 3 */ ThenBy(info => !info.IsUserExecutable).
-            /* 2 */ ThenBy(info => info.ActionName).ToList();
+            UpdateSerializedActionInfoListContents();
+            SortSerializedActionInfoList(validContexts);
             
 
             int infoIndex = 0;
@@ -332,9 +324,10 @@ namespace SpriteMapper
                 {
                     menuStates[context] = HandleCustomFoldout(menuStates[context], context.ToString());
 
-                    // Go through all ActionInfos in current valid context
-                    ActionInfo info;
-                    while (infoIndex < data.ActionInfos.Count && (info = data.ActionInfos[infoIndex]).Context == context)
+                    // Go through all SerializedActionInfos in current valid context
+                    SerializedActionInfo info;
+                    while (infoIndex < data.SerializedActionInfos.Count &&
+                        (info = data.SerializedActionInfos[infoIndex]).Context == context)
                     {
                         // Don't draw Context foldout menu's contents if it's closed
                         if (!menuStates[context]) { infoIndex++; continue; }
@@ -344,7 +337,7 @@ namespace SpriteMapper
                         {
                             GUILayout.Space(S_PAD);
                             bool remove;
-                            (remove, data.ActionInfos[infoIndex]) = HandleActionInfoField(info, 20);
+                            (remove, data.SerializedActionInfos[infoIndex]) = HandleActionInfoField(info);
                         }
                         infoIndex++;
                     }
@@ -355,19 +348,30 @@ namespace SpriteMapper
             GUILayout.EndScrollView();
         }
 
-        private void UpdateActionInfoListContents()
+        /// <summary>
+        /// <br/>   Update SerializedActionInfo list so that:
+        /// <br/>   
+        /// <br/>   1. Pre-existing infos point to correct Action types.
+        /// <br/>
+        /// <br/>   2. Pre-existing infos that no longer point to Action types have their action names removed.
+        /// <br/>   The infos won't be removed so the user can transfer their information
+        /// <br/>   to another info, that actually points to an existing Action type.
+        /// <br/>
+        /// <br/>   3. New infos are created for those Action types, that don't have ones yet.
+        /// </summary>
+        private void UpdateSerializedActionInfoListContents()
         {
-            // Organize pre-existing ActionInfos into a dictionary based on their stored ActionFullNames
+            // Organize pre-existing SerializedActionInfos into a dictionary based on their stored ActionFullNames
             // This helps speed up matching Action types found via reflection to already existing ActionInfos
-            Dictionary<string, ActionInfo> infosByFullName = new();
+            Dictionary<string, SerializedActionInfo> infosByFullName = new();
             
-            foreach (ActionInfo info in data.ActionInfos)
+            foreach (SerializedActionInfo info in data.SerializedActionInfos)
             {
                 infosByFullName[info.ActionFullName] = info;
 
-                // Assume that ActionInfo doesn't point to an Action type
+                // Assume that SerializedActionInfo doesn't point to an Action type
                 // Later when iterating through Action types with reflection, we can reassign the boolean
-                // This way the ActionInfos that don't point to any Action type will be easily differentiated
+                // This way the SerializedActionInfos that don't point to any Action type will be easily differentiated
                 info.PointsToAnAction = false;
             }
 
@@ -379,24 +383,58 @@ namespace SpriteMapper
                     !type.Namespace.StartsWith("SpriteMapper.Actions")) { continue; }
 
 
-                // Use pre-existing ActionInfo if there is one, otherwise create a new one
-                if (!infosByFullName.TryGetValue(type.FullName, out ActionInfo info)) { info = new(); }
+                // Use pre-existing SerializedActionInfo if there is one, otherwise create a new one
+                if (!infosByFullName.TryGetValue(type.FullName, out SerializedActionInfo info)) { info = new(); }
 
-                Context context = type.HasAttribute<ActionContext>() ?
+                info.Context = type.HasAttribute<ActionContext>() ?
                     type.GetCustomAttribute<ActionContext>().Context : Context.Unassigned;
 
-                bool isLong = typeof(ILong).IsAssignableFrom(type);
-                bool isUndoable = typeof(IUndoable).IsAssignableFrom(type);
-                bool isUserExecutable = typeof(IUserExecutable).IsAssignableFrom(type);
-
                 info.PointsToAnAction = true;
-                info.SetIdentifiers(context, type.FullName, type.Name);
-                info.SetModifiers(isLong, isUndoable, isUserExecutable);
+                info.ActionFullName = type.FullName;
+                info.ActionName = type.Name;
+
+                info.IsLong = typeof(ILong).IsAssignableFrom(type);
+                info.IsUndoable = typeof(IUndoable).IsAssignableFrom(type);
+                info.IsUserExecutable = typeof(IUserExecutable).IsAssignableFrom(type);
 
                 infosByFullName[type.FullName] = info;
             }
 
-            data.ActionInfos = infosByFullName.Values.ToList();
+            data.SerializedActionInfos = infosByFullName.Values.ToList();
+        }
+
+        /// <summary>
+        /// <br/>   Sorts SerializedActionInfo list by following priority:
+        /// <br/>   1. Context; infos with an invalid context will be moved to Unassigned context.
+        /// <br/>   2. IsUserExecutable; first user executable actions, then the rest.
+        /// <br/>   3. Based on Index or in other words the Action's order number in a Context.
+        /// <br/>   Also makes sure that all actions have proper indices in their corresponding contexts.
+        /// </summary>
+        private void SortSerializedActionInfoList(List<Context> validContexts)
+        {
+            data.SerializedActionInfos = data.SerializedActionInfos.
+            /* 1. */ OrderBy(info => validContexts.Contains(info.Context) ? info.Context : Context.Unassigned).
+            /* 2. */ ThenBy(info => !info.IsUserExecutable).
+            /* 3. */ ThenBy(info => info.Index).ToList();
+
+            // Remove gaps and duplicate indices
+            int currentIndex = 0;
+            Context currentContext = Context.Unassigned;
+            foreach (SerializedActionInfo info in data.SerializedActionInfos)
+            {
+                if (info.Context != currentContext)
+                {
+                    currentIndex = 0;
+                    currentContext = info.Context;
+                }
+
+                info.Index = currentIndex;
+
+                // Note: Index is divisible by 2 so that when its order can be changed more easily.
+                //       For example you can simply add 3 to an action's index so it goes forward once.
+                //       This way all following actions' indices don't have to be updated.
+                currentIndex += 2;
+            }
         }
 
         /// <summary>
@@ -406,7 +444,7 @@ namespace SpriteMapper
         private void UpdateFoldoutStates(List<Context> validContexts)
         {
             Dictionary<Context, bool> newStates = new();
-            validContexts.ForEach(c => newStates[c] = menuStates.ContainsKey(c) ? menuStates[c] : false);
+            validContexts.ForEach(c => newStates[c] = menuStates.ContainsKey(c) ? menuStates[c] : true);
             menuStates = newStates;
         }
 
@@ -447,14 +485,28 @@ namespace SpriteMapper
             return state;
         }
 
-        /// <summary> Handles the drawing and modification of a given action info. </summary>
-        private (bool remove, ActionInfo info) HandleActionInfoField(ActionInfo info, int pixelIndentation)
+        /// <summary> Handles the drawing and modification of a given ActionInfo. </summary>
+        private (bool remove, SerializedActionInfo info) HandleActionInfoField(SerializedActionInfo info)
         {
             bool remove = false;
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("", GUIStyle.none, GUILayout.Width(pixelIndentation));
             {
+                GUILayout.BeginVertical(GUILayout.Width(FIELD_HEIGHT));
+                {
+                    if (GUILayout.Button("Λ", button, GUILayout.Width(FIELD_HEIGHT),
+                        GUILayout.Height(FIELD_HEIGHT / 2 + S_PAD)))
+                    {
+                        info.Index -= 3;
+                    }
+                    if (GUILayout.Button("V", button, GUILayout.Width(FIELD_HEIGHT),
+                        GUILayout.Height(FIELD_HEIGHT / 2 + S_PAD)))
+                    {
+                        info.Index += 3;
+                    }
+                }
+                GUILayout.EndVertical();
+
                 GUI.backgroundColor = Color.white * (info == selectedInfo ? 1.25f : 1);
                 GUILayout.BeginHorizontal(field);
                 GUI.backgroundColor = Color.white;
@@ -491,7 +543,7 @@ namespace SpriteMapper
                     {
                         // TODO: Undo here
                         (bool focused, Shortcut newShortcut) = EditorInputControls.ShortcutField(rightRect, info.Shortcut);
-                        info.Rebind(newShortcut);
+                        info.Shortcut = newShortcut;
 
                         if (focused)
                         {

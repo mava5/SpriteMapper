@@ -4,7 +4,8 @@ using UnityEngine;
 
 namespace SpriteMapper.Actions
 {
-    public class Draw1 : Action, ILong, IUndoable
+    [ActionContext(Context.DrawImage)]
+    public class Draw : Action, ILong, IUndoable, IUserExecutable
     {
         public bool EndPredicate
         {
@@ -32,7 +33,7 @@ namespace SpriteMapper.Actions
 
         #region Action ================================================================== Action
 
-        public Draw1()
+        public Draw() : base()
         {
             newValues = new float[canvasSize, canvasSize];
             oldValues = new float[canvasSize, canvasSize];

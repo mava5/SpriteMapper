@@ -36,12 +36,14 @@ namespace SpriteMapper.Actions
             ActionHistory.SaveUndoStep(this);
         }
 
+        public override void Dispose() { createdImage.Dispose(); }
+        
         #endregion Action
 
 
         #region Undo Logic ============================================================== Undo Logic
 
-        public void Undo() { createdImage.Destroy(); }
+        public void Undo() { createdImage.Dispose(); }
 
         public void Redo() { CreateNewImage(); }
 

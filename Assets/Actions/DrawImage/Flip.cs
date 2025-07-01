@@ -1,6 +1,7 @@
 
 namespace SpriteMapper.Actions
 {
+    [ActionContext(Context.DrawImage)]
     public class Flip : Action, IUndoable, IUserExecutable
     {
         #region Action ================================================================== Action

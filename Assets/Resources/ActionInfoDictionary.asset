@@ -12,102 +12,94 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ff26fa5c4571fc643b9dc90513a3acf1, type: 3}
   m_Name: ActionInfoDictionary
   m_EditorClassIdentifier: 
-  actionInfos:
-  - <Context>k__BackingField: 0
-    <ActionName>k__BackingField: 
-    <ActionFullName>k__BackingField: 
-    <Description>k__BackingField: 
-    <IsLong>k__BackingField: 1
-    <IsUndoable>k__BackingField: 1
-    <IsUserExecutable>k__BackingField: 1
-    <Shortcut>k__BackingField:
-      Shift: 0
-      Ctrl: 0
-      Alt: 0
-      Cmd: 0
-      Binding: 
-    PointsToAnAction: 0
-  - <Context>k__BackingField: 0
-    <ActionName>k__BackingField: Flip
-    <ActionFullName>k__BackingField: SpriteMapper.Actions.Flip
-    <Description>k__BackingField: 
-    <IsLong>k__BackingField: 0
-    <IsUndoable>k__BackingField: 1
-    <IsUserExecutable>k__BackingField: 1
-    <Shortcut>k__BackingField:
-      Shift: 0
-      Ctrl: 0
-      Alt: 0
-      Cmd: 0
-      Binding: <Keyboard>/F
+  SerializedActionInfos:
+  - Index: 0
+    Context: 0
     PointsToAnAction: 1
-  - <Context>k__BackingField: 0
-    <ActionName>k__BackingField: NewImage
-    <ActionFullName>k__BackingField: SpriteMapper.Actions.NewImage
-    <Description>k__BackingField: 
-    <IsLong>k__BackingField: 0
-    <IsUndoable>k__BackingField: 1
-    <IsUserExecutable>k__BackingField: 1
-    <Shortcut>k__BackingField:
+    ActionName: NewImage
+    ActionFullName: SpriteMapper.Actions.NewImage
+    Description: 
+    IsLong: 0
+    IsUndoable: 1
+    IsUserExecutable: 1
+    Shortcut:
       Shift: 0
       Ctrl: 0
       Alt: 0
       Cmd: 0
       Binding: <Keyboard>/N
+  - Index: 0
+    Context: 1
     PointsToAnAction: 1
-  - <Context>k__BackingField: 0
-    <ActionName>k__BackingField: Draw1
-    <ActionFullName>k__BackingField: SpriteMapper.Actions.Draw1
-    <Description>k__BackingField: 
-    <IsLong>k__BackingField: 1
-    <IsUndoable>k__BackingField: 1
-    <IsUserExecutable>k__BackingField: 0
-    <Shortcut>k__BackingField:
-      Shift: 0
-      Ctrl: 0
-      Alt: 0
-      Cmd: 0
-      Binding: 
-    PointsToAnAction: 1
-  - <Context>k__BackingField: 1
-    <ActionName>k__BackingField: Draw
-    <ActionFullName>k__BackingField: SpriteMapper.Actions.Draw
-    <Description>k__BackingField: 
-    <IsLong>k__BackingField: 1
-    <IsUndoable>k__BackingField: 1
-    <IsUserExecutable>k__BackingField: 1
-    <Shortcut>k__BackingField:
-      Shift: 0
-      Ctrl: 0
-      Alt: 0
-      Cmd: 0
-      Binding: <Mouse>/LeftButton
-    PointsToAnAction: 1
-  - <Context>k__BackingField: 1
-    <ActionName>k__BackingField: Redo
-    <ActionFullName>k__BackingField: SpriteMapper.Actions.Redo
-    <Description>k__BackingField: 
-    <IsLong>k__BackingField: 0
-    <IsUndoable>k__BackingField: 0
-    <IsUserExecutable>k__BackingField: 1
-    <Shortcut>k__BackingField:
-      Shift: 0
-      Ctrl: 0
-      Alt: 0
-      Cmd: 0
-      Binding: <Keyboard>/Y
-    PointsToAnAction: 1
-  - <Context>k__BackingField: 1
-    <ActionName>k__BackingField: Undo
-    <ActionFullName>k__BackingField: SpriteMapper.Actions.Undo
-    <Description>k__BackingField: 
-    <IsLong>k__BackingField: 0
-    <IsUndoable>k__BackingField: 0
-    <IsUserExecutable>k__BackingField: 1
-    <Shortcut>k__BackingField:
+    ActionName: Undo
+    ActionFullName: SpriteMapper.Actions.Undo
+    Description: 
+    IsLong: 0
+    IsUndoable: 0
+    IsUserExecutable: 1
+    Shortcut:
       Shift: 0
       Ctrl: 0
       Alt: 0
       Cmd: 0
       Binding: <Keyboard>/Z
+  - Index: 2
+    Context: 1
     PointsToAnAction: 1
+    ActionName: Redo
+    ActionFullName: SpriteMapper.Actions.Redo
+    Description: 
+    IsLong: 0
+    IsUndoable: 0
+    IsUserExecutable: 1
+    Shortcut:
+      Shift: 0
+      Ctrl: 0
+      Alt: 0
+      Cmd: 0
+      Binding: <Keyboard>/Y
+  - Index: 0
+    Context: 2
+    PointsToAnAction: 1
+    ActionName: Draw
+    ActionFullName: SpriteMapper.Actions.Draw
+    Description: 
+    IsLong: 1
+    IsUndoable: 1
+    IsUserExecutable: 1
+    Shortcut:
+      Shift: 0
+      Ctrl: 0
+      Alt: 0
+      Cmd: 0
+      Binding: <Mouse>/LeftButton
+  - Index: 2
+    Context: 2
+    PointsToAnAction: 1
+    ActionName: Flip
+    ActionFullName: SpriteMapper.Actions.Flip
+    Description: 
+    IsLong: 0
+    IsUndoable: 1
+    IsUserExecutable: 1
+    Shortcut:
+      Shift: 0
+      Ctrl: 0
+      Alt: 0
+      Cmd: 0
+      Binding: <Keyboard>/F
+  - Index: 4
+    Context: 2
+    PointsToAnAction: 1
+    ActionName: Draw1
+    ActionFullName: SpriteMapper.Actions.Draw1
+    Description: 
+    IsLong: 1
+    IsUndoable: 1
+    IsUserExecutable: 0
+    Shortcut:
+      Shift: 0
+      Ctrl: 0
+      Alt: 0
+      Cmd: 0
+      Binding: 

@@ -1,4 +1,5 @@
 
+using System;
 using UnityEngine;
 
 
@@ -15,7 +16,7 @@ namespace SpriteMapper
     /// <br/>   The main building block for creating normal maps.
     /// <br/>   Can contain depth and / or normal data.
     /// </summary>
-    public abstract class Image
+    public abstract class Image : IDisposable
     {
         public ImageType Type { get; internal set; } = ImageType.None;
         
@@ -60,7 +61,7 @@ namespace SpriteMapper
         public abstract Texture2D GetDepthData();
         public abstract Texture2D GetNormalData();
 
-        public abstract void Destroy();
+        public abstract void Dispose();
 
         #endregion Public Methods
     }

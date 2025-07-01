@@ -4,8 +4,8 @@ using UnityEngine;
 
 namespace SpriteMapper.Actions
 {
-    [ActionContext(Context.Global)]
-    public class Draw : Action, ILong, IUndoable, IUserExecutable
+    [ActionContext(Context.DrawImage)]
+    public class Draw1 : Action, ILong, IUndoable
     {
         public bool EndPredicate
         {
@@ -33,7 +33,7 @@ namespace SpriteMapper.Actions
 
         #region Action ================================================================== Action
 
-        public Draw()
+        public Draw1()
         {
             newValues = new float[canvasSize, canvasSize];
             oldValues = new float[canvasSize, canvasSize];
@@ -41,8 +41,6 @@ namespace SpriteMapper.Actions
 
         public void Update()
         {
-            Debug.Log("Update");
-
             int radiusCeiled = Mathf.CeilToInt(brushRadius);
 
             Vector2 mousePos = Input.mousePosition;
@@ -74,13 +72,11 @@ namespace SpriteMapper.Actions
 
         public void Cancel()
         {
-            Debug.Log("Cancel");
+
         }
 
         public void End()
         {
-            Debug.Log("End");
-
             //for (int x = 0; x < canvasSize; x++)
             //{
             //    for (int y = 0; y < canvasSize; y++)

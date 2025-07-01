@@ -15,6 +15,7 @@ namespace SpriteMapper
 
         public static GUIHandler GUI => Instance.gui;
         public static DataHandler Data => Instance.data;
+        public static ActionHandler Action => Instance.action;
         public static ContextHandler Context => Instance.context;
         public static ControlsHandler Controls => Instance.controls;
         public static SelectionHandler Selection => Instance.selection;
@@ -22,6 +23,7 @@ namespace SpriteMapper
 
         private GUIHandler gui;
         private DataHandler data;
+        private ActionHandler action;
         private ContextHandler context;
         private ControlsHandler controls;
         private SelectionHandler selection;
@@ -37,6 +39,7 @@ namespace SpriteMapper
 
             gui = new GUIHandler();
             data = new DataHandler();
+            action = new ActionHandler();
             context = new ContextHandler();
             controls = new ControlsHandler();
             selection = new SelectionHandler();

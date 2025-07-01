@@ -17,7 +17,6 @@ namespace SpriteMapper
         public List<FunctionLayer> FunctionLayers { get; private set; } = new();
 
 
-
         #region Public Methods ==================================================================== Public Methods
 
         public Image CreateImage<T>(int width, int height) where T : Image
@@ -30,7 +29,7 @@ namespace SpriteMapper
         public void RemoveImage(Image imageToRemove)
         {
             Images.Remove(imageToRemove);
-            imageToRemove.Destroy();
+            imageToRemove.Dispose();
         }
 
         #endregion Public Methods

@@ -1,7 +1,4 @@
 
-using System;
-using System.Collections.Generic;
-
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -19,8 +16,6 @@ namespace SpriteMapper
         private bool altHeld = false;
         private bool cmdHeld = false;
 
-        private List<ILong> longActions = new();
-
 
         #region Initialization ============================================================================== Initialization
 
@@ -29,16 +24,10 @@ namespace SpriteMapper
         {
             InputActionMap actionMap = new("Shortcuts");
 
-            foreach (ActionInfo info in ActionInfoDictionary.Instance.ActionInfos)
+            foreach (ActionInfo info in ActionInfoDictionary.Data.Values)
             {
-                if (!info.PointsToAnAction)
-                {
-                    Debug.LogWarning($"{info.ActionName} [{info.ActionFullName}] doesn't point to an Action type!");
-                    continue;
-                }
-
                 InputAction inputAction =
-                    actionMap.AddAction(info.ActionFullName, InputActionType.Button, info.Shortcut.Binding);
+                    actionMap.AddAction(info.ActionType.FullName, InputActionType.Button, info.Shortcut.Binding);
 
                 inputAction.performed += callbackContext => { OnActionPerformed(callbackContext, info); };
             }
@@ -51,25 +40,13 @@ namespace SpriteMapper
 
         #region Public Methods ============================================================================== Public Methods
         
-        /// <summary> Updates control variables and each active <see cref="ILong"/> <see cref="Action"/>. </summary>
+        /// <summary> Updates control variables. </summary>
         public void Update()
         {
             shiftHeld = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
             ctrlHeld = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
             altHeld = Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt);
             cmdHeld = Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand);
-
-            // Handle long Actions
-            for (int i = 0; i < longActions.Count; i++)
-            {
-                ILong action = longActions[i];
-
-                // Cancel or end long action based on its corresponding predicates
-                if (action.CancelPredicate) { action.Cancel(); longActions.RemoveAt(i--); continue; }
-                else if (action.EndPredicate) { action.End(); longActions.RemoveAt(i--); continue; }
-
-                action.Update();
-            }
         }
 
         #endregion Public Methods
@@ -86,9 +63,7 @@ namespace SpriteMapper
                 (info.Shortcut.Alt && !altHeld) ||
                 (info.Shortcut.Cmd && !cmdHeld)) { return; }
 
-            Action action = (Action)Activator.CreateInstance(Type.GetType(info.ActionFullName));
-
-            if (info.IsLong) { longActions.Add((ILong)action); }
+            App.Action.Create(info);
         }
 
         #endregion Private Methods
