@@ -31,11 +31,9 @@ namespace SpriteMapper
 
         #region Initialization ========================================================== Initialization
 
-        private void Awake()
+        private void Start()
         {
             Instance = this;
-
-            ActionInfoDictionary.Initialize();
 
             gui = new GUIHandler();
             data = new DataHandler();

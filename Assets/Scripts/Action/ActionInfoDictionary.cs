@@ -30,12 +30,16 @@ namespace SpriteMapper
         /// </summary>
         public List<SerializedActionInfo> SerializedActionInfos = new();
 
+        /// <summary> Returns a <see cref="ActionInfo"/> for given <see cref="Action"/> type. </summary>
+        public ActionInfo this[Type actionType] => data.GetValueOrDefault(actionType, null);
 
-        public Dictionary<Type, ActionInfo> data { get; private set; } = new();
+
+        private Dictionary<Type, ActionInfo> data = new();
 
 
         #region Initialization ======================================================================================== Initialization
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         public static void Initialize()
         {
             // Get all ScriptableObjects from Unity Resources
@@ -48,35 +52,19 @@ namespace SpriteMapper
             {
                 Debug.LogWarning($"Multiple ActionInfoDictionaries in Unity Resources.");
             }
-            else { Instance = assets[0]; }
+            else { Instance = assets[0]; Instance.InitializeData(); }
         }
 
-        #endregion Initialization
-
-
-        #region Indexer =============================================================================================== Indexer
-
-        /// <summary> Returns a <see cref="ActionInfo"/> for given <see cref="Action"/> type. </summary>
-        public ActionInfo this[Type actionType]
+        private void InitializeData()
         {
-            get
+            // Initialize data based on serialized action infos
+            foreach (SerializedActionInfo info in SerializedActionInfos)
             {
-                // Initialize data dictionary if it's accessed for the first time
-                if (data.Count == 0)
-                {
-                    foreach (SerializedActionInfo info in SerializedActionInfos)
-                    {
-                        data.Add(Type.GetType(info.ActionFullName), new ActionInfo(info));
-                    }
-                }
-
-                if (!data.ContainsKey(actionType)) { return null; }
-
-                return data[actionType];
+                data.Add(Type.GetType(info.ActionFullName), new ActionInfo(info));
             }
         }
 
-        #endregion Indexer
+        #endregion Initialization
     }
 
 
@@ -151,7 +139,6 @@ namespace SpriteMapper
         public bool Shift = false;
         public bool Ctrl = false;
         public bool Alt = false;
-        public bool Cmd = false;
         public string Binding = "";
 
         /// <summary> User readable view of shortcut. </summary>
@@ -159,7 +146,6 @@ namespace SpriteMapper
             (Shift ? "Shift + " : "") +
             (Ctrl ? "Ctrl + " : "") +
             (Alt ? "Alt + " : "") +
-            (Cmd ? "Cmd + " : "") +
             (Binding.Contains("/") ? Binding.Split("/")[1] : "");
 
         /// <summary> Input System readable binding. </summary>

@@ -86,7 +86,7 @@ namespace SpriteMapper.Actions
             //}
 
             ApplyNewValues();
-            ActionHistory.SaveUndoStep(this);
+            App.Action.History.SaveUndoStep(this);
         }
 
         #endregion Action

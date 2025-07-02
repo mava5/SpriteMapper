@@ -1,7 +1,8 @@
 
 namespace SpriteMapper.Actions
 {
-    public class NewImage : Action, IUndoable, IUserExecutable
+    [ActionContext(Context.Global)]
+    public class NewImage : Action, IUndoable
     {
         private Image createdImage;
 
@@ -22,7 +23,7 @@ namespace SpriteMapper.Actions
 
             CreateNewImage();
 
-            ActionHistory.SaveUndoStep(this);
+            App.Action.History.SaveUndoStep(this);
         }
 
         public NewImage(ImageType imageType, int width, int height)
@@ -33,7 +34,7 @@ namespace SpriteMapper.Actions
 
             CreateNewImage();
 
-            ActionHistory.SaveUndoStep(this);
+            App.Action.History.SaveUndoStep(this);
         }
 
         public override void Dispose() { createdImage.Dispose(); }

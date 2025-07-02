@@ -19,7 +19,6 @@ public static class EditorInputControls
         { KeyCode.LeftShift,    false }, { KeyCode.RightShift,   false },
         { KeyCode.LeftControl,  false }, { KeyCode.RightControl, false },
         { KeyCode.LeftAlt,      false }, { KeyCode.RightAlt,     false },
-        { KeyCode.LeftCommand,  false }, { KeyCode.RightCommand, false },
         { KeyCode.AltGr,        false },
     };
 
@@ -170,7 +169,6 @@ public static class EditorInputControls
         shortcut.Shift =    heldModifierKeys[KeyCode.LeftShift]     || heldModifierKeys[KeyCode.RightShift];
         shortcut.Ctrl =     heldModifierKeys[KeyCode.LeftControl]   || heldModifierKeys[KeyCode.RightControl]   || heldModifierKeys[KeyCode.AltGr];
         shortcut.Alt =      heldModifierKeys[KeyCode.LeftAlt]       || heldModifierKeys[KeyCode.RightAlt]       || heldModifierKeys[KeyCode.AltGr];
-        shortcut.Cmd =      heldModifierKeys[KeyCode.LeftCommand]   || heldModifierKeys[KeyCode.RightCommand];
     }
 
     #endregion Private Methods

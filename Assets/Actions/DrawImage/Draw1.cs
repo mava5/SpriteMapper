@@ -25,7 +25,7 @@ namespace SpriteMapper.Actions
 
 
         private float brushRadius = 10f;
-        private int canvasSize = 200;
+        private int canvasSize = 512;
 
         private float[,] newValues;
         private float[,] oldValues;
@@ -86,7 +86,7 @@ namespace SpriteMapper.Actions
             //}
 
             ApplyNewValues();
-            ActionHistory.SaveUndoStep(this);
+            App.Action.History.SaveUndoStep(this);
         }
 
         #endregion Action

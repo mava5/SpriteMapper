@@ -14,21 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   SerializedActionInfos:
   - Index: 0
-    Context: 0
-    PointsToAnAction: 1
-    ActionName: NewImage
-    ActionFullName: SpriteMapper.Actions.NewImage
-    Description: 
-    IsLong: 0
-    IsUndoable: 1
-    IsUserExecutable: 1
-    Shortcut:
-      Shift: 0
-      Ctrl: 0
-      Alt: 0
-      Cmd: 0
-      Binding: <Keyboard>/N
-  - Index: 0
     Context: 1
     PointsToAnAction: 1
     ActionName: Undo
@@ -41,7 +26,6 @@ MonoBehaviour:
       Shift: 0
       Ctrl: 0
       Alt: 0
-      Cmd: 0
       Binding: <Keyboard>/Z
   - Index: 2
     Context: 1
@@ -56,8 +40,21 @@ MonoBehaviour:
       Shift: 0
       Ctrl: 0
       Alt: 0
-      Cmd: 0
       Binding: <Keyboard>/Y
+  - Index: 4
+    Context: 1
+    PointsToAnAction: 1
+    ActionName: NewImage
+    ActionFullName: SpriteMapper.Actions.NewImage
+    Description: 
+    IsLong: 0
+    IsUndoable: 1
+    IsUserExecutable: 0
+    Shortcut:
+      Shift: 0
+      Ctrl: 0
+      Alt: 0
+      Binding: <Keyboard>/N
   - Index: 0
     Context: 2
     PointsToAnAction: 1
@@ -71,7 +68,6 @@ MonoBehaviour:
       Shift: 0
       Ctrl: 0
       Alt: 0
-      Cmd: 0
       Binding: <Mouse>/LeftButton
   - Index: 2
     Context: 2
@@ -84,9 +80,8 @@ MonoBehaviour:
     IsUserExecutable: 1
     Shortcut:
       Shift: 0
-      Ctrl: 0
-      Alt: 0
-      Cmd: 0
+      Ctrl: 1
+      Alt: 1
       Binding: <Keyboard>/F
   - Index: 4
     Context: 2
@@ -101,5 +96,4 @@ MonoBehaviour:
       Shift: 0
       Ctrl: 0
       Alt: 0
-      Cmd: 0
       Binding: 

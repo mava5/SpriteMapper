@@ -9,7 +9,7 @@ namespace SpriteMapper.Actions
         public Flip()
         {
             FlipImage();
-            ActionHistory.SaveUndoStep(this);
+            App.Action.History.SaveUndoStep(this);
         }
 
         #endregion Action
