@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   SerializedActionInfos:
   - Index: 0
-    Context: 1
+    ActionContext: SpriteMapper.Context+Global
     PointsToAnAction: 1
     ActionName: Undo
     ActionFullName: SpriteMapper.Actions.Undo
@@ -28,7 +28,7 @@ MonoBehaviour:
       Alt: 0
       Binding: <Keyboard>/Z
   - Index: 2
-    Context: 1
+    ActionContext: SpriteMapper.Context+Global
     PointsToAnAction: 1
     ActionName: Redo
     ActionFullName: SpriteMapper.Actions.Redo
@@ -41,22 +41,8 @@ MonoBehaviour:
       Ctrl: 0
       Alt: 0
       Binding: <Keyboard>/Y
-  - Index: 4
-    Context: 1
-    PointsToAnAction: 1
-    ActionName: NewImage
-    ActionFullName: SpriteMapper.Actions.NewImage
-    Description: 
-    IsLong: 0
-    IsUndoable: 1
-    IsUserExecutable: 0
-    Shortcut:
-      Shift: 0
-      Ctrl: 0
-      Alt: 0
-      Binding: <Keyboard>/N
   - Index: 0
-    Context: 2
+    ActionContext: SpriteMapper.Context+ImageEditor+DrawImage
     PointsToAnAction: 1
     ActionName: Draw
     ActionFullName: SpriteMapper.Actions.Draw
@@ -70,7 +56,7 @@ MonoBehaviour:
       Alt: 0
       Binding: <Mouse>/LeftButton
   - Index: 2
-    Context: 2
+    ActionContext: SpriteMapper.Context+ImageEditor+DrawImage
     PointsToAnAction: 1
     ActionName: Flip
     ActionFullName: SpriteMapper.Actions.Flip
@@ -84,7 +70,21 @@ MonoBehaviour:
       Alt: 1
       Binding: <Keyboard>/F
   - Index: 4
-    Context: 2
+    ActionContext: SpriteMapper.Context+ImageEditor+DrawImage
+    PointsToAnAction: 1
+    ActionName: NewImage
+    ActionFullName: SpriteMapper.Actions.NewImage
+    Description: 
+    IsLong: 0
+    IsUndoable: 1
+    IsUserExecutable: 0
+    Shortcut:
+      Shift: 0
+      Ctrl: 0
+      Alt: 0
+      Binding: <Keyboard>/N
+  - Index: 6
+    ActionContext: SpriteMapper.Context+ImageEditor+DrawImage
     PointsToAnAction: 1
     ActionName: Draw1
     ActionFullName: SpriteMapper.Actions.Draw1

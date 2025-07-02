@@ -9,14 +9,14 @@ namespace SpriteMapper
     /// <br/>   Context changes based on chosen panel.
     /// <br/>   TODO: Instead of a Context enum, each panel type could be its own context?
     /// </summary>
-    public enum Context
-    {
-        Unassigned,
-        Global,
-        DrawImage,
-        MeshImage,
-        LayerView,
-    }
+    //public enum Context
+    //{
+    //    Unassigned,
+    //    Global,
+    //    DrawImage,
+    //    MeshImage,
+    //    LayerView,
+    //}
 
     /// <summary> Handles switching between different contexts. </summary>
     public class ContextHandler

@@ -72,7 +72,7 @@ namespace SpriteMapper
     public class ActionInfo
     {
         /// <summary> The context, in which action can be used. </summary>
-        public readonly Context Context;
+        public readonly string ActionContext;
 
         /// <summary> The type of the action the info points to. </summary>
         public readonly Type ActionType;
@@ -90,7 +90,7 @@ namespace SpriteMapper
 
         public ActionInfo(SerializedActionInfo serializedInfo)
         {
-            Context = serializedInfo.Context;
+            ActionContext = serializedInfo.ActionContext;
             ActionType = Type.GetType(serializedInfo.ActionFullName);
             Description = serializedInfo.Description;
 
@@ -116,7 +116,7 @@ namespace SpriteMapper
     public class SerializedActionInfo
     {
         public int Index = 0;
-        public Context Context = Context.Unassigned;
+        public string ActionContext = Context.Default;
         
         public bool PointsToAnAction = false;
         public string ActionName = "";
@@ -168,7 +168,7 @@ namespace SpriteMapper
         private ActionInfoDictionary data;
 
         // Keeps track of each context's foldout menu open state
-        private static Dictionary<Context, bool> menuStates = new();
+        private static Dictionary<string, bool> menuStates = new();
 
         private static SerializedActionInfo selectedInfo = null;
 
@@ -290,7 +290,7 @@ namespace SpriteMapper
 
         private void HandleScrollViewGUI()
         {
-            List<Context> validContexts = ((Context[])Enum.GetValues(typeof(Context))).ToList();
+            List<string> validContexts = GetContexts();
             UpdateFoldoutStates(validContexts);
 
             UpdateSerializedActionInfoListContents();
@@ -306,14 +306,14 @@ namespace SpriteMapper
             scroll = GUILayout.BeginScrollView(scroll, scrollView, GUILayout.Width(width), GUILayout.Height(scrollViewHeight));
             {
                 // Draw Context foldout menus
-                foreach (Context context in validContexts)
+                foreach (string context in validContexts)
                 {
                     menuStates[context] = HandleCustomFoldout(menuStates[context], context.ToString());
 
                     // Go through all SerializedActionInfos in current valid context
                     SerializedActionInfo info;
                     while (infoIndex < data.SerializedActionInfos.Count &&
-                        (info = data.SerializedActionInfos[infoIndex]).Context == context)
+                        (info = data.SerializedActionInfos[infoIndex]).ActionContext == context)
                     {
                         // Don't draw Context foldout menu's contents if it's closed
                         if (!menuStates[context]) { infoIndex++; continue; }
@@ -365,15 +365,15 @@ namespace SpriteMapper
             foreach (Type type in Assembly.GetExecutingAssembly().GetTypes())
             {
                 // Only check for action classes
-                if (!type.IsClass || string.IsNullOrEmpty(type.Namespace) ||
-                    !type.Namespace.StartsWith("SpriteMapper.Actions")) { continue; }
+                if (!type.IsClass || string.IsNullOrEmpty(type.FullName) ||
+                    !type.FullName.StartsWith("SpriteMapper.Actions.")) { continue; }
 
 
                 // Use pre-existing SerializedActionInfo if there is one, otherwise create a new one
                 if (!infosByFullName.TryGetValue(type.FullName, out SerializedActionInfo info)) { info = new(); }
 
-                info.Context = type.HasAttribute<ActionContext>() ?
-                    type.GetCustomAttribute<ActionContext>().Context : Context.Unassigned;
+                info.ActionContext = type.HasAttribute<UserExecutable>() ?
+                    type.GetCustomAttribute<UserExecutable>().ActionContext : Context.Default;
 
                 info.PointsToAnAction = true;
                 info.ActionFullName = type.FullName;
@@ -396,22 +396,22 @@ namespace SpriteMapper
         /// <br/>   3. Based on Index or in other words the Action's order number in a Context.
         /// <br/>   Also makes sure that all actions have proper indices in their corresponding contexts.
         /// </summary>
-        private void SortSerializedActionInfoList(List<Context> validContexts)
+        private void SortSerializedActionInfoList(List<string> validContexts)
         {
             data.SerializedActionInfos = data.SerializedActionInfos.
-            /* 1. */ OrderBy(info => validContexts.Contains(info.Context) ? info.Context : Context.Unassigned).
+            /* 1. */ OrderBy(info => validContexts.Contains(info.ActionContext) ? info.ActionContext : Context.Default).
             /* 2. */ ThenBy(info => !info.IsUserExecutable).
             /* 3. */ ThenBy(info => info.Index).ToList();
 
             // Remove gaps and duplicate indices
             int currentIndex = 0;
-            Context currentContext = Context.Unassigned;
+            string currentContext = typeof(Context.Global).FullName;
             foreach (SerializedActionInfo info in data.SerializedActionInfos)
             {
-                if (info.Context != currentContext)
+                if (info.ActionContext != currentContext)
                 {
                     currentIndex = 0;
-                    currentContext = info.Context;
+                    currentContext = info.ActionContext;
                 }
 
                 info.Index = currentIndex;
@@ -427,9 +427,9 @@ namespace SpriteMapper
         /// <br/>   Makes sure each valid context has a foldout menu state.
         /// <br/>   Uses previously saved state or defaults to false.
         /// </summary>
-        private void UpdateFoldoutStates(List<Context> validContexts)
+        private void UpdateFoldoutStates(List<string> validContexts)
         {
-            Dictionary<Context, bool> newStates = new();
+            Dictionary<string, bool> newStates = new();
             validContexts.ForEach(c => newStates[c] = menuStates.ContainsKey(c) ? menuStates[c] : true);
             menuStates = newStates;
         }
@@ -444,6 +444,25 @@ namespace SpriteMapper
 
 
         #region Private Methods ======================================================================================= Private Methods
+
+        /// <summary> Returns list of each <see cref="Context"/> FullName. </summary>
+        private List<string> GetContexts()
+        {
+            List<string> contexts = new();
+
+            // Go through each Action type and add their infos to the list
+            foreach (Type type in Assembly.GetExecutingAssembly().GetTypes())
+            {
+                // Only check for action classes
+                if (!type.IsClass || string.IsNullOrEmpty(type.FullName) ||
+                    !type.FullName.StartsWith("SpriteMapper.Context+")) { continue; }
+
+                contexts.Add(type.FullName);
+            }
+
+            return contexts;
+        }
+
 
         /// <summary> Handles a modified foldout menu that better aligns in a HelpBox. </summary>
         private bool HandleCustomFoldout(bool state, string title)

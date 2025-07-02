@@ -1,7 +1,7 @@
 
 namespace SpriteMapper.Actions
 {
-    [ActionContext(Context.Global)]
+    [UserExecutable(typeof(Context.ImageEditor.DrawImage))]
     public class NewImage : Action, IUndoable
     {
         private Image createdImage;
