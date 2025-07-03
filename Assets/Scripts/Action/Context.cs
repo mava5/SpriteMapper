@@ -35,6 +35,8 @@ namespace SpriteMapper
 
         public class Properties : CM<Properties> { }
 
+        public class Preview : CM<Preview> { }
+
 
         /// <summary>
         /// <br/>   Inherited by each <see cref="Context"/>.
