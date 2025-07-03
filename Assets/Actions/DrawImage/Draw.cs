@@ -5,7 +5,7 @@ using UnityEngine;
 namespace SpriteMapper.Actions
 {
     [UserExecutable(typeof(Context.ImageEditor.DrawImage))]
-    public class Draw : Action, ILong, IUndoable, IUserExecutable
+    public class Draw : Action, ILong, IUndoable
     {
         public bool EndPredicate
         {
@@ -86,7 +86,7 @@ namespace SpriteMapper.Actions
             //}
 
             ApplyNewValues();
-            App.Action.History.SaveUndoStep(this);
+            App.Project.Action.History.SaveUndoStep(this);
         }
 
         #endregion Action

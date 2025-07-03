@@ -23,7 +23,7 @@ namespace SpriteMapper.Actions
 
             CreateNewImage();
 
-            App.Action.History.SaveUndoStep(this);
+            App.Project.Action.History.SaveUndoStep(this);
         }
 
         public NewImage(ImageType imageType, int width, int height)
@@ -34,7 +34,7 @@ namespace SpriteMapper.Actions
 
             CreateNewImage();
 
-            App.Action.History.SaveUndoStep(this);
+            App.Project.Action.History.SaveUndoStep(this);
         }
 
         public override void Dispose() { createdImage.Dispose(); }
@@ -57,8 +57,8 @@ namespace SpriteMapper.Actions
         {
             switch (imageType)
             {
-                case ImageType.Draw: createdImage = App.Data.CreateImage<DrawImage>(width, height); break;
-                case ImageType.Mesh: createdImage = App.Data.CreateImage<MeshImage>(width, height); break;
+                case ImageType.Draw: createdImage = App.Project.Data.CreateImage<DrawImage>(width, height); break;
+                case ImageType.Mesh: createdImage = App.Project.Data.CreateImage<MeshImage>(width, height); break;
             }
         }
 

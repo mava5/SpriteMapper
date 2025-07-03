@@ -2,14 +2,14 @@
 namespace SpriteMapper.Actions
 {
     [UserExecutable(typeof(Context.ImageEditor.DrawImage))]
-    public class Flip : Action, IUndoable, IUserExecutable
+    public class Flip : Action, IUndoable
     {
         #region Action ================================================================== Action
 
         public Flip()
         {
             FlipImage();
-            App.Action.History.SaveUndoStep(this);
+            App.Project.Action.History.SaveUndoStep(this);
         }
 
         #endregion Action

@@ -2,8 +2,8 @@
 namespace SpriteMapper.Actions
 {
     [UserExecutable(typeof(Context.Global))]
-    public class Undo : Action, IUserExecutable
+    public class Undo : Action
     {
-        public Undo() { App.Action.History.Undo(); }
+        public Undo() { App.Project.Action.History.Undo(); }
     }
 }

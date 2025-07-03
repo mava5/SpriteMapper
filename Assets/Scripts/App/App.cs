@@ -1,58 +1,59 @@
 
+using System.Collections.Generic;
+using SpriteMapper.Actions;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 
 namespace SpriteMapper
 {
     /// <summary>
-    /// <br/>   Main class for managing the application.
-    /// <br/>   Contains and manages different types of handlers.
-    /// <br/>   These handlers in turn take care of different parts of the application.
+    /// <br/>   Contains each open <see cref="SpriteMapper.Project"/> and information about application.
+    /// <br/>   Also contains <see cref="ControlsHandler"/> as all projects have the same control scheme.
     /// </summary>
-    public class App : MonoBehaviour
+    public static class App
     {
-        public static App Instance { get; private set; }
+        public static List<Project> OpenProjects { get; private set; } = new();
+        
+        /// <summary> Currently open <see cref="SpriteMapper.Project"/>. </summary>
+        public static Project Project { get; private set; }
 
-        public static GUIHandler GUI => Instance.gui;
-        public static DataHandler Data => Instance.data;
-        public static ActionHandler Action => Instance.action;
-        public static ContextHandler Context => Instance.context;
-        public static ControlsHandler Controls => Instance.controls;
-        public static SelectionHandler Selection => Instance.selection;
+        public static readonly ControlsHandler Controls = new();
 
 
-        private GUIHandler gui;
-        private DataHandler data;
-        private ActionHandler action;
-        private ContextHandler context;
-        private ControlsHandler controls;
-        private SelectionHandler selection;
+        #region App Initialization ================================================================ App Initialization
 
-
-        #region Initialization ========================================================== Initialization
-
-        private void Start()
+        /// <summary> Sets up application before first scene loads. </summary>
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void InitializeApp()
         {
-            Instance = this;
+            ActionInfoDictionary.Initialize();
+            Controls.Initialize();
 
-            gui = new GUIHandler();
-            data = new DataHandler();
-            action = new ActionHandler();
-            context = new ContextHandler();
-            controls = new ControlsHandler();
-            selection = new SelectionHandler();
+            UpdateCaller.SubscribeUpdateCallback(Update);
         }
 
-        #endregion Initialization
+        #endregion
 
 
-        #region Update Loop ============================================================= Update Loop
+        #region Update Loop ======================================================================= Update Loop
 
-        private void Update()
+        private static void Update()
         {
             Controls.Update();
+            if (Project != null) { Project.Update(); }
         }
 
         #endregion Update Loop
+
+
+        #region Public Methods ==================================================================== Public Methods
+
+        public static void OpenProject(Project projectToOpen)
+        {
+
+        }
+
+        #endregion Public Methods
     }
 }

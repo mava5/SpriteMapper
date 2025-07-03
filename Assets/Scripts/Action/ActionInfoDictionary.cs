@@ -39,7 +39,6 @@ namespace SpriteMapper
 
         #region Initialization ======================================================================================== Initialization
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         public static void Initialize()
         {
             // Get all ScriptableObjects from Unity Resources
@@ -60,6 +59,8 @@ namespace SpriteMapper
             // Initialize data based on serialized action infos
             foreach (SerializedActionInfo info in SerializedActionInfos)
             {
+                if (!info.PointsToAnAction) { continue; }
+
                 data.Add(Type.GetType(info.ActionFullName), new ActionInfo(info));
             }
         }
@@ -308,7 +309,7 @@ namespace SpriteMapper
                 // Draw Context foldout menus
                 foreach (string context in validContexts)
                 {
-                    menuStates[context] = HandleCustomFoldout(menuStates[context], context.ToString());
+                    menuStates[context] = HandleCustomFoldout(menuStates[context], context);
 
                     // Go through all SerializedActionInfos in current valid context
                     SerializedActionInfo info;
@@ -381,7 +382,7 @@ namespace SpriteMapper
 
                 info.IsLong = typeof(ILong).IsAssignableFrom(type);
                 info.IsUndoable = typeof(IUndoable).IsAssignableFrom(type);
-                info.IsUserExecutable = typeof(IUserExecutable).IsAssignableFrom(type);
+                info.IsUserExecutable = type.HasAttribute<UserExecutable>();
 
                 infosByFullName[type.FullName] = info;
             }
@@ -405,7 +406,7 @@ namespace SpriteMapper
 
             // Remove gaps and duplicate indices
             int currentIndex = 0;
-            string currentContext = typeof(Context.Global).FullName;
+            string currentContext = Context.Global.Name;
             foreach (SerializedActionInfo info in data.SerializedActionInfos)
             {
                 if (info.ActionContext != currentContext)

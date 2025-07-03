@@ -19,7 +19,7 @@ namespace SpriteMapper
         #region Initialization ============================================================================== Initialization
 
         /// <summary> Creates an <see cref="InputAction"/> for each stored <see cref="ActionInfo"/>. </summary>
-        public ControlsHandler()
+        public void Initialize()
         {
             InputActionMap actionMap = new("Shortcuts");
 
@@ -27,7 +27,7 @@ namespace SpriteMapper
 
             foreach (ActionInfo info in ActionInfoDictionary.Data.Values)
             {
-                Debug.Log(info.Shortcut.Binding);
+                Debug.Log(info.ActionType + ", " + info.Shortcut.Binding);
                 InputAction inputAction =
                     actionMap.AddAction(info.ActionType.FullName, InputActionType.Button, info.Shortcut.Binding);
 

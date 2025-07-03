@@ -77,7 +77,7 @@ MonoBehaviour:
     Description: 
     IsLong: 0
     IsUndoable: 1
-    IsUserExecutable: 0
+    IsUserExecutable: 1
     Shortcut:
       Shift: 0
       Ctrl: 0
@@ -91,7 +91,7 @@ MonoBehaviour:
     Description: 
     IsLong: 1
     IsUndoable: 1
-    IsUserExecutable: 0
+    IsUserExecutable: 1
     Shortcut:
       Shift: 0
       Ctrl: 0

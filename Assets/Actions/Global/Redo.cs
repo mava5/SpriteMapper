@@ -2,8 +2,8 @@
 namespace SpriteMapper.Actions
 {
     [UserExecutable(typeof(Context.Global))]
-    public class Redo : Action, IUserExecutable
+    public class Redo : Action
     {
-        public Redo() { App.Action.History.Redo(); }
+        public Redo() { App.Project.Action.History.Redo(); }
     }
 }
