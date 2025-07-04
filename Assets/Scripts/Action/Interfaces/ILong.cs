@@ -2,11 +2,11 @@
 namespace SpriteMapper
 {
     /// <summary>
-    /// <br/>   Interface used to create long actions.
+    /// <br/>   Interface used to create a long <see cref="Action"/>.
     /// <br/>   
     /// <br/>   A long action:
-    /// <br/>   • begins upon creation, gets updated each frame and ends,
-    /// <br/>   • has its changes applied only when it ends,
+    /// <br/>   • begins upon creation, gets updated each frame and ends
+    /// <br/>   • has its changes applied only when it ends
     /// <br/>   • can get cancelled
     /// <br/>   → Cancelled action's don't apply any changes.
     /// </summary>
@@ -24,6 +24,12 @@ namespace SpriteMapper
         /// </summary>
         public bool CancelPredicate { get; }
 
+
+        /// <summary>
+        /// <br/>   Gets called after action creation.
+        /// <br/>   Should return a boolean, which tells if action successfully began.
+        /// </summary>
+        bool Begin();
 
         /// <summary>
         /// <br/>   Gets called each MonoBehaviour Update().

@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace SpriteMapper.Actions
 {
-    [UserExecutable(typeof(Context.ImageEditor.DrawImage))]
+    [ActionUsedIn(typeof(Context.Viewport.DrawImage))]
     public class Draw1 : Action, ILong, IUndoable
     {
         public bool EndPredicate
@@ -33,10 +33,12 @@ namespace SpriteMapper.Actions
 
         #region Action ================================================================== Action
 
-        public Draw1()
+        public bool Begin()
         {
             newValues = new float[canvasSize, canvasSize];
             oldValues = new float[canvasSize, canvasSize];
+
+            return true;
         }
 
         public void Update()
@@ -86,7 +88,7 @@ namespace SpriteMapper.Actions
             //}
 
             ApplyNewValues();
-            App.Project.Action.History.SaveUndoStep(this);
+            App.Project.History.SaveUndoStep(this);
         }
 
         #endregion Action

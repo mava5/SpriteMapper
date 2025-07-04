@@ -1,15 +1,15 @@
 
+using System.Collections;
 using System.Collections.Generic;
-using SpriteMapper.Actions;
+
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 
 namespace SpriteMapper
 {
     /// <summary>
     /// <br/>   Contains each open <see cref="SpriteMapper.Project"/> and information about application.
-    /// <br/>   Also contains <see cref="ControlsHandler"/> as all projects have the same control scheme.
+    /// <br/>   Also contains <see cref="ActionHandler"/> as all projects have the same control scheme.
     /// </summary>
     public static class App
     {
@@ -18,7 +18,7 @@ namespace SpriteMapper
         /// <summary> Currently open <see cref="SpriteMapper.Project"/>. </summary>
         public static Project Project { get; private set; }
 
-        public static readonly ControlsHandler Controls = new();
+        public static readonly ActionHandler Controls = new();
 
 
         #region App Initialization ================================================================ App Initialization

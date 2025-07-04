@@ -6,6 +6,6 @@ namespace SpriteMapper.Panels
 {
     public class PreviewPanel : Panel
     {
-        public override string PanelContext => Context.Preview.Name;
+        public override string PanelContext => Context.Viewport.Preview.Name;
     }
 }

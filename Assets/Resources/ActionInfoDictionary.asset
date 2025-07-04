@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   SerializedActionInfos:
   - Index: 0
-    ActionContext: SpriteMapper.Context+Global
+    ActionContext: /Global
     PointsToAnAction: 1
     ActionName: Undo
     ActionFullName: SpriteMapper.Actions.Undo
@@ -27,8 +27,22 @@ MonoBehaviour:
       Ctrl: 0
       Alt: 0
       Binding: <Keyboard>/Z
-  - Index: 2
-    ActionContext: SpriteMapper.Context+Global
+  - Index: 0
+    ActionContext: /Viewport/DrawImage
+    PointsToAnAction: 1
+    ActionName: Draw
+    ActionFullName: SpriteMapper.Actions.Draw
+    Description: 
+    IsLong: 1
+    IsUndoable: 1
+    IsUserExecutable: 1
+    Shortcut:
+      Shift: 0
+      Ctrl: 0
+      Alt: 0
+      Binding: <Mouse>/LeftButton
+  - Index: 0
+    ActionContext: /Global
     PointsToAnAction: 1
     ActionName: Redo
     ActionFullName: SpriteMapper.Actions.Redo
@@ -42,21 +56,7 @@ MonoBehaviour:
       Alt: 0
       Binding: <Keyboard>/Y
   - Index: 0
-    ActionContext: SpriteMapper.Context+ImageEditor+DrawImage
-    PointsToAnAction: 1
-    ActionName: Draw
-    ActionFullName: SpriteMapper.Actions.Draw
-    Description: 
-    IsLong: 1
-    IsUndoable: 1
-    IsUserExecutable: 1
-    Shortcut:
-      Shift: 0
-      Ctrl: 0
-      Alt: 0
-      Binding: <Mouse>/LeftButton
-  - Index: 2
-    ActionContext: SpriteMapper.Context+ImageEditor+DrawImage
+    ActionContext: /Viewport/DrawImage
     PointsToAnAction: 1
     ActionName: Flip
     ActionFullName: SpriteMapper.Actions.Flip
@@ -69,8 +69,8 @@ MonoBehaviour:
       Ctrl: 1
       Alt: 1
       Binding: <Keyboard>/F
-  - Index: 4
-    ActionContext: SpriteMapper.Context+ImageEditor+DrawImage
+  - Index: 2
+    ActionContext: /Viewport/DrawImage
     PointsToAnAction: 1
     ActionName: NewImage
     ActionFullName: SpriteMapper.Actions.NewImage
@@ -83,8 +83,8 @@ MonoBehaviour:
       Ctrl: 0
       Alt: 0
       Binding: <Keyboard>/N
-  - Index: 6
-    ActionContext: SpriteMapper.Context+ImageEditor+DrawImage
+  - Index: 4
+    ActionContext: /Viewport/DrawImage
     PointsToAnAction: 1
     ActionName: Draw1
     ActionFullName: SpriteMapper.Actions.Draw1

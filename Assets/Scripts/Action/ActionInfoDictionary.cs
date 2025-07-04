@@ -69,46 +69,6 @@ namespace SpriteMapper
     }
 
 
-    /// <summary> Contains necessary information for an <see cref="Action"/>. </summary>
-    public class ActionInfo
-    {
-        /// <summary> The context, in which action can be used. </summary>
-        public readonly string ActionContext;
-
-        /// <summary> The type of the action the info points to. </summary>
-        public readonly Type ActionType;
-
-        /// <summary> Explanation for how the action works, used for action's tooltip. </summary>
-        public readonly string Description;
-
-        public readonly bool IsLong;
-        public readonly bool IsUndoable;
-        public readonly bool IsUserExecutable;
-
-        /// <summary> Shortcut for executing an <see cref="IUserExecutable"/> action. </summary>
-        public Shortcut Shortcut { get; private set; } = null;
-
-
-        public ActionInfo(SerializedActionInfo serializedInfo)
-        {
-            ActionContext = serializedInfo.ActionContext;
-            ActionType = Type.GetType(serializedInfo.ActionFullName);
-            Description = serializedInfo.Description;
-
-            IsLong = serializedInfo.IsLong;
-            IsUndoable = serializedInfo.IsUndoable;
-            IsUserExecutable = serializedInfo.IsUserExecutable;
-
-            Shortcut = serializedInfo.Shortcut;
-        }
-
-
-        /// <summary> Rebinds the action's shortcut. </summary>
-        public void Rebind(Shortcut newShortcut)
-        { if (IsUserExecutable) { Shortcut = newShortcut; } }
-    }
-
-
     /// <summary>
     /// <br/>   Serializes <see cref="Action"/> specific information.
     /// <br/>   Gets turned into a <see cref="ActionInfo"/> in runtime.
@@ -130,33 +90,6 @@ namespace SpriteMapper
         public bool IsUserExecutable = false;
 
         public Shortcut Shortcut = null;
-    }
-
-
-    /// <summary> Shortcut used by an <see cref="IUserExecutable"/> <see cref="Action"/>. </summary>
-    [Serializable]
-    public class Shortcut
-    {
-        public bool Shift = false;
-        public bool Ctrl = false;
-        public bool Alt = false;
-        public string Binding = "";
-
-        /// <summary> User readable view of shortcut. </summary>
-        public string View =>
-            (Shift ? "Shift + " : "") +
-            (Ctrl ? "Ctrl + " : "") +
-            (Alt ? "Alt + " : "") +
-            (Binding.Contains("/") ? Binding.Split("/")[1] : "");
-
-        /// <summary> Input System readable binding. </summary>
-        // Code help from: https://stackoverflow.com/a/21755933
-        public string InputBinding =>
-            string.IsNullOrEmpty(Binding) ?
-                "" :
-                (Binding.Length == 1 ?
-                    char.ToLower(Binding[0]).ToString() :
-                    char.ToLower(Binding[0]) + Binding[1..]);
     }
 
 
@@ -373,8 +306,8 @@ namespace SpriteMapper
                 // Use pre-existing SerializedActionInfo if there is one, otherwise create a new one
                 if (!infosByFullName.TryGetValue(type.FullName, out SerializedActionInfo info)) { info = new(); }
 
-                info.ActionContext = type.HasAttribute<UserExecutable>() ?
-                    type.GetCustomAttribute<UserExecutable>().ActionContext : Context.Default;
+                info.ActionContext = type.HasAttribute<ActionUsedIn>() ?
+                    type.GetCustomAttribute<ActionUsedIn>().ActionContext : Context.Default;
 
                 info.PointsToAnAction = true;
                 info.ActionFullName = type.FullName;
@@ -382,7 +315,7 @@ namespace SpriteMapper
 
                 info.IsLong = typeof(ILong).IsAssignableFrom(type);
                 info.IsUndoable = typeof(IUndoable).IsAssignableFrom(type);
-                info.IsUserExecutable = type.HasAttribute<UserExecutable>();
+                info.IsUserExecutable = type.HasAttribute<ActionUsedIn>();
 
                 infosByFullName[type.FullName] = info;
             }

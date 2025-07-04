@@ -16,6 +16,8 @@ namespace SpriteMapper
         public readonly ActionHandler Action = new();
         public readonly SelectionHandler Selection = new();
 
+        public readonly ActionHistory History = new();
+
 
         #region Update Loop ============================================================= Update Loop
 

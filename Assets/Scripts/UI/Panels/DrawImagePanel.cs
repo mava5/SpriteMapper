@@ -6,6 +6,6 @@ namespace SpriteMapper.Panels
 {
     public class DrawImagePanel : Panel
     {
-        public override string PanelContext => Context.ImageEditor.DrawImage.Name;
+        public override string PanelContext => Context.Viewport.DrawImage.Name;
     }
 }
