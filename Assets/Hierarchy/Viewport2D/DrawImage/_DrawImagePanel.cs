@@ -2,7 +2,7 @@
 using UnityEngine;
 
 
-namespace SpriteMapper.Panels
+namespace SpriteMapper.Panels.Viewport
 {
     public class DrawImagePanel : Panel
     {

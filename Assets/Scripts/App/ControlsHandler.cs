@@ -70,7 +70,7 @@ namespace SpriteMapper
                 // Go through each action in queue until one succeeds or begins successfully
                 foreach (ActionInfo info in queue)
                 {
-                    if (info.IsQuick && ((IQuick)Create(queue.Dequeue())).Do()) { break; }
+                    if (info.IsShort && ((IShort)Create(queue.Dequeue())).Do()) { break; }
                     if (info.IsLong && ((ILong)Create(queue.Dequeue())).Begin()) { break; }
                 }
             }

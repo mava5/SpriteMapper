@@ -20,7 +20,7 @@ namespace SpriteMapper
         public readonly string Description;
 
         public readonly bool IsLong;
-        public readonly bool IsQuick;
+        public readonly bool IsShort;
         public readonly bool IsUndoable;
         public readonly bool IsUserExecutable;
 
