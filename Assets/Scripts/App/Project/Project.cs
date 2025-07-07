@@ -11,6 +11,9 @@ namespace SpriteMapper
     /// </summary>
     public class Project
     {
+        public Panel FocusedPanel { get; private set; }
+        public Tool EquipedTool { get; private set; }
+
         public readonly GUIHandler GUI = new();
         public readonly DataHandler Data = new();
         public readonly ActionHandler Action = new();

@@ -85,13 +85,27 @@ MonoBehaviour:
       Binding: <Keyboard>/N
   - Index: 4
     ActionContext: /Viewport/DrawImage
-    PointsToAnAction: 1
+    PointsToAnAction: 0
     ActionName: Draw1
     ActionFullName: SpriteMapper.Actions.Draw1
     Description: 
     IsLong: 1
     IsUndoable: 1
     IsUserExecutable: 1
+    Shortcut:
+      Shift: 0
+      Ctrl: 0
+      Alt: 0
+      Binding: 
+  - Index: 0
+    ActionContext: SpriteMapper.Context+Global
+    PointsToAnAction: 1
+    ActionName: OpenContextMenu
+    ActionFullName: SpriteMapper.Actions.Global.OpenContextMenu
+    Description: 
+    IsLong: 0
+    IsUndoable: 0
+    IsUserExecutable: 0
     Shortcut:
       Shift: 0
       Ctrl: 0

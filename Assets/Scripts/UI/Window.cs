@@ -1,4 +1,6 @@
 
+using System.Collections.Generic;
+
 using UnityEngine;
 
 
@@ -10,6 +12,7 @@ namespace SpriteMapper
     /// </summary>
     public class Window
     {
-
+        public Window Parent;
+        public List<Window> Children;
     }
 }
