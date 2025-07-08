@@ -27,8 +27,8 @@ namespace SpriteMapper
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void InitializeApp()
         {
-            ActionInfoDictionary.Initialize();
-            Controls.Initialize();
+            HierarchyInfoDictionary.Initialize();
+            //Controls.Initialize();
 
             UpdateCaller.SubscribeUpdateCallback(Update);
         }

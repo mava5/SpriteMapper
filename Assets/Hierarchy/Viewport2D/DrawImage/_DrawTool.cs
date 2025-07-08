@@ -2,10 +2,9 @@
 using UnityEngine;
 
 
-namespace SpriteMapper.Actions
+namespace SpriteMapper.Actions.Viewport2D.DrawImage
 {
-    [ActionUsedIn(typeof(Context.Viewport.DrawImage))]
-    public class Draw : Action, ILong, IUndoable
+    public class DrawTool : Action, ILong, IUndoable
     {
         public bool EndPredicate
         {

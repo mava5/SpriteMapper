@@ -2,7 +2,7 @@
 using UnityEngine;
 
 
-namespace SpriteMapper.Panels
+namespace SpriteMapper.Panels.Viewport3D
 {
     /// <summary> A viewport panel that uses 3D navigation and visuals. </summary>
     public class Viewport3DPanel : Panel

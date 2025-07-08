@@ -1,7 +1,6 @@
 
-namespace SpriteMapper.Actions
+namespace SpriteMapper.Global
 {
-    [ActionUsedIn(typeof(Context.Viewport.DrawImage))]
     public class NewImage : Action, IUndoable
     {
         private Image createdImage;

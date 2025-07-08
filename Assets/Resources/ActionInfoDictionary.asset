@@ -13,101 +13,177 @@ MonoBehaviour:
   m_Name: ActionInfoDictionary
   m_EditorClassIdentifier: 
   SerializedActionInfos:
-  - Index: 0
-    ActionContext: /Global
-    PointsToAnAction: 1
-    ActionName: Undo
-    ActionFullName: SpriteMapper.Actions.Undo
+  - Index: 2
+    Context: No Type
+    Name: 
+    FullName: 
+    PointsToType: 0
     Description: 
     IsLong: 0
+    IsShort: 0
     IsUndoable: 0
-    IsUserExecutable: 1
+    IsShortcutExecutable: 0
+    Priority: 0
+    Shortcut:
+      Shift: 0
+      Ctrl: 0
+      Alt: 0
+      Binding: 
+  - Index: 2
+    Context: Global
+    Name: Undo
+    FullName: SpriteMapper.Actions.Global.Undo
+    PointsToType: 1
+    Description: 
+    IsLong: 0
+    IsShort: 1
+    IsUndoable: 0
+    IsShortcutExecutable: 1
+    Priority: 1
     Shortcut:
       Shift: 0
       Ctrl: 0
       Alt: 0
       Binding: <Keyboard>/Z
-  - Index: 0
-    ActionContext: /Viewport/DrawImage
-    PointsToAnAction: 1
-    ActionName: Draw
-    ActionFullName: SpriteMapper.Actions.Draw
-    Description: 
-    IsLong: 1
-    IsUndoable: 1
-    IsUserExecutable: 1
-    Shortcut:
-      Shift: 0
-      Ctrl: 0
-      Alt: 0
-      Binding: <Mouse>/LeftButton
-  - Index: 0
-    ActionContext: /Global
-    PointsToAnAction: 1
-    ActionName: Redo
-    ActionFullName: SpriteMapper.Actions.Redo
+  - Index: 4
+    Context: Global
+    Name: Redo
+    FullName: SpriteMapper.Actions.Global.Redo
+    PointsToType: 1
     Description: 
     IsLong: 0
+    IsShort: 1
     IsUndoable: 0
-    IsUserExecutable: 1
+    IsShortcutExecutable: 1
+    Priority: 1
     Shortcut:
       Shift: 0
       Ctrl: 0
       Alt: 0
       Binding: <Keyboard>/Y
-  - Index: 0
-    ActionContext: /Viewport/DrawImage
-    PointsToAnAction: 1
-    ActionName: Flip
-    ActionFullName: SpriteMapper.Actions.Flip
+  - Index: 6
+    Context: Global
+    Name: OpenContextMenuShort
+    FullName: SpriteMapper.Actions.Global.OpenContextMenuShort
+    PointsToType: 1
     Description: 
     IsLong: 0
-    IsUndoable: 1
-    IsUserExecutable: 1
-    Shortcut:
-      Shift: 0
-      Ctrl: 1
-      Alt: 1
-      Binding: <Keyboard>/F
-  - Index: 2
-    ActionContext: /Viewport/DrawImage
-    PointsToAnAction: 1
-    ActionName: NewImage
-    ActionFullName: SpriteMapper.Actions.NewImage
-    Description: 
-    IsLong: 0
-    IsUndoable: 1
-    IsUserExecutable: 1
+    IsShort: 1
+    IsUndoable: 0
+    IsShortcutExecutable: 0
+    Priority: 0
     Shortcut:
       Shift: 0
       Ctrl: 0
       Alt: 0
-      Binding: <Keyboard>/N
-  - Index: 4
-    ActionContext: /Viewport/DrawImage
-    PointsToAnAction: 0
-    ActionName: Draw1
-    ActionFullName: SpriteMapper.Actions.Draw1
+      Binding: 
+  - Index: 8
+    Context: Global
+    Name: OpenContextMenuLong
+    FullName: SpriteMapper.Actions.Global.OpenContextMenuLong
+    PointsToType: 1
     Description: 
     IsLong: 1
-    IsUndoable: 1
-    IsUserExecutable: 1
+    IsShort: 0
+    IsUndoable: 0
+    IsShortcutExecutable: 0
+    Priority: 0
     Shortcut:
       Shift: 0
       Ctrl: 0
       Alt: 0
       Binding: 
-  - Index: 0
-    ActionContext: SpriteMapper.Context+Global
-    PointsToAnAction: 1
-    ActionName: OpenContextMenu
-    ActionFullName: SpriteMapper.Actions.Global.OpenContextMenu
+  - Index: 2
+    Context: Viewport2D.DrawImage
+    Name: FlipTool
+    FullName: SpriteMapper.Actions.Viewport2D.DrawImage.FlipTool
+    PointsToType: 1
     Description: 
     IsLong: 0
-    IsUndoable: 0
-    IsUserExecutable: 0
+    IsShort: 0
+    IsUndoable: 1
+    IsShortcutExecutable: 1
+    Priority: 1
     Shortcut:
       Shift: 0
       Ctrl: 0
       Alt: 0
-      Binding: 
+      Binding: <Keyboard>/F
+  - Index: 4
+    Context: Viewport2D.DrawImage
+    Name: DrawTool
+    FullName: SpriteMapper.Actions.Viewport2D.DrawImage.DrawTool
+    PointsToType: 1
+    Description: 
+    IsLong: 1
+    IsShort: 0
+    IsUndoable: 1
+    IsShortcutExecutable: 1
+    Priority: 1
+    Shortcut:
+      Shift: 0
+      Ctrl: 0
+      Alt: 0
+      Binding: <Keyboard>/P
+  SerializedPanelInfos:
+  - Index: 2
+    Context: No Type
+    Name: Viewport2DPanel
+    FullName: SpriteMapper.Panels.Viewport2DPanel
+    PointsToType: 0
+    Description: 
+  - Index: 4
+    Context: No Type
+    Name: Viewport3DPanel
+    FullName: SpriteMapper.Panels.Viewport3DPanel
+    PointsToType: 0
+    Description: 
+  - Index: 6
+    Context: No Type
+    Name: MeshImagePanel
+    FullName: SpriteMapper.Panels.Viewport3D.MeshImagePanel
+    PointsToType: 0
+    Description: 
+  - Index: 8
+    Context: No Type
+    Name: DrawImagePanel
+    FullName: SpriteMapper.Panels.Viewport2D.DrawImagePanel
+    PointsToType: 0
+    Description: 
+  - Index: 10
+    Context: No Type
+    Name: PreviewPanel
+    FullName: SpriteMapper.Panels.Viewport3D.PreviewPanel
+    PointsToType: 0
+    Description: 
+  - Index: 2
+    Context: Viewport2D
+    Name: Viewport2DPanel
+    FullName: SpriteMapper.Panels.Viewport2D.Viewport2DPanel
+    PointsToType: 1
+    Description: 
+  - Index: 2
+    Context: Viewport2D.DrawImage
+    Name: DrawImagePanel
+    FullName: SpriteMapper.Panels.Viewport2D.DrawImage.DrawImagePanel
+    PointsToType: 1
+    Description: 
+  - Index: 2
+    Context: Viewport3D
+    Name: Viewport3DPanel
+    FullName: SpriteMapper.Panels.Viewport3D.Viewport3DPanel
+    PointsToType: 1
+    Description: 
+  - Index: 2
+    Context: Viewport3D.MeshImage
+    Name: MeshImagePanel
+    FullName: SpriteMapper.Panels.Viewport3D.MeshImage.MeshImagePanel
+    PointsToType: 1
+    Description: 
+  - Index: 2
+    Context: Viewport3D.Preview
+    Name: PreviewPanel
+    FullName: SpriteMapper.Panels.Viewport3D.Preview.PreviewPanel
+    PointsToType: 1
+    Description: 
+  SerializedToolInfos: []

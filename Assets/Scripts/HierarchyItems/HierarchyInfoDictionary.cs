@@ -7,8 +7,6 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 using Unity.VisualScripting;
-using System.Collections;
-using static UnityEngine.Rendering.DebugUI;
 
 
 namespace SpriteMapper
@@ -69,18 +67,18 @@ namespace SpriteMapper
             // Initialize data based on serialized infos
             foreach (SerializedActionInfo actionInfo in SerializedActionInfos)
             {
-                if (actionInfo.PointsToAnAction)
+                if (actionInfo.PointsToType)
                 {
-                    actionInfos.Add(Type.GetType(actionInfo.ActionFullName), new ActionInfo(actionInfo));
+                    actionInfos.Add(Type.GetType(actionInfo.FullName), new ActionInfo(actionInfo));
                 }
             }
             foreach (SerializedPanelInfo panelInfo in SerializedPanelInfos)
             {
-                panelInfos.Add(Type.GetType(panelInfo.PanelFullName), new PanelInfo(panelInfo));
+                //panelInfos.Add(Type.GetType(panelInfo.FullName), new PanelInfo(panelInfo));
             }
             foreach (SerializedToolInfo toolInfo in SerializedToolInfos)
             {
-                actionInfos.Add(Type.GetType(toolInfo.ToolFullName), new ToolInfo(toolInfo));
+                //actionInfos.Add(Type.GetType(toolInfo.FullName), new ToolInfo(toolInfo));
             }
         }
 
@@ -116,6 +114,7 @@ namespace SpriteMapper
     public class SerializedActionInfo : SerializedHierarchyItemInfo
     {
         public bool IsLong = false;
+        public bool IsShort = false;
         public bool IsUndoable = false;
         public bool IsShortcutExecutable = false;
 
@@ -148,6 +147,8 @@ namespace SpriteMapper
 
         private static Vector2 scroll = new();
 
+        private static bool showActions = true, showPanels = true, showTools = true;
+
         
         private const int TOP_BAR_HEIGHT = 40;
         private const int PROPERTIES_HEIGHT = 200;
@@ -161,6 +162,8 @@ namespace SpriteMapper
         private const int S_PAD = 3;
 
         private int width = 0, height = 0;
+        private HashSet<string> contexts = new();
+
         private bool guiStylesInitialized = false;
 
         private GUIStyle normalPadding;
@@ -204,6 +207,7 @@ namespace SpriteMapper
                 smallText.margin = zeroRect;
                 smallText.fixedHeight = 0;
                 smallText.fixedWidth = 0;
+                smallText.alignment = TextAnchor.MiddleCenter;
                 smallText.normal.textColor = new(0.6f, 0.6f, 0.6f);
 
                 button = EditorStyles.miniButton;
@@ -221,6 +225,7 @@ namespace SpriteMapper
 
             width = Mathf.Max(Mathf.RoundToInt(EditorGUIUtility.currentViewWidth), 0) - PAD * 2;
             height = Screen.height - 170 - PAD * 2;
+            contexts.Clear();
 
             GUILayout.BeginVertical(normalPadding);
             {
@@ -242,17 +247,20 @@ namespace SpriteMapper
         private void HandleTopBarGUI()
         {
             GUILayout.BeginHorizontal(GUILayout.Height(TOP_BAR_HEIGHT - PAD));
+            {
+                showPanels = GUILayout.Toggle(showPanels, "Panels", button,
+                    GUILayout.Width((width - 2 * PAD) / 3), GUILayout.Height(TOP_BAR_HEIGHT - PAD));
 
-            /*showUserActions =*/ GUILayout.Toggle(true, "", button,
-                GUILayout.Width((width - PAD) / 2), GUILayout.Height(TOP_BAR_HEIGHT - PAD),
-                GUILayout.MinWidth(0), GUILayout.MinHeight(0));
+                GUILayout.Label("", GUIStyle.none, GUILayout.Width(PAD));
 
-            GUILayout.Label("", GUIStyle.none, GUILayout.Width(PAD));
+                showActions = GUILayout.Toggle(showActions, "Actions", button,
+                    GUILayout.Width((width - 2 * PAD) / 3), GUILayout.Height(TOP_BAR_HEIGHT - PAD));
 
-            /*showNonUserActions =*/ GUILayout.Toggle(true, "", button,
-                GUILayout.Width((width - PAD) / 2), GUILayout.Height(TOP_BAR_HEIGHT - PAD),
-                GUILayout.MinWidth(0), GUILayout.MinHeight(0));
+                GUILayout.Label("", GUIStyle.none, GUILayout.Width(PAD));
 
+                showTools = GUILayout.Toggle(showTools, "Tools", button,
+                    GUILayout.Width((width - 2 * PAD) / 3), GUILayout.Height(TOP_BAR_HEIGHT - PAD));
+            }
             GUILayout.EndHorizontal();
 
             GUILayout.Space(PAD);
@@ -266,51 +274,115 @@ namespace SpriteMapper
         private void HandleScrollViewGUI()
         {
             UpdateSerializedHierarchyItemInfoLists();
-            SortSerializedHierarchyItemInfoLists();
+            data.SerializedActionInfos = GetSortedHierarchyItemInfoList(data.SerializedActionInfos);
+            data.SerializedPanelInfos = GetSortedHierarchyItemInfoList(data.SerializedPanelInfos);
+            data.SerializedToolInfos = GetSortedHierarchyItemInfoList(data.SerializedToolInfos);
 
-            List<string> validContexts = GetContexts();
-            UpdateFoldoutStates(validContexts);
+            contexts = Enumerable.ToHashSet(
+                contexts.OrderBy(context =>
+                {
+                    return context switch
+                    {
+                        "Wrong Context" => "",
+                        "No Type" => " ",
+                        "Global" => "  ",
+                        _ => context
+                    };
+                }));
 
-
-
-            int actionInfoIndex = 0;
-            int panelInfoIndex = 0;
-            int toolInfoIndex = 0;
+            UpdateFoldoutStates(contexts);
 
             int scrollViewHeight = height - TOP_BAR_HEIGHT - (selectedInfo != null ? PROPERTIES_HEIGHT : 0);
             scrollViewHeight = Mathf.Max(scrollViewHeight, MIN_SCROLL_VIEW_HEIGHT);
 
 
+            string lastClosedContext = "NULL";
+            int actionIndex = 0;
+            int panelIndex = 0;
+            int toolIndex = 0;
+
             scroll = GUILayout.BeginScrollView(scroll, scrollView, GUILayout.Width(width), GUILayout.Height(scrollViewHeight));
             {
                 // Draw Context foldout menus
-                foreach (string context in validContexts)
+                foreach (string context in contexts)
                 {
-                    menuStates[context] = HandleCustomFoldout(menuStates[context], context);
+                    // Don't open child contexts of a closed context
+                    if (context.StartsWith(lastClosedContext)) { continue; }
 
-                    // Go through all SerializedActionInfos in current valid context
-                    SerializedActionInfo info;
-                    while (infoIndex < data.SerializedActionInfos.Count &&
-                        (info = data.SerializedActionInfos[infoIndex]).ActionContext == context)
+
+                    int currentDepth = context.Count(c => c == '.');
+                    int pixelIndent = currentDepth * INDENT_WIDTH;
+                    menuStates[context] = ContextFoldout(menuStates[context], context, pixelIndent);
+
+                    if (!menuStates[context])
                     {
-                        // Don't draw Context foldout menu's contents if it's closed
-                        if (!menuStates[context]) { infoIndex++; continue; }
+                        lastClosedContext = context;
+                        GUILayout.Space(PAD);
+
+                        while (actionIndex < data.SerializedActionInfos.Count &&
+                            data.SerializedActionInfos[actionIndex].Context.StartsWith(lastClosedContext)) { actionIndex++; }
+                        
+                        while (panelIndex < data.SerializedPanelInfos.Count &&
+                            data.SerializedPanelInfos[panelIndex].Context.StartsWith(lastClosedContext)) { panelIndex++; }
+
+                        while (toolIndex < data.SerializedToolInfos.Count &&
+                            data.SerializedToolInfos[toolIndex].Context.StartsWith(lastClosedContext)) { toolIndex++; }
+
+                        continue;
+                    }
 
 
-                        if ((info.IsUserExecutable && showUserActions) || (!info.IsUserExecutable && showNonUserActions))
+                    // Panels ------------------------------------------------------------------------------- Panels
+
+                    SerializedPanelInfo panelInfo;
+                    while (panelIndex < data.SerializedPanelInfos.Count &&
+                        (panelInfo = data.SerializedPanelInfos[panelIndex]).Context == context)
+                    {
+                        if (showPanels)
                         {
                             GUILayout.Space(S_PAD);
-                            bool remove;
-                            (remove, data.SerializedActionInfos[infoIndex]) = HandleActionInfoField(info);
+                            data.SerializedPanelInfos[panelIndex] = HierarchyItemInfoField(panelInfo, pixelIndent);
                         }
-                        infoIndex++;
+                        panelIndex++;
                     }
+
+
+                    // Actions ------------------------------------------------------------------------------ Actions
+
+                    SerializedActionInfo actionInfo;
+                    while (actionIndex < data.SerializedActionInfos.Count &&
+                        (actionInfo = data.SerializedActionInfos[actionIndex]).Context == context)
+                    {
+                        if (showActions)
+                        {
+                            GUILayout.Space(S_PAD);
+                            data.SerializedActionInfos[actionIndex] = ActionInfoField(actionInfo, pixelIndent);
+                        }
+                        actionIndex++;
+                    }
+
+
+                    // Tools -------------------------------------------------------------------------------- Tools
+
+                    SerializedToolInfo toolInfo;
+                    while (toolIndex < data.SerializedToolInfos.Count &&
+                        (toolInfo = data.SerializedToolInfos[toolIndex]).Context == context)
+                    {
+                        if (showTools)
+                        {
+                            GUILayout.Space(S_PAD);
+                            data.SerializedToolInfos[toolIndex] = HierarchyItemInfoField(toolInfo, pixelIndent);
+                        }
+                        toolIndex++;
+                    }
+
 
                     GUILayout.Space(PAD);
                 }
             }
             GUILayout.EndScrollView();
         }
+
 
         /// <summary>
         /// <br/>   Update serialized Action, Panel and Tool lists so that:
@@ -333,9 +405,9 @@ namespace SpriteMapper
             // Assume that infos don't point to a type
             // Later when iterating through types with reflection, we can reassign the boolean
             // This way the infos that don't point to any type will be easily differentiated
-            foreach (var i in data.SerializedActionInfos) { actionInfosByFullName[i.FullName] = i; i.PointsToType = false; }
-            foreach (var i in data.SerializedPanelInfos) { panelInfosByFullName[i.FullName] = i; i.PointsToType = false; }
-            foreach (var i in data.SerializedToolInfos) { toolInfosByFullName[i.FullName] = i; i.PointsToType = false; }
+            foreach (var i in data.SerializedActionInfos) { actionInfosByFullName[i.FullName] = i; i.PointsToType = false; i.Context = "No Type"; }
+            foreach (var i in data.SerializedPanelInfos) { panelInfosByFullName[i.FullName] = i; i.PointsToType = false; i.Context = "No Type"; }
+            foreach (var i in data.SerializedToolInfos) { toolInfosByFullName[i.FullName] = i; i.PointsToType = false; i.Context = "No Type"; }
 
 
             // Go through each Action, Panel and Tool type and add their infos to the list
@@ -351,15 +423,15 @@ namespace SpriteMapper
 
                 if (fullName.StartsWith("SpriteMapper.Actions."))
                 {
-                    if (!actionInfosByFullName.TryGetValue(fullName, out var actionInfo)) { actionInfo = new(); }
+                    if (!actionInfosByFullName.TryGetValue(fullName, out SerializedActionInfo actionInfo)) { actionInfo = new(); }
 
                     actionInfo.Context = FullNameToContext(fullName);
-
                     actionInfo.Name = name;
                     actionInfo.FullName = fullName;
                     actionInfo.PointsToType = true;
 
                     actionInfo.IsLong = typeof(ILong).IsAssignableFrom(type);
+                    actionInfo.IsShort = typeof(IShort).IsAssignableFrom(type);
                     actionInfo.IsUndoable = typeof(IUndoable).IsAssignableFrom(type);
                     actionInfo.IsShortcutExecutable = !type.HasAttribute<NotShortcutExecutable>();
 
@@ -370,8 +442,9 @@ namespace SpriteMapper
                 }
                 else if (fullName.StartsWith("SpriteMapper.Panels."))
                 {
-                    if (!panelInfosByFullName.TryGetValue(fullName, out var panelInfo)) { panelInfo = new(); }
+                    if (!panelInfosByFullName.TryGetValue(fullName, out SerializedPanelInfo panelInfo)) { panelInfo = new(); }
 
+                    panelInfo.Context = FullNameToContext(fullName);
                     panelInfo.Name = name;
                     panelInfo.FullName = fullName;
                     panelInfo.PointsToType = true;
@@ -380,8 +453,9 @@ namespace SpriteMapper
                 }
                 else if (fullName.StartsWith("SpriteMapper.Tools."))
                 {
-                    if (!toolInfosByFullName.TryGetValue(fullName, out var toolInfo)) { toolInfo = new(); }
+                    if (!toolInfosByFullName.TryGetValue(fullName, out SerializedToolInfo toolInfo)) { toolInfo = new(); }
 
+                    toolInfo.Context = FullNameToContext(fullName);
                     toolInfo.Name = name;
                     toolInfo.FullName = fullName;
                     toolInfo.PointsToType = true;
@@ -395,70 +469,67 @@ namespace SpriteMapper
             data.SerializedToolInfos = toolInfosByFullName.Values.ToList();
         }
 
+
         /// <summary>
-        /// <br/>   Sorts serialized Action, Panel and Tool lists by following priority:
-        /// <br/>   1 Context (shortened namespace of hierarchy item)
-        /// <br/>   2 [Action only] IsShortcutExecutable
-        /// <br/>   3 Index (hierarchy item's order number in a context)
-        /// <br/>   Also removes gaps and duplicates from hierarchy items' indices.
+        /// <br/>   Returns a sorted and cleaned version of given hierarchy item info list.
+        /// <br/>   Also updates available contexts list when sorting through different contexts.
         /// </summary>
-        private void SortSerializedHierarchyItemInfoLists()
+        private List<T> GetSortedHierarchyItemInfoList<T>(List<T> infos) where T : SerializedHierarchyItemInfo
         {
-            data.SerializedActionInfos = data.SerializedActionInfos.
-            /* 1 */ OrderBy(info => info.Context).
-            /* 2 */ ThenBy(info => !info.IsShortcutExecutable).
-            /* 3 */ ThenBy(info => info.Index).ToList();
+            infos = infos.
+                OrderBy(info =>
+                {
+                    contexts.Add(info.Context);
+                    return info.Context switch
+                    {
+                        "Wrong Context" => "",
+                        "No Type"       => " ",
+                        "Global"        => "  ",
+                        _ => info.Context
+                    };
+                }).
+                ThenBy(info =>
+                {
+                    return true switch
+                    {
+                        true when typeof(SerializedPanelInfo).IsAssignableFrom(info.GetType())  => 0,
+                        true when typeof(SerializedActionInfo).IsAssignableFrom(info.GetType()) &&
+                        (info as SerializedActionInfo).IsShortcutExecutable                     => 1,
+                        true when typeof(SerializedActionInfo).IsAssignableFrom(info.GetType()) => 2,
+                        true when typeof(SerializedToolInfo).IsAssignableFrom(info.GetType())   => 3,
+                        _ => int.MaxValue
+                    };
+                }).
+                ThenBy(info => info.Index).ToList();
 
-            data.SerializedPanelInfos = data.SerializedPanelInfos.
-            /* 1 */ OrderBy(info => info.Context).
-            /* 3 */ ThenBy(info => info.Index).ToList();
-
-            data.SerializedToolInfos = data.SerializedToolInfos.
-            /* 1 */ OrderBy(info => info.Context).
-            /* 3 */ ThenBy(info => info.Index).ToList();
-
-
-            // Note: Index is divisible by 2 so that when its order can be changed more easily.
-            //       For example you can simply add 3 to an action's index so it goes forward once.
-            //       This way all following actions' indices don't have to be updated.
-
-            // Remove gaps and duplicate indices
-            int currentIndex = 0; string currentContext = "";
-            foreach (SerializedActionInfo actionInfo in data.SerializedActionInfos)
+            // Remove duplicates and gaps from hierarchy items' indices
+            int currentIndex = 0;
+            string currentContext = "";
+            foreach (SerializedHierarchyItemInfo info in infos)
             {
-                if (actionInfo.Context != currentContext)
-                { currentIndex = 0; currentContext = actionInfo.Context; }
+                if (info.Context != currentContext)
+                { currentIndex = 0; currentContext = info.Context; }
 
-                actionInfo.Index = currentIndex += 2;
+                info.Index = currentIndex += 2;
             }
 
-            currentIndex = 0; currentContext = "";
-            foreach (SerializedPanelInfo panelInfo in data.SerializedPanelInfos)
-            {
-                if (panelInfo.Context != currentContext)
-                { currentIndex = 0; currentContext = panelInfo.Context; }
-
-                panelInfo.Index = currentIndex += 2;
-            }
-
-            currentIndex = 0; currentContext = "";
-            foreach (SerializedToolInfo toolInfo in data.SerializedToolInfos)
-            {
-                if (toolInfo.Context != currentContext)
-                { currentIndex = 0; currentContext = toolInfo.Context; }
-
-                toolInfo.Index = currentIndex += 2;
-            }
+            return infos;
         }
 
+
         /// <summary>
-        /// <br/>   Makes sure each valid context has a foldout menu state.
+        /// <br/>   Makes sure each context has a foldout menu state.
         /// <br/>   Uses previously saved state or defaults to false.
         /// </summary>
-        private void UpdateFoldoutStates(List<string> validContexts)
+        private void UpdateFoldoutStates(HashSet<string> contexts)
         {
             Dictionary<string, bool> newStates = new();
-            validContexts.ForEach(c => newStates[c] = menuStates.ContainsKey(c) ? menuStates[c] : true);
+            
+            foreach (string context in contexts)
+            {
+                newStates[context] = menuStates.ContainsKey(context) ? menuStates[context] : false;
+            }
+
             menuStates = newStates;
         }
 
@@ -483,24 +554,28 @@ namespace SpriteMapper
             // X "Actions.Global.Undo"
             // X "SpriteMapper.Actions"
             // X "SpriteMapper.Global.Undo"
+            // X "SpriteMapper.Actions.Undo"
             // ✓ "SpriteMapper.Actions.Global.Undo"
-            if (!fullName.StartsWith("SpriteMapper.Actions.") ||
-                !fullName.StartsWith("SpriteMapper.Panels.") ||
-                !fullName.StartsWith("SpriteMapper.Tools."))
+            if ((!fullName.StartsWith("SpriteMapper.Actions.") &&
+                !fullName.StartsWith("SpriteMapper.Panels.") &&
+                !fullName.StartsWith("SpriteMapper.Tools.")) ||
+                fullName.Count(c => c == '.') <= 2)
             {
                 Debug.LogWarning($"Hierarchy item {fullName} has invalid namespace!");
-                return "ERROR";
+                return "Wrong Context";
             }
 
-            return fullName[fullName["SpriteMapper.".Length..].IndexOf(".")..fullName.LastIndexOf(".")];
+            return fullName[(fullName.IndexOf(".", fullName.IndexOf(".") + 1) + 1)..fullName.LastIndexOf(".")];
         }
 
 
-        /// <summary> Handles a modified foldout menu that better aligns in a HelpBox. </summary>
-        private bool HandleCustomFoldout(bool state, string title)
+        /// <summary> Handles drawing and opening of a context foldout menu. </summary>
+        private bool ContextFoldout(bool state, string title, int pixelIndent)
         {
             GUILayout.BeginHorizontal();
             {
+                GUILayout.Label("", GUIStyle.none, GUILayout.Width(pixelIndent));
+
                 GUI.backgroundColor = new(0.8f, 0.8f, 0.8f);
                 GUILayout.BeginHorizontal(field);
                 GUI.backgroundColor = Color.white;
@@ -522,21 +597,22 @@ namespace SpriteMapper
             return state;
         }
 
-        /// <summary> Handles the drawing and modification of a given ActionInfo. </summary>
-        private (bool remove, SerializedActionInfo info) HandleActionInfoField(SerializedActionInfo info)
-        {
-            bool remove = false;
 
+        /// <summary> Handles the drawing and modification of a given SerializedActionInfo. </summary>
+        private SerializedActionInfo ActionInfoField(SerializedActionInfo info, int pixelIndent)
+        {
             GUILayout.BeginHorizontal();
             {
-                GUILayout.BeginVertical(GUILayout.Width(FIELD_HEIGHT));
+                GUILayout.Label("", GUIStyle.none, GUILayout.Width(pixelIndent));
+
+                GUILayout.BeginVertical(GUILayout.Width(ORDER_ARROW_WIDTH));
                 {
-                    if (GUILayout.Button("Λ", button, GUILayout.Width(FIELD_HEIGHT),
+                    if (GUILayout.Button("Λ", button, GUILayout.Width(ORDER_ARROW_WIDTH),
                         GUILayout.Height(FIELD_HEIGHT / 2 + S_PAD)))
                     {
                         info.Index -= 3;
                     }
-                    if (GUILayout.Button("V", button, GUILayout.Width(FIELD_HEIGHT),
+                    if (GUILayout.Button("V", button, GUILayout.Width(ORDER_ARROW_WIDTH),
                         GUILayout.Height(FIELD_HEIGHT / 2 + S_PAD)))
                     {
                         info.Index += 3;
@@ -548,35 +624,37 @@ namespace SpriteMapper
                 GUILayout.BeginHorizontal(field);
                 GUI.backgroundColor = Color.white;
                 {
-                    GUILayout.Label(new GUIContent(info.IsLong ? "L" : "", (info.IsLong ? "Is" : "Not") + " ILong"),
-                        smallText, GUILayout.Width(10));
-                    GUILayout.Label(new GUIContent(info.IsUndoable ? "U" : "", (info.IsUndoable ? "Is" : "Not") + " IUndoable"),
-                        smallText, GUILayout.Width(10));
+                    GUILayout.Label(new GUIContent(
+                        info.IsLong ? "L" :
+                        info.IsShort ? "S" :
+                        "?",
+                        info.IsLong ? "Long action" :
+                        info.IsShort ? "Short action" :
+                        "Action not long or short"), smallText, GUILayout.Width(10));
 
-                    if (GUILayout.Button(new GUIContent(info.ActionName, info.Description), EditorStyles.label,
-                        GUILayout.Width(100), GUILayout.Height(FIELD_HEIGHT), GUILayout.MinWidth(0)))
-                    {
-                        if (info != selectedInfo)   { selectedInfo = info; }
-                        else                        { selectedInfo = null; }
-                    }
+                    GUILayout.Label(new GUIContent(
+                        info.IsUndoable ? "U" : "",
+                        info.IsUndoable ? "Undoable action" : ""), smallText, GUILayout.Width(10));
 
+
+                    SelectableInfoLabel(info);
 
                     GUILayout.Label("", GUIStyle.none, GUILayout.Height(FIELD_HEIGHT), GUILayout.ExpandWidth(true));
                     Rect rightRect = GUILayoutUtility.GetLastRect();
                     rightRect.height = FIELD_HEIGHT;
 
-                    if (!info.PointsToAnAction)
-                    {
-                        rightRect.width -= FIELD_HEIGHT;
-                        GUI.Label(rightRect, "Action not found");
+                    //if (!info.PointsToType)
+                    //{
+                    //    rightRect.width -= FIELD_HEIGHT;
+                    //    GUI.Label(rightRect, "Action not found");
 
-                        rightRect.x += rightRect.width;
-                        rightRect.width = FIELD_HEIGHT;
-                        GUI.backgroundColor = new(1.6f, 0.8f, 0.8f);
-                        if (GUI.Button(rightRect, "X")) { remove = true; }
-                        GUI.backgroundColor = Color.white;
-                    }
-                    else if (info.IsUserExecutable)
+                    //    rightRect.x += rightRect.width;
+                    //    rightRect.width = FIELD_HEIGHT;
+                    //    GUI.backgroundColor = new(1.6f, 0.8f, 0.8f);
+                    //    if (GUI.Button(rightRect, "X")) { remove = true; }
+                    //    GUI.backgroundColor = Color.white;
+                    //}
+                    if (info.IsShortcutExecutable)
                     {
                         // TODO: Undo here
                         (bool focused, Shortcut newShortcut) = EditorInputControls.ShortcutField(rightRect, info.Shortcut);
@@ -596,7 +674,54 @@ namespace SpriteMapper
             }
             GUILayout.EndHorizontal();
 
-            return (remove, info);
+            return info;
+        }
+
+        /// <summary> Handles the drawing and modification of a given SerializedHierarchyItemInfo. </summary>
+        private T HierarchyItemInfoField<T>(T info, int pixelIndent) where T : SerializedHierarchyItemInfo
+        {
+            GUILayout.BeginHorizontal();
+            {
+                GUILayout.Label("", GUIStyle.none, GUILayout.Width(pixelIndent));
+
+                GUILayout.BeginVertical(GUILayout.Width(ORDER_ARROW_WIDTH));
+                {
+                    if (GUILayout.Button("Λ", button, GUILayout.Width(ORDER_ARROW_WIDTH),
+                        GUILayout.Height(FIELD_HEIGHT / 2 + S_PAD)))
+                    {
+                        info.Index -= 3;
+                    }
+                    if (GUILayout.Button("V", button, GUILayout.Width(ORDER_ARROW_WIDTH),
+                        GUILayout.Height(FIELD_HEIGHT / 2 + S_PAD)))
+                    {
+                        info.Index += 3;
+                    }
+                }
+                GUILayout.EndVertical();
+
+                GUI.backgroundColor = Color.white * (info == selectedInfo ? 1.25f : 1);
+                GUILayout.BeginHorizontal(field);
+                GUI.backgroundColor = Color.white;
+                {
+                    SelectableInfoLabel(info);
+                }
+                GUILayout.EndHorizontal();
+            }
+            GUILayout.EndHorizontal();
+
+            return info;
+        }
+
+
+        /// <summary> Handles drawing and modification of a label that selects info upon clicking. </summary>
+        private void SelectableInfoLabel(SerializedHierarchyItemInfo info)
+        {
+            if (GUILayout.Button(new GUIContent(info.Name, info.Name + ":\n" + info.Description), EditorStyles.label,
+                        GUILayout.Width(100), GUILayout.Height(FIELD_HEIGHT), GUILayout.MinWidth(0)))
+            {
+                if (info != selectedInfo) { selectedInfo = info; }
+                else { selectedInfo = null; }
+            }
         }
 
         #endregion Private Methods

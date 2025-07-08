@@ -1,7 +1,6 @@
 
-namespace SpriteMapper.Actions
+namespace SpriteMapper.Actions.Global
 {
-    [ActionUsedIn(typeof(Context.Global))]
     public class Redo : Action, IShort
     {
         public bool Do() { App.Project.History.Redo(); return true; }

@@ -22,7 +22,7 @@ namespace SpriteMapper
         public readonly bool IsLong;
         public readonly bool IsShort;
         public readonly bool IsUndoable;
-        public readonly bool IsUserExecutable;
+        public readonly bool IsShortcutExecutable;
 
         /// <summary> Shortcut for executing an user executable action. </summary>
         public Shortcut Shortcut { get; private set; } = null;
@@ -31,12 +31,12 @@ namespace SpriteMapper
         public ActionInfo(SerializedActionInfo serializedInfo)
         {
             Context = serializedInfo.Context;
-            ActionType = Type.GetType(serializedInfo.ActionFullName);
+            ActionType = Type.GetType(serializedInfo.FullName);
             Description = serializedInfo.Description;
 
             IsLong = serializedInfo.IsLong;
             IsUndoable = serializedInfo.IsUndoable;
-            IsUserExecutable = serializedInfo.IsUserExecutable;
+            IsShortcutExecutable = serializedInfo.IsShortcutExecutable;
 
             Shortcut = serializedInfo.Shortcut;
         }
@@ -44,6 +44,6 @@ namespace SpriteMapper
 
         /// <summary> Rebinds the action's shortcut. </summary>
         public void Rebind(Shortcut newShortcut)
-        { if (IsUserExecutable) { Shortcut = newShortcut; } }
+        { if (IsShortcutExecutable) { Shortcut = newShortcut; } }
     }
 }

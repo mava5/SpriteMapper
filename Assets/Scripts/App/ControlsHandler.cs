@@ -34,25 +34,25 @@ namespace SpriteMapper
 
         #region Initialization ============================================================================== Initialization
 
-        /// <summary> Creates an <see cref="InputAction"/> for each stored <see cref="ActionInfo"/>. </summary>
-        public void Initialize()
-        {
-            InputActionMap actionMap = new("Shortcuts");
+        ///// <summary> Creates an <see cref="InputAction"/> for each stored <see cref="ActionInfo"/>. </summary>
+        //public void Initialize()
+        //{
+        //    InputActionMap actionMap = new("Shortcuts");
 
-            //AddModifierKeyInputActions(ref actionMap);
+        //    //AddModifierKeyInputActions(ref actionMap);
 
-            foreach (ActionInfo info in ActionInfoDictionary.Data.Values)
-            {
-                Debug.Log(info.ActionType + ", " + info.Shortcut.Binding);
-                InputAction inputAction =
-                    actionMap.AddAction(info.ActionType.FullName, InputActionType.Button, info.Shortcut.Binding);
+        //    foreach (ActionInfo info in ActionInfoDictionary.Data.Values)
+        //    {
+        //        Debug.Log(info.ActionType + ", " + info.Shortcut.Binding);
+        //        InputAction inputAction =
+        //            actionMap.AddAction(info.ActionType.FullName, InputActionType.Button, info.Shortcut.Binding);
 
-                //inputAction.performed += callbackContext => { OnActionPerformed(callbackContext, info); };
-                //inputAction.canceled += callbackContext => { OnActionPerformed(callbackContext, info); };
-            }
+        //        //inputAction.performed += callbackContext => { OnActionPerformed(callbackContext, info); };
+        //        //inputAction.canceled += callbackContext => { OnActionPerformed(callbackContext, info); };
+        //    }
 
-            foreach (InputAction action in actionMap.actions) { action.Enable(); }
-        }
+        //    foreach (InputAction action in actionMap.actions) { action.Enable(); }
+        //}
 
         #endregion Initialization
 
@@ -103,11 +103,11 @@ namespace SpriteMapper
         }
 
 
-        /// <summary> Creates and runs action of given type with provided arguments. </summary>
-        public Action Create<T>(object[] args = null) where T : Action
-        {
-            return Create(ActionInfoDictionary.Instance[typeof(T)], args);
-        }
+        ///// <summary> Creates and runs action of given type with provided arguments. </summary>
+        //public Action Create<T>(object[] args = null) where T : Action
+        //{
+        //    return Create(ActionInfoDictionary.Instance[typeof(T)], args);
+        //}
 
         /// <summary> Creates and runs action based on given info and arguments. </summary>
         public Action Create(ActionInfo info, object[] args = null)

@@ -1,12 +1,11 @@
 
-namespace SpriteMapper.Actions
+namespace SpriteMapper.Actions.Viewport2D.DrawImage
 {
-    [ActionUsedIn(typeof(Context.Viewport.DrawImage))]
-    public class Flip : Action, IUndoable
+    public class FlipTool : Action, IUndoable
     {
         #region Action ================================================================== Action
 
-        public Flip()
+        public FlipTool()
         {
             FlipImage();
             App.Project.History.SaveUndoStep(this);
