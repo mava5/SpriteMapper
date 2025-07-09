@@ -16,41 +16,41 @@ Folder and namespace structure example:
 | ¦ CancelTool (Actions.Global.CancelTool)
 | 
 | Viewport2D:
-| ¦ __Viewport2DPanel (Panels.Viewport2DPanel)
+| ¦ --Viewport2DPanel (Panels.Viewport2DPanel)
 | ¦ ResetView (Actions.Viewport2D.ResetView)
 | ¦ 
 | ¦ DrawImage:
-| ¦ | __DrawImagePanel (Panels.Viewport2D.DrawImagePanel)
+| ¦ | --DrawImagePanel (Panels.Viewport2D.DrawImagePanel)
 | ¦ | Invert (Actions.Viewport2D.DrawImage.Invert)
 | ¦ | 
-| ¦ | _DrawTool (Tools.Viewport2D.DrawImage.DrawTool)
+| ¦ | -DrawTool (Tools.Viewport2D.DrawImage.DrawTool)
 | ¦ | ¦ EquipDrawTool (Actions.Viewport2D.DrawImage.EquipDrawTool)
 | ¦ | 
-| ¦ | _RotateTool (Tools.Viewport2D.DrawImage.RotateTool)
+| ¦ | -RotateTool (Tools.Viewport2D.DrawImage.RotateTool)
 | ¦ | ¦ EquipRotateTool (Actions.Viewport2D.DrawImage.EquipRotateTool)
 | ¦ | ¦ QuickUseRotateTool (Actions.Viewport2D.DrawImage.QuickUseRotateTool)
 | ¦ | ¦ 
 | ¦ | ¦ Equiped:
-| ¦ | ¦ Rotate (Tools.Viewport2D.DrawImage.RotateTool.Equiped.Rotate)
+| ¦ | ¦ Rotate (Tools.Viewport2D.DrawImage.RotateToolEquiped.Rotate)
 | ¦ | ¦ 
 | ¦ | ¦ Active:
-| ¦ | ¦ CycleFilterMode (Actions.Viewport2D.DrawImage.RotateTool.Active.CycleFilterMode)
+| ¦ | ¦ CycleFilterMode (Actions.Viewport2D.DrawImage.RotateToolActive.CycleFilterMode)
 |
 | Viewport3D:
-| ¦ __Viewport3DPanel (Panels.Viewport3DPanel)
+| ¦ --Viewport3DPanel (Panels.Viewport3DPanel)
 | ¦ ResetView (Actions.Viewport3D.ResetView)
 | ¦ 
 | ¦ MeshImage:
-| ¦ | __MeshImagePanel (Panels.Viewport3D.MeshImagePanel)
+| ¦ | --MeshImagePanel (Panels.Viewport3D.MeshImagePanel)
 | ¦ | FlipX (Actions.Viewport3D.MeshImage.FlipX)
 | ¦ | FlipY (Actions.Viewport3D.MeshImage.FlipY)
 | ¦ | FlipZ (Actions.Viewport3D.MeshImage.FlipZ)
 | ¦ | 
-| ¦ | _MoveTool (Tools.Viewport3D.MeshImage.MoveTool)
+| ¦ | -MoveTool (Tools.Viewport3D.MeshImage.MoveTool)
 | ¦ | ¦ EquipMoveTool (Actions.Viewport3D.MeshImage.EquipMoveTool)
 | ¦ | ¦ QuickUseMoveTool (Actions.Viewport3D.MeshImage.QuickUseMoveTool)
 | ¦ | 
-| ¦ | _RotateTool (Tools.Viewport3D.MeshImage.RotateTool)
+| ¦ | -RotateTool (Tools.Viewport3D.MeshImage.RotateTool)
 | ¦ | ¦ EquipRotateTool (Actions.Viewport3D.MeshImage.EquipRotateTool)
 | ¦ | ¦ QuickUseRotateTool (Actions.Viewport3D.MeshImage.QuickUseRotateTool)
 

@@ -13,6 +13,12 @@ namespace SpriteMapper
     public interface ILong
     {
         /// <summary>
+        /// <br/>   Tells if user released the action's shortcut.
+        /// <br/>   Set by <see cref="ActionHandler"/>.
+        /// </summary>
+        public bool ShortcutReleased { get; set; }
+
+        /// <summary>
         /// <br/>   A predicate that determines if action is to be ended.
         /// <br/>   Gets evaluated each MonoBehaviour Update().
         /// </summary>

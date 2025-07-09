@@ -18,7 +18,27 @@ namespace SpriteMapper
         /// <summary> Currently open <see cref="SpriteMapper.Project"/>. </summary>
         public static Project Project { get; private set; }
 
-        public static readonly ActionHandler Controls = new();
+        public static string CurrentContext
+        {
+            get
+            {
+                if (Project != null && Project.Panel != null)
+                {
+                    if (Project.Panel.Tool != null)
+                    {
+                        if (Project.Panel.Tool.Active)
+                        {
+                            return Project.Panel.Tool.Info.Context + "Active";
+                        }
+                        return Project.Panel.Tool.Info.Context + "Equiped";
+                    }
+                    return Project.Panel.Info.Context;
+                }
+                return "";
+            }
+        }
+
+        public static readonly ActionHandler Actions = new();
 
 
         #region App Initialization ================================================================ App Initialization
@@ -40,7 +60,7 @@ namespace SpriteMapper
 
         private static void Update()
         {
-            Controls.Update();
+            Actions.Update();
             if (Project != null) { Project.Update(); }
         }
 

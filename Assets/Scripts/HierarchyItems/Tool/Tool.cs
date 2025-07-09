@@ -7,6 +7,8 @@ namespace SpriteMapper
 
     public class Tool
     {
-        public bool Active { get; internal set; }
+        public ToolInfo Info { get; internal set; } = null;
+
+        public bool Active { get; internal set; } = false;
     }
 }

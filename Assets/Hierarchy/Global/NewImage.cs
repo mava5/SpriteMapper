@@ -1,5 +1,5 @@
 
-namespace SpriteMapper.Global
+namespace SpriteMapper.Actions.Global
 {
     public class NewImage : Action, IUndoable
     {

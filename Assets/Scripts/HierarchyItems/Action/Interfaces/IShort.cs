@@ -9,7 +9,7 @@ namespace SpriteMapper
     {
         /// <summary>
         /// <br/>   Gets called after action creation.
-        /// <br/>   Should return a boolean, which tells if action succeeded.
+        /// <br/>   Should return a boolean, which tells whether action succeeded.
         /// </summary>
         bool Do();
     }

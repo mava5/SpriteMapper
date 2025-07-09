@@ -7,7 +7,7 @@ namespace SpriteMapper.Actions.Global
     [NotShortcutExecutable, ActionPriority(PriorityLevel.Low)]
     public class OpenContextMenuShort : Action, IShort
     {
-        public bool Do() { App.Project.FocusedPanel.OpenContextMenu(); return true; }
+        public bool Do() { App.Project.Panel.OpenContextMenu(); return true; }
     }
 
     /// <summary>
@@ -19,6 +19,8 @@ namespace SpriteMapper.Actions.Global
     [NotShortcutExecutable, ActionPriority(PriorityLevel.Low)]
     public class OpenContextMenuLong : Action, ILong
     {
+        public bool ShortcutReleased { get; set; }
+
         public bool CancelPredicate => Time.time > startTime + 0.25f;
         public bool EndPredicate => Input.GetMouseButtonUp(1);
 
@@ -32,6 +34,6 @@ namespace SpriteMapper.Actions.Global
 
         public void Cancel() { }
 
-        public void End() { App.Project.FocusedPanel.OpenContextMenu(); }
+        public void End() { App.Project.Panel.OpenContextMenu(); }
     }
 }

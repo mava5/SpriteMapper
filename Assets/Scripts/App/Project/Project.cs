@@ -5,14 +5,13 @@ using UnityEngine;
 namespace SpriteMapper
 {
     /// <summary>
-    /// <br/>   A project is 
     /// <br/>   Contains and manages handlers unique to each open project.
     /// <br/>   These handlers in turn abstractify their respective parts of the project.
     /// </summary>
     public class Project
     {
-        public Panel FocusedPanel { get; private set; }
-        public Tool EquipedTool { get; private set; }
+        /// <summary> Currently focused <see cref="SpriteMapper.Panel"/>. </summary>
+        public Panel Panel { get; private set; } = null;
 
         public readonly GUIHandler GUI = new();
         public readonly DataHandler Data = new();
