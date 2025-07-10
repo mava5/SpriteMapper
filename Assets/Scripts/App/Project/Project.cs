@@ -33,12 +33,22 @@ namespace SpriteMapper
 
         #region Public Methods ========================================================== Public Methods
 
-        public void Open()
+        public void Open() { }
+
+        public void Close() { }
+
+
+        public void Enter()
         {
             // Load ProjectScene based on project's information
+
+
+            // DEBUG
+            GameObject gameObject = new("Test_Panel");
+            Panel = gameObject.AddComponent<Panels.Viewport2D.DrawImage.DrawImagePanel>();
         }
 
-        public void Close()
+        public void Exit()
         {
             // Stop all active long actions
         }

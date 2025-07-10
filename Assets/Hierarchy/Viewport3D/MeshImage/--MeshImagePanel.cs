@@ -17,12 +17,14 @@ namespace SpriteMapper.Panels.Viewport3D.MeshImage
 
         private void Start()
         {
+            Info = HierarchyInfoDictionary.PanelInfos[typeof(MeshImagePanel)];
+
             contextMenu = new ContextMenu();
 
-            foreach (Type toolType in toolTypes)
-            {
-                tools.Add(toolType, (Tool)Activator.CreateInstance(toolType));
-            }
+            //foreach (Type toolType in toolTypes)
+            //{
+            //    tools.Add(toolType, (Tool)Activator.CreateInstance(toolType));
+            //}
         }
 
 

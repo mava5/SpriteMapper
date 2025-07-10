@@ -14,7 +14,7 @@ namespace SpriteMapper
     public static class App
     {
         public static List<Project> OpenProjects { get; private set; } = new();
-        
+
         /// <summary> Currently open <see cref="SpriteMapper.Project"/>. </summary>
         public static Project Project { get; private set; }
 
@@ -39,6 +39,7 @@ namespace SpriteMapper
         }
 
         public static readonly ActionHandler Actions = new();
+        public static readonly ControlsHandler Controls = new();
 
 
         #region App Initialization ================================================================ App Initialization
@@ -47,8 +48,13 @@ namespace SpriteMapper
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void InitializeApp()
         {
+            // DEBUG
+            Project = new();
+            Project.Enter();
+
+
             HierarchyInfoDictionary.Initialize();
-            //Controls.Initialize();
+            Controls.Initialize();
 
             UpdateCaller.SubscribeUpdateCallback(Update);
         }
@@ -61,7 +67,10 @@ namespace SpriteMapper
         private static void Update()
         {
             Actions.Update();
+
             if (Project != null) { Project.Update(); }
+            
+            Controls.UpdateModifierKeys();
         }
 
         #endregion Update Loop

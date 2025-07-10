@@ -4,6 +4,7 @@
 using System.Linq;
 using System.Collections.Generic;
 
+using UnityEditor;
 using UnityEngine;
 
 using SpriteMapper;
@@ -11,6 +12,7 @@ using SpriteMapper;
 
 public static class EditorInputControls
 {
+    private static Shortcut currentlyReadShortcut;
     private static bool reading = false;
     private static int focusedControl = 0;
 
@@ -37,24 +39,38 @@ public static class EditorInputControls
     /// <summary>
     /// <br/>   Draws a text field with given rect for inputting a <see cref="Shortcut"/>.
     /// <br/>   Will start listening for a keyboard or mouse inputs when selected.
-    /// <br/>   Returns boolean, which tells if the shortcut field is focused.
-    /// <br/>   Also returns the modified shortcut.
+    /// <br/>   Only returns modified shortcut once reading has finished.
     /// </summary>
-    public static (bool, Shortcut) ShortcutField(Rect controlRect, Shortcut shortcut)
+    public static Shortcut ShortcutField(Rect controlRect, Shortcut startShortcut)
     {
         int control = GUIUtility.GetControlID(FocusType.Keyboard);
 
         Event evt = Event.current;
         EventType evtType = evt.GetTypeForControl(control);
 
-
         // Repaint control
         if (evtType == EventType.Repaint)
         {
             GUIStyle style = GUI.skin.GetStyle("TextField");
-            style.Draw(controlRect, new GUIContent(shortcut.View), control);
-            
-            return (control == focusedControl, shortcut);
+
+            if (control == focusedControl)
+            {
+                string view = controlRect.width < 100 ? currentlyReadShortcut.ShortView : currentlyReadShortcut.View;
+                style.Draw(controlRect, new GUIContent(view), control);
+
+                // Draw red line in front of shortcut field when it's focused
+                controlRect.width = 1;
+                EditorGUI.DrawRect(controlRect, Color.HSVToRGB(0, 0.8f, 1));
+                controlRect.x += 1;
+                EditorGUI.DrawRect(controlRect, Color.HSVToRGB(0, 0.8f, 0.75f));
+            }
+            else
+            {
+                string view = controlRect.width < 100 ? startShortcut.ShortView : startShortcut.View;
+                style.Draw(controlRect, new GUIContent(view), control);
+            }
+
+            return startShortcut;
         }
 
 
@@ -78,33 +94,39 @@ public static class EditorInputControls
                     reading = true;
                     focusedControl = control;
 
-                    // Reset shortcut
-                    shortcut = new();
+                    currentlyReadShortcut = new();
 
                     GUIUtility.hotControl = 0;
                     evt.Use();
                 }
             }
 
-            return (control == focusedControl, shortcut);
+            return startShortcut;
         }
 
+        // Only read key presses for the focused shortcut field
+        if (control != focusedControl) { return startShortcut; }
 
-        // Stop reading if escape key is pressed
-        if (evt.isKey && evtType == EventType.KeyUp && evt.keyCode == KeyCode.Escape)
+
+        bool finished = false;
+        if (evt.isKey)
+        {
+            finished = HandleKeyboardInput(ref currentlyReadShortcut, ref evt, evtType);
+        }
+        else if (evt.isMouse)
+        {
+            finished = HandleMouseInput(ref currentlyReadShortcut, ref evt, evtType);
+        }
+
+        if (finished)
         {
             StopReadingShortcut();
-            return (false, shortcut);
+            return currentlyReadShortcut;
         }
-
-        // Skip controls that aren't focused
-        if (control != focusedControl) { return (false, shortcut); }
-
-
-        if (evt.isKey) { HandleKeyboardInput(ref shortcut, ref evt, evtType); }
-        else if (evt.isMouse) { HandleMouseInput(ref shortcut, ref evt, evtType); }
-
-        return (control == focusedControl, shortcut);
+        else
+        {
+            return startShortcut;
+        }
     }
 
 
@@ -113,15 +135,28 @@ public static class EditorInputControls
     /// <summary>
     /// <br/>   Reads keyboard key and updates referenced shortcut accordingly.
     /// <br/>   Uses referenced event to prevent Unity from picking it up.
+    /// <br/>   Returns a boolean, which tells if reading finished.
     /// </summary>
-    private static void HandleKeyboardInput(ref Shortcut shortcut, ref Event evt, EventType evtType)
+    private static bool HandleKeyboardInput(ref Shortcut shortcut, ref Event evt, EventType evtType)
     {
+        bool finished = false;
+
         if (evtType == EventType.KeyDown)
         {
             if (heldModifierKeys.ContainsKey(evt.keyCode))
             {
                 heldModifierKeys[evt.keyCode] = true;
                 UpdateShortcutModifierKeys(ref shortcut);
+            }
+            else if (evt.keyCode == KeyCode.Escape)
+            {
+                shortcut.Binding = "";
+                finished = true;
+            }
+            else
+            {
+                shortcut.Binding = "<Keyboard>/" + evt.keyCode;
+                finished = true;
             }
         }
         else if (evtType == EventType.KeyUp)
@@ -131,22 +166,21 @@ public static class EditorInputControls
                 heldModifierKeys[evt.keyCode] = false;
                 UpdateShortcutModifierKeys(ref shortcut);
             }
-            else
-            {
-                shortcut.Binding = "<Keyboard>/" + evt.keyCode;
-                StopReadingShortcut();
-            }
         }
 
         evt.Use();
+        return finished;
     }
 
     /// <summary>
     /// <br/>   Reads mouse button and updates referenced shortcut accordingly.
     /// <br/>   Uses referenced event to prevent Unity from picking it up.
+    /// <br/>   Returns a boolean, which tells if reading finished.
     /// </summary>
-    private static void HandleMouseInput(ref Shortcut shortcut, ref Event evt, EventType evtType)
+    private static bool HandleMouseInput(ref Shortcut shortcut, ref Event evt, EventType evtType)
     {
+        bool finished = false;
+
         if (evtType == EventType.MouseUp)
         {
             switch (evt.button)
@@ -157,9 +191,11 @@ public static class EditorInputControls
                 case 3: StopReadingShortcut(); shortcut.Binding = "<Mouse>/Back"; break;
                 case 4: StopReadingShortcut(); shortcut.Binding = "<Mouse>/Forward"; break;
             }
+            finished = true;
         }
 
         evt.Use();
+        return finished;
     }
 
 

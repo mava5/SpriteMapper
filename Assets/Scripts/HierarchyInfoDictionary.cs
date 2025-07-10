@@ -74,11 +74,17 @@ namespace SpriteMapper
             }
             foreach (SerializedPanelInfo panelInfo in SerializedPanelInfos)
             {
-                //panelInfos.Add(Type.GetType(panelInfo.FullName), new PanelInfo(panelInfo));
+                if (panelInfo.PointsToType)
+                {
+                    panelInfos.Add(Type.GetType(panelInfo.FullName), new PanelInfo(panelInfo));
+                }
             }
             foreach (SerializedToolInfo toolInfo in SerializedToolInfos)
             {
-                //actionInfos.Add(Type.GetType(toolInfo.FullName), new ToolInfo(toolInfo));
+                if (toolInfo.PointsToType)
+                {
+                    toolInfos.Add(Type.GetType(toolInfo.FullName), new ToolInfo(toolInfo));
+                }
             }
         }
 
@@ -120,7 +126,8 @@ namespace SpriteMapper
 
         public PriorityLevel Priority;
 
-        public Shortcut Shortcut = null;
+        public Shortcut DefaultShortcut1 = null;
+        public Shortcut DefaultShortcut2 = null;
     }
 
     /// <summary> Contains <see cref="Panel"/> specific information for creating a runtime <see cref="PanelInfo"/>. </summary>
@@ -155,7 +162,7 @@ namespace SpriteMapper
         private const int MIN_SCROLL_VIEW_HEIGHT = 50;
 
         private const int FIELD_HEIGHT = 20;
-        private const int INDENT_WIDTH = 20;
+        private const int INDENT_WIDTH = 15;
         private const int ORDER_ARROW_WIDTH = 15;
 
         private const int PAD = 5;
@@ -167,7 +174,6 @@ namespace SpriteMapper
         private bool guiStylesInitialized = false;
 
         private GUIStyle normalPadding;
-        private GUIStyle smallPadding;
         private GUIStyle scrollView;
         private GUIStyle smallText;
         private GUIStyle button;
@@ -194,7 +200,6 @@ namespace SpriteMapper
                 RectOffset smallPaddingRect = new(S_PAD, S_PAD, S_PAD, S_PAD);
 
                 normalPadding = new() { padding = paddingRect };
-                smallPadding = new() { padding = smallPaddingRect };
 
                 scrollView = new("LODBlackBox");
                 scrollView.padding = paddingRect;
@@ -312,7 +317,9 @@ namespace SpriteMapper
 
                     int currentDepth = context.Count(c => c == '.');
                     int pixelIndent = currentDepth * INDENT_WIDTH;
-                    menuStates[context] = ContextFoldout(menuStates[context], context, pixelIndent);
+                    string title = currentDepth > 0 ? context[context.LastIndexOf(".")..] : context;
+
+                    menuStates[context] = ContextFoldout(menuStates[context], title, pixelIndent);
 
                     if (!menuStates[context])
                     {
@@ -340,7 +347,7 @@ namespace SpriteMapper
                     {
                         if (showPanels)
                         {
-                            GUILayout.Space(S_PAD);
+                            Undo.RecordObject(data, "HierarchyInfoDictionary updated");
                             data.SerializedPanelInfos[panelIndex] = HierarchyItemInfoField(panelInfo, pixelIndent);
                         }
                         panelIndex++;
@@ -355,7 +362,7 @@ namespace SpriteMapper
                     {
                         if (showActions)
                         {
-                            GUILayout.Space(S_PAD);
+                            Undo.RecordObject(data, "HierarchyInfoDictionary updated");
                             data.SerializedActionInfos[actionIndex] = ActionInfoField(actionInfo, pixelIndent);
                         }
                         actionIndex++;
@@ -370,7 +377,7 @@ namespace SpriteMapper
                     {
                         if (showTools)
                         {
-                            GUILayout.Space(S_PAD);
+                            Undo.RecordObject(data, "HierarchyInfoDictionary updated");
                             data.SerializedToolInfos[toolIndex] = HierarchyItemInfoField(toolInfo, pixelIndent);
                         }
                         toolIndex++;
@@ -656,18 +663,16 @@ namespace SpriteMapper
                     //}
                     if (info.IsShortcutExecutable)
                     {
-                        // TODO: Undo here
-                        (bool focused, Shortcut newShortcut) = EditorInputControls.ShortcutField(rightRect, info.Shortcut);
-                        info.Shortcut = newShortcut;
-
-                        if (focused)
+                        if (info.DefaultShortcut1.IsEmpty && !info.DefaultShortcut2.IsEmpty)
                         {
-                            rightRect.width = 1;
-                            rightRect.x -= 5;
-                            EditorGUI.DrawRect(rightRect, Color.HSVToRGB(0, 0.8f, 1));
-                            rightRect.x += 1;
-                            EditorGUI.DrawRect(rightRect, Color.HSVToRGB(0, 0.8f, 0.75f));
+                            (info.DefaultShortcut1, info.DefaultShortcut2) = (info.DefaultShortcut2, new());
                         }
+
+                        rightRect.width = (rightRect.width - S_PAD) / 2;
+                        info.DefaultShortcut1 = EditorInputControls.ShortcutField(rightRect, info.DefaultShortcut1);
+
+                        rightRect.x += rightRect.width + S_PAD;
+                        info.DefaultShortcut2 = EditorInputControls.ShortcutField(rightRect, info.DefaultShortcut2);
                     }
                 }
                 GUILayout.EndHorizontal();

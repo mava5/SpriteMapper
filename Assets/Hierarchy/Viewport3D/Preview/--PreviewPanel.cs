@@ -1,9 +1,4 @@
 
-using System.Collections.Generic;
-using System;
-using UnityEngine;
-
-
 namespace SpriteMapper.Panels.Viewport3D.Preview
 {
 
@@ -12,6 +7,8 @@ namespace SpriteMapper.Panels.Viewport3D.Preview
 
         private void Start()
         {
+            Info = HierarchyInfoDictionary.PanelInfos[typeof(PreviewPanel)];
+
             contextMenu = new ContextMenu();
         }
 

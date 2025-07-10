@@ -13,11 +13,20 @@ namespace SpriteMapper
         public bool Alt = false;
         public string Binding = "";
 
+        public bool IsEmpty => Binding == "";
+
         /// <summary> User readable view of shortcut. </summary>
         public string View =>
             (Shift ? "Shift + " : "") +
             (Ctrl ? "Ctrl + " : "") +
             (Alt ? "Alt + " : "") +
+            (Binding.Contains("/") ? Binding.Split("/")[1] : "");
+
+        /// <summary> Shortened version of <see cref="View"/>. </summary>
+        public string ShortView =>
+            (Shift ? "S+" : "") +
+            (Ctrl ? "C+" : "") +
+            (Alt ? "A+" : "") +
             (Binding.Contains("/") ? Binding.Split("/")[1] : "");
 
         /// <summary> Input System readable binding. </summary>
@@ -41,8 +50,6 @@ namespace SpriteMapper
                 Alt == other.Alt;
         }
 
-        // Override GetHashCode() so that same shortcuts occupy same key in a dictionary
-        // This helps with storing and checking unfinished actions based on their shortcut in ActionHandler
         public override int GetHashCode()
         {
             return HashCode.Combine(Shift, Ctrl, Alt, Binding);

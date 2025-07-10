@@ -8,11 +8,11 @@ namespace SpriteMapper
 {
     /// <summary>
     /// <br/>   A floating or docked area containing at least one <see cref="Panel"/>.
-    /// <br/>   Windows can also be slotted into other windows.
+    /// <br/>   Containers can also be slotted into other containers.
     /// </summary>
-    public class Window
+    public class Container
     {
-        public Window Parent;
-        public List<Window> Children;
+        public Container Parent;
+        public List<Container> Children;
     }
 }

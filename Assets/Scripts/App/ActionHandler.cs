@@ -19,52 +19,22 @@ namespace SpriteMapper
     /// </summary>
     public class ActionHandler
     {
-        /// <summary> Mouse position captured before starting a long action. </summary>
-        public Vector2 StartMousePosition { get; private set; } = Vector2.zero;
+        /// <summary>
+        /// <br/>   Currently active long actions.
+        /// <br/>   Only one long action of a given type can be active at once.
+        /// <br/>   Mouse position is also captured before starting a long action.
+        /// </summary>
+        public Dictionary<Type, (ILong longAction, Vector2 mouseStartPosition)> ActiveLongActions { get; private set; } = new();
 
-        // Contains the currently active ILong action
-        // Only one long action can be active at once
-        // For example the user cannot quick use a tool while panning a camera
-        private ILong currentLongAction = null;
 
         // Keep track of actions to execute based on their shortcut
         // Lower priority actions will be disgarded if higher priority ones succeeded
         private Dictionary<Shortcut, Queue<(ActionInfo info, int priority)>> actionQueues = new();
 
-        private bool shiftHeld = false;
-        private bool ctrlHeld = false;
-        private bool altHeld = false;
-
-
-        #region Initialization ============================================================================== Initialization
-
-        /// <summary> Creates an <see cref="InputAction"/> for each stored <see cref="ActionInfo"/>. </summary>
-        public void Initialize()
-        {
-            InputActionMap actionMap = new("Shortcuts");
-
-            foreach (ActionInfo info in HierarchyInfoDictionary.ActionInfos.Values)
-            {
-                if (!info.IsShortcutExecutable) { continue; }
-
-                InputAction inputAction = actionMap.AddAction(info.ActionType.FullName, InputActionType.Button, info.Shortcut.Binding);
-                inputAction.performed += callbackContext => { OnActionShortcutDown(callbackContext, info); };
-
-                if (info.IsLong)
-                {
-                    inputAction.canceled += callbackContext => { OnLongActionShortcutUp(callbackContext, info); };
-                }
-            }
-
-            foreach (InputAction action in actionMap.actions) { action.Enable(); }
-        }
-
-        #endregion Initialization
-
 
         #region Public Methods ============================================================================== Public Methods
 
-        /// <summary> Handles action and controls variables updating. </summary>
+        /// <summary> Executes each highest priority <see cref="Action"/> and updates active long action. </summary>
         public void Update()
         {
             // Execute highest priority actions from each queue
@@ -77,6 +47,8 @@ namespace SpriteMapper
                 {
                     ActionInfo info = queue.Dequeue().info;
 
+                    Debug.Log(App.CurrentContext + " / " + info.Context);
+
                     if (info.Context != App.CurrentContext) { continue; }
 
                     Action action = (Action)Activator.CreateInstance(info.ActionType);
@@ -84,83 +56,76 @@ namespace SpriteMapper
                     if (info.IsShort && ((IShort)action).Do()) { break; }
                     if (info.IsLong && ((ILong)action).Begin())
                     {
-                        if (currentLongAction != null) { currentLongAction.Cancel(); }
-                        StartMousePosition = Input.mousePosition;
-                        currentLongAction = (ILong)action;
+                        // Cancel currently active long action if there is one
+                        if (ActiveLongActions.ContainsKey(info.ActionType))
+                        {
+                            ActiveLongActions[info.ActionType].longAction.Cancel();
+                            ActiveLongActions.Remove(info.ActionType);
+                        }
+
+                        ActiveLongActions.Add(info.ActionType, ((ILong)action, Input.mousePosition));
                         break;
                     }
                 }
             }
             actionQueues.Clear();
 
-            // Evaluate currently active long action
-            if (currentLongAction != null)
+
+            // Evaluate currently active long actions
+            List<Type> longActionsToRemove = new();
+            foreach ((ILong action, Vector2 _) in ActiveLongActions.Values)
             {
-                if (currentLongAction.CancelPredicate)
+                if (action != null)
                 {
-                    currentLongAction.Cancel();
-                    currentLongAction = null;
-                }
-                else if (currentLongAction.EndPredicate)
-                {
-                    currentLongAction.End();
-                    currentLongAction = null;
-                }
-                else
-                {
-                    currentLongAction.Update();
+                    if (action.CancelPredicate)
+                    {
+                        action.Cancel();
+                        longActionsToRemove.Add(action.GetType());
+                    }
+                    else if (action.EndPredicate)
+                    {
+                        action.End();
+                        longActionsToRemove.Add(action.GetType());
+                    }
+                    else
+                    {
+                        action.Update();
+                    }
                 }
             }
 
-            shiftHeld = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-            ctrlHeld = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
-            altHeld = Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt);
+            foreach (Type actionType in longActionsToRemove) { ActiveLongActions.Remove(actionType); }
         }
 
 
-        /// <summary> Puts <see cref="Action"/> based on given type at the front of the action queue. </summary>
-        /// <param name="shortcut"> The actions that share the same shortcut get ignored </param>
-        public void ForceExecute<T>(Shortcut shortcut) where T : Action
+        /// <summary> Queues up <see cref="Action"/> based on given type. </summary>
+        /// <param name="shortcutOverride"> Shortcut used to execute action if not the action's own one. </param>
+        /// <param name="highPriority"> true = Action prioritized in queue <br/> false = Uses priority from <see cref="ActionInfo"/> </param>
+        public void AddToQueue<T>(Shortcut shortcutOverride = null, bool highPriority = false) where T : Action
         {
-            actionQueues[shortcut].Enqueue((HierarchyInfoDictionary.ActionInfos[typeof(T)], int.MaxValue));
+            AddToQueue(HierarchyInfoDictionary.ActionInfos[typeof(T)], shortcutOverride, highPriority);
         }
 
-        /// <summary> Puts <see cref="Action"/> based on given type at the front of the action queue. </summary>
-        /// <param name="shortcut"> The actions that share the same shortcut get ignored </param>
-        public void ForceExecute(Shortcut shortcut, Type actionType)
+        /// <summary> Queues up <see cref="Action"/> based on given type. </summary>
+        /// <param name="shortcutOverride"> Shortcut used to execute action if not the action's own one. </param>
+        /// <param name="highPriority"> true = Action prioritized in queue <br/> false = Uses priority from <see cref="ActionInfo"/> </param>
+        public void AddToQueue(Type actionType, Shortcut shortcutOverride = null, bool highPriority = false)
         {
-            actionQueues[shortcut].Enqueue((HierarchyInfoDictionary.ActionInfos[actionType], int.MaxValue));
+            AddToQueue(HierarchyInfoDictionary.ActionInfos[actionType], shortcutOverride, highPriority);
         }
 
-        /// <summary> Puts <see cref="Action"/> based on given info at the front of the action queue. </summary>
-        /// <param name="shortcut"> The actions that share the same shortcut get ignored </param>
-        public void ForceExecute(Shortcut shortcut, ActionInfo info)
+        /// <summary> Queues up <see cref="Action"/> based on given info. </summary>
+        /// <param name="shortcutOverride"> Shortcut used to execute action if not the action's own one. </param>
+        /// <param name="highPriority"> true = Action prioritized in queue <br/> false = Uses priority from <see cref="ActionInfo"/> </param>
+        public void AddToQueue(ActionInfo actionInfo, Shortcut shortcutOverride = null, bool highPriority = false)
         {
-            actionQueues[shortcut].Enqueue((info, int.MaxValue));
+            Shortcut shortcut = shortcutOverride ?? actionInfo.DefaultShortcut1;
+            int priority = highPriority ? int.MaxValue : (int)actionInfo.Priority;
+
+            actionQueues.TryAdd(shortcut, new());
+            actionQueues[shortcut].Enqueue((actionInfo, priority));
         }
 
         #endregion Public Methods
-
-
-        #region Private Methods ============================================================================= Private Methods
-
-        private void OnActionShortcutDown(InputAction.CallbackContext context, ActionInfo info)
-        {
-            if ((info.Shortcut.Shift && !shiftHeld) ||
-                (info.Shortcut.Ctrl && !ctrlHeld) ||
-                (info.Shortcut.Alt && !altHeld)) { return; }
-
-            actionQueues[info.Shortcut].Enqueue((info, (int)info.Priority));
-        }
-
-        private void OnLongActionShortcutUp(InputAction.CallbackContext context, ActionInfo info)
-        {
-            if (currentLongAction != null && currentLongAction.GetType() == info.ActionType)
-            {
-                currentLongAction.ShortcutReleased = true;
-            }
-        }
-
-        #endregion Private Methods
     }
 }

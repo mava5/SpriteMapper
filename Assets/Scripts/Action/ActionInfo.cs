@@ -24,8 +24,11 @@ namespace SpriteMapper
         public readonly bool IsUndoable;
         public readonly bool IsShortcutExecutable;
 
-        /// <summary> Shortcut for executing the action. </summary>
-        public Shortcut Shortcut { get; private set; } = null;
+        /// <summary> The first default shortcut for executing the action. </summary>
+        public Shortcut DefaultShortcut1 { get; private set; } = null;
+
+        /// <summary> The second default shortcut for executing the action. </summary>
+        public Shortcut DefaultShortcut2 { get; private set; } = null;
 
 
         public ActionInfo(SerializedActionInfo serializedInfo)
@@ -38,12 +41,13 @@ namespace SpriteMapper
             IsUndoable = serializedInfo.IsUndoable;
             IsShortcutExecutable = serializedInfo.IsShortcutExecutable;
 
-            Shortcut = serializedInfo.Shortcut;
+            DefaultShortcut1 = serializedInfo.DefaultShortcut1;
+            DefaultShortcut2 = serializedInfo.DefaultShortcut2;
         }
 
 
-        /// <summary> Rebinds the action's shortcut. </summary>
-        public void Rebind(Shortcut newShortcut)
-        { if (IsShortcutExecutable) { Shortcut = newShortcut; } }
+        ///// <summary> Rebinds the action's shortcut. </summary>
+        //public void Rebind(Shortcut newShortcut)
+        //{ if (IsShortcutExecutable) { Shortcut = newShortcut; } }
     }
 }
