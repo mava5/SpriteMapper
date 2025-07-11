@@ -34,8 +34,8 @@ namespace SpriteMapper
 
         #region Public Methods ============================================================================== Public Methods
 
-        /// <summary> Executes each highest priority <see cref="Action"/> and updates active long action. </summary>
-        public void Update()
+        /// <summary> Executes each highest priority <see cref="Action"/> in action queue. </summary>
+        public void ProcessQueue()
         {
             // Execute highest priority actions from each queue
             foreach ((Shortcut shortcut, Queue<(ActionInfo info, int priority)> queue) in actionQueues)
@@ -69,8 +69,11 @@ namespace SpriteMapper
                 }
             }
             actionQueues.Clear();
+        }
 
-
+        /// <summary> Updates each active <see cref="ILong"/> <see cref="Action"/> and re-evaluates them. </summary>
+        public void UpdateLongActions()
+        {
             // Evaluate currently active long actions
             List<Type> longActionsToRemove = new();
             foreach ((ILong action, Vector2 _) in ActiveLongActions.Values)

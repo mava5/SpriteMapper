@@ -24,9 +24,6 @@ namespace SpriteMapper
         /// <summary> Contains an <see cref="ActionInfo"/> for each <see cref="Action"/>. </summary>
         public static Dictionary<Type, ActionInfo> ActionInfos => Instance.actionInfos;
 
-        /// <summary> Contains an <see cref="PanelInfo"/> for each <see cref="Panel"/>. </summary>
-        public static Dictionary<Type, PanelInfo> PanelInfos => Instance.panelInfos;
-
         /// <summary> Contains an <see cref="ToolInfo"/> for each <see cref="Tool"/>. </summary>
         public static Dictionary<Type, ToolInfo> ToolInfos => Instance.toolInfos;
 
@@ -34,14 +31,10 @@ namespace SpriteMapper
         public List<SerializedActionInfo> SerializedActionInfos = new();
 
         /// <summary> Used by <see cref="HierarchyInfoDictionaryEditor"/>. </summary>
-        public List<SerializedPanelInfo> SerializedPanelInfos = new();
-
-        /// <summary> Used by <see cref="HierarchyInfoDictionaryEditor"/>. </summary>
         public List<SerializedToolInfo> SerializedToolInfos = new();
 
 
         private Dictionary<Type, ActionInfo> actionInfos = new();
-        private Dictionary<Type, PanelInfo> panelInfos = new();
         private Dictionary<Type, ToolInfo> toolInfos = new();
 
 
@@ -72,13 +65,6 @@ namespace SpriteMapper
                     actionInfos.Add(Type.GetType(actionInfo.FullName), new ActionInfo(actionInfo));
                 }
             }
-            foreach (SerializedPanelInfo panelInfo in SerializedPanelInfos)
-            {
-                if (panelInfo.PointsToType)
-                {
-                    panelInfos.Add(Type.GetType(panelInfo.FullName), new PanelInfo(panelInfo));
-                }
-            }
             foreach (SerializedToolInfo toolInfo in SerializedToolInfos)
             {
                 if (toolInfo.PointsToType)
@@ -89,16 +75,15 @@ namespace SpriteMapper
         }
 
         #endregion Initialization
-
-
-        #region Public Methods ======================================================================================== Public Methods
-
-        public ActionInfo GetActionInfo<T>() where T : Action { return actionInfos[typeof(T)]; }
-        public PanelInfo GetPanelInfo<T>() where T : Panel { return panelInfos[typeof(T)]; }
-        public ToolInfo GetToolInfo<T>() where T : Tool { return toolInfos[typeof(T)]; }
-
-        #endregion Public Methods
     }
+
+
+    /// <summary> A static class with hierarchy info related helper functions </summary>
+    public static class HIH
+    {
+
+    }
+
 
 
     /// <summary> Contains information for hierarchy items. </summary>
@@ -130,10 +115,6 @@ namespace SpriteMapper
         public Shortcut DefaultShortcut2 = null;
     }
 
-    /// <summary> Contains <see cref="Panel"/> specific information for creating a runtime <see cref="PanelInfo"/>. </summary>
-    [Serializable]
-    public class SerializedPanelInfo : SerializedHierarchyItemInfo { }
-
     /// <summary> Contains <see cref="Tool"/> specific information for creating a runtime <see cref="ToolInfo"/>. </summary>
     [Serializable]
     public class SerializedToolInfo : SerializedHierarchyItemInfo { }
@@ -154,7 +135,7 @@ namespace SpriteMapper
 
         private static Vector2 scroll = new();
 
-        private static bool showActions = true, showPanels = true, showTools = true;
+        private static bool showActions = true, showTools = true;
 
         
         private const int TOP_BAR_HEIGHT = 40;
@@ -253,18 +234,13 @@ namespace SpriteMapper
         {
             GUILayout.BeginHorizontal(GUILayout.Height(TOP_BAR_HEIGHT - PAD));
             {
-                showPanels = GUILayout.Toggle(showPanels, "Panels", button,
-                    GUILayout.Width((width - 2 * PAD) / 3), GUILayout.Height(TOP_BAR_HEIGHT - PAD));
-
-                GUILayout.Label("", GUIStyle.none, GUILayout.Width(PAD));
-
                 showActions = GUILayout.Toggle(showActions, "Actions", button,
-                    GUILayout.Width((width - 2 * PAD) / 3), GUILayout.Height(TOP_BAR_HEIGHT - PAD));
+                    GUILayout.Width((width - PAD) / 2), GUILayout.Height(TOP_BAR_HEIGHT - PAD));
 
                 GUILayout.Label("", GUIStyle.none, GUILayout.Width(PAD));
 
                 showTools = GUILayout.Toggle(showTools, "Tools", button,
-                    GUILayout.Width((width - 2 * PAD) / 3), GUILayout.Height(TOP_BAR_HEIGHT - PAD));
+                    GUILayout.Width((width - PAD) / 2), GUILayout.Height(TOP_BAR_HEIGHT - PAD));
             }
             GUILayout.EndHorizontal();
 
@@ -280,7 +256,6 @@ namespace SpriteMapper
         {
             UpdateSerializedHierarchyItemInfoLists();
             data.SerializedActionInfos = GetSortedHierarchyItemInfoList(data.SerializedActionInfos);
-            data.SerializedPanelInfos = GetSortedHierarchyItemInfoList(data.SerializedPanelInfos);
             data.SerializedToolInfos = GetSortedHierarchyItemInfoList(data.SerializedToolInfos);
 
             contexts = Enumerable.ToHashSet(
@@ -303,7 +278,6 @@ namespace SpriteMapper
 
             string lastClosedContext = "NULL";
             int actionIndex = 0;
-            int panelIndex = 0;
             int toolIndex = 0;
 
             scroll = GUILayout.BeginScrollView(scroll, scrollView, GUILayout.Width(width), GUILayout.Height(scrollViewHeight));
@@ -329,28 +303,10 @@ namespace SpriteMapper
                         while (actionIndex < data.SerializedActionInfos.Count &&
                             data.SerializedActionInfos[actionIndex].Context.StartsWith(lastClosedContext)) { actionIndex++; }
                         
-                        while (panelIndex < data.SerializedPanelInfos.Count &&
-                            data.SerializedPanelInfos[panelIndex].Context.StartsWith(lastClosedContext)) { panelIndex++; }
-
                         while (toolIndex < data.SerializedToolInfos.Count &&
                             data.SerializedToolInfos[toolIndex].Context.StartsWith(lastClosedContext)) { toolIndex++; }
 
                         continue;
-                    }
-
-
-                    // Panels ------------------------------------------------------------------------------- Panels
-
-                    SerializedPanelInfo panelInfo;
-                    while (panelIndex < data.SerializedPanelInfos.Count &&
-                        (panelInfo = data.SerializedPanelInfos[panelIndex]).Context == context)
-                    {
-                        if (showPanels)
-                        {
-                            Undo.RecordObject(data, "HierarchyInfoDictionary updated");
-                            data.SerializedPanelInfos[panelIndex] = HierarchyItemInfoField(panelInfo, pixelIndent);
-                        }
-                        panelIndex++;
                     }
 
 
@@ -392,7 +348,7 @@ namespace SpriteMapper
 
 
         /// <summary>
-        /// <br/>   Update serialized Action, Panel and Tool lists so that:
+        /// <br/>   Update serialized Action and Tool lists so that:
         /// <br/>   
         /// <br/>   1. Pre-existing infos point to correct types.
         /// <br/>
@@ -406,24 +362,22 @@ namespace SpriteMapper
             // Organize pre-existing serialized infos into dictionaries based on the stored FullNames
             // This helps speed up matching types found via reflection to already existing infos
             Dictionary<string, SerializedActionInfo> actionInfosByFullName = new();
-            Dictionary<string, SerializedPanelInfo> panelInfosByFullName = new();
             Dictionary<string, SerializedToolInfo> toolInfosByFullName = new();
 
             // Assume that infos don't point to a type
             // Later when iterating through types with reflection, we can reassign the boolean
             // This way the infos that don't point to any type will be easily differentiated
             foreach (var i in data.SerializedActionInfos) { actionInfosByFullName[i.FullName] = i; i.PointsToType = false; i.Context = "No Type"; }
-            foreach (var i in data.SerializedPanelInfos) { panelInfosByFullName[i.FullName] = i; i.PointsToType = false; i.Context = "No Type"; }
             foreach (var i in data.SerializedToolInfos) { toolInfosByFullName[i.FullName] = i; i.PointsToType = false; i.Context = "No Type"; }
 
 
-            // Go through each Action, Panel and Tool type and add their infos to the list
+            // Go through each Action and Tool type and add their infos to the list
             foreach (Type type in Assembly.GetExecutingAssembly().GetTypes())
             {
                 string name = type.Name;
                 string fullName = type.FullName;
 
-                // All Actions, Panels and Tools should be in SpriteMapper namespace
+                // All Actions and Tools should be in SpriteMapper namespace
                 if (!type.IsClass || string.IsNullOrEmpty(fullName) ||
                     !fullName.StartsWith("SpriteMapper.")) { continue; }
 
@@ -432,7 +386,7 @@ namespace SpriteMapper
                 {
                     if (!actionInfosByFullName.TryGetValue(fullName, out SerializedActionInfo actionInfo)) { actionInfo = new(); }
 
-                    actionInfo.Context = FullNameToContext(fullName);
+                    actionInfo.Context = HF.Hierarchy.FullNameToContext(fullName);
                     actionInfo.Name = name;
                     actionInfo.FullName = fullName;
                     actionInfo.PointsToType = true;
@@ -447,22 +401,11 @@ namespace SpriteMapper
 
                     actionInfosByFullName[fullName] = actionInfo;
                 }
-                else if (fullName.StartsWith("SpriteMapper.Panels."))
-                {
-                    if (!panelInfosByFullName.TryGetValue(fullName, out SerializedPanelInfo panelInfo)) { panelInfo = new(); }
-
-                    panelInfo.Context = FullNameToContext(fullName);
-                    panelInfo.Name = name;
-                    panelInfo.FullName = fullName;
-                    panelInfo.PointsToType = true;
-
-                    panelInfosByFullName[fullName] = panelInfo;
-                }
                 else if (fullName.StartsWith("SpriteMapper.Tools."))
                 {
                     if (!toolInfosByFullName.TryGetValue(fullName, out SerializedToolInfo toolInfo)) { toolInfo = new(); }
 
-                    toolInfo.Context = FullNameToContext(fullName);
+                    //toolInfo.Context = FullNameToContext(fullName);
                     toolInfo.Name = name;
                     toolInfo.FullName = fullName;
                     toolInfo.PointsToType = true;
@@ -472,7 +415,6 @@ namespace SpriteMapper
             }
 
             data.SerializedActionInfos = actionInfosByFullName.Values.ToList();
-            data.SerializedPanelInfos = panelInfosByFullName.Values.ToList();
             data.SerializedToolInfos = toolInfosByFullName.Values.ToList();
         }
 
@@ -499,11 +441,10 @@ namespace SpriteMapper
                 {
                     return true switch
                     {
-                        true when typeof(SerializedPanelInfo).IsAssignableFrom(info.GetType())  => 0,
                         true when typeof(SerializedActionInfo).IsAssignableFrom(info.GetType()) &&
-                        (info as SerializedActionInfo).IsShortcutExecutable                     => 1,
-                        true when typeof(SerializedActionInfo).IsAssignableFrom(info.GetType()) => 2,
-                        true when typeof(SerializedToolInfo).IsAssignableFrom(info.GetType())   => 3,
+                        (info as SerializedActionInfo).IsShortcutExecutable                     => 0,
+                        true when typeof(SerializedActionInfo).IsAssignableFrom(info.GetType()) => 1,
+                        true when typeof(SerializedToolInfo).IsAssignableFrom(info.GetType())   => 2,
                         _ => int.MaxValue
                     };
                 }).
@@ -550,31 +491,6 @@ namespace SpriteMapper
 
 
         #region Private Methods ======================================================================================= Private Methods
-
-        /// <summary>
-        /// <br/>   Returns a hierarchy item type's FullName as a context name.
-        /// <br/>   For example: "SpriteMapper.Actions.Global.Undo" -> "Global"
-        /// </summary>
-        private string FullNameToContext(string fullName)
-        {
-            // For example:
-            // X "Actions.Global.Undo"
-            // X "SpriteMapper.Actions"
-            // X "SpriteMapper.Global.Undo"
-            // X "SpriteMapper.Actions.Undo"
-            // ✓ "SpriteMapper.Actions.Global.Undo"
-            if ((!fullName.StartsWith("SpriteMapper.Actions.") &&
-                !fullName.StartsWith("SpriteMapper.Panels.") &&
-                !fullName.StartsWith("SpriteMapper.Tools.")) ||
-                fullName.Count(c => c == '.') <= 2)
-            {
-                Debug.LogWarning($"Hierarchy item {fullName} has invalid namespace!");
-                return "Wrong Context";
-            }
-
-            return fullName[(fullName.IndexOf(".", fullName.IndexOf(".") + 1) + 1)..fullName.LastIndexOf(".")];
-        }
-
 
         /// <summary> Handles drawing and opening of a context foldout menu. </summary>
         private bool ContextFoldout(bool state, string title, int pixelIndent)

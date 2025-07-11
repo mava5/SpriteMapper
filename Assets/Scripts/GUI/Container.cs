@@ -7,8 +7,8 @@ using UnityEngine;
 namespace SpriteMapper
 {
     /// <summary>
-    /// <br/>   A floating or docked area containing at least one <see cref="Panel"/>.
-    /// <br/>   Containers can also be slotted into other containers.
+    /// <br/>   A dockable element that contains two or more dockable elements.
+    /// <br/>   Can contain these elements in horizontally or vertically.
     /// </summary>
     public class Container : DockableElement
     {

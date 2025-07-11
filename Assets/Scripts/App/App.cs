@@ -1,5 +1,4 @@
 
-using System.Collections;
 using System.Collections.Generic;
 
 using UnityEngine;
@@ -9,14 +8,14 @@ namespace SpriteMapper
 {
     /// <summary>
     /// <br/>   Contains each open <see cref="SpriteMapper.Project"/> and information about application.
-    /// <br/>   Also contains <see cref="ActionHandler"/> as all projects have the same control scheme.
+    /// <br/>   Also contains <see cref="ActionHandler"/> and <see cref="ControlsHandler"/> for processing user input.
     /// </summary>
     public static class App
     {
         public static List<Project> OpenProjects { get; private set; } = new();
 
         /// <summary> Currently open <see cref="SpriteMapper.Project"/>. </summary>
-        public static Project Project { get; private set; }
+        public static Project Project { get; private set; } = null;
 
         public static string CurrentContext
         {
@@ -30,9 +29,9 @@ namespace SpriteMapper
                         {
                             return Project.Panel.Tool.Info.Context + "Active";
                         }
-                        return Project.Panel.Tool.Info.Context + "Equiped";
+                        return Project.Panel.Tool.Info.Context + "Equipped";
                     }
-                    return Project.Panel.Info.Context;
+                    return Project.Panel.Context;
                 }
                 return "";
             }
@@ -66,10 +65,13 @@ namespace SpriteMapper
 
         private static void Update()
         {
-            Actions.Update();
+            // Wait until a project is open
+            if (Project == null) { return; }
 
-            if (Project != null) { Project.Update(); }
-            
+
+            Actions.ProcessQueue();
+            Actions.UpdateLongActions();
+
             Controls.UpdateModifierKeys();
         }
 

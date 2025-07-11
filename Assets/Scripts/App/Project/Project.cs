@@ -21,14 +21,14 @@ namespace SpriteMapper
         public readonly ActionHistory History = new();
 
 
-        #region Update Loop ============================================================= Update Loop
+        //#region Update Loop ============================================================= Update Loop
 
-        public void Update()
-        {
-            //Controls.Update();
-        }
+        //public void Update()
+        //{
+        //    //Controls.Update();
+        //}
 
-        #endregion Update Loop
+        //#endregion Update Loop
 
 
         #region Public Methods ========================================================== Public Methods
@@ -45,7 +45,7 @@ namespace SpriteMapper
 
             // DEBUG
             GameObject gameObject = new("Test_Panel");
-            Panel = gameObject.AddComponent<Panels.Viewport2D.DrawImage.DrawImagePanel>();
+            //Panel = gameObject.AddComponent<Panels.DrawImagePanel>();
         }
 
         public void Exit()
