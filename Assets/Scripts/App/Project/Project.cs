@@ -13,6 +13,8 @@ namespace SpriteMapper
         /// <summary> Currently focused <see cref="SpriteMapper.Panel"/>. </summary>
         public Panel Panel { get; private set; } = null;
 
+        public bool IsPanelSelected => Panel != null;
+
         public readonly GUIHandler GUI = new();
         public readonly DataHandler Data = new();
         public readonly ActionHandler Action = new();

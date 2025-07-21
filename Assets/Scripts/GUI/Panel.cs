@@ -15,6 +15,7 @@ namespace SpriteMapper
         /// <summary> Currently active context. </summary>
         public abstract string Context { get; internal set; }
 
+        public bool IsToolEquipped => Tool != null;
 
         /// <summary> Currently equipped <see cref="SpriteMapper.Tool"/>. </summary>
         public Tool Tool { get; internal set; } = null;

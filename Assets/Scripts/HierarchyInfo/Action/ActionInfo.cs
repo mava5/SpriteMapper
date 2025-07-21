@@ -8,27 +8,22 @@ namespace SpriteMapper
     public class ActionInfo
     {
         /// <summary> The type of the action the info points to. </summary>
-        public readonly Type ActionType;
+        public readonly Type ActionType = null;
 
         /// <summary> The context in which action can be used. Determined by the action's namespace. </summary>
-        public readonly string Context;
+        public readonly string Context = "";
 
-        /// <summary> Explanation for how the action works, used for action's tooltip. </summary>
-        public readonly string Description;
+        public readonly string Description = "";
+        
+        public readonly ActionBehaviourType Behaviour;
+        public readonly ActionSettings Settings = null;
+        public readonly bool IsUndoable = false;
 
-        /// <summary> A high priority action succeeding causes the lower priority ones to get ignored. </summary>
-        public readonly PriorityLevel Priority;
+        public readonly Shortcut DefaultShortcut = null;
+        public Shortcut Shortcut { get; private set; } = null;
 
-        public readonly bool IsLong;
-        public readonly bool IsShort;
-        public readonly bool IsUndoable;
-        public readonly bool IsShortcutExecutable;
-
-        /// <summary> The first default shortcut for executing the action. </summary>
-        public Shortcut DefaultShortcut1 { get; private set; } = null;
-
-        /// <summary> The second default shortcut for executing the action. </summary>
-        public Shortcut DefaultShortcut2 { get; private set; } = null;
+        /// <summary> Determines if action can be used. </summary>
+        public bool Active { get; private set; } = true;
 
 
         public ActionInfo(SerializedActionInfo serializedInfo)
@@ -37,17 +32,21 @@ namespace SpriteMapper
             Context = serializedInfo.Context;
             Description = serializedInfo.Description;
 
-            IsLong = serializedInfo.IsLong;
+            Behaviour = serializedInfo.Behaviour;
+            Settings = serializedInfo.Settings;
             IsUndoable = serializedInfo.IsUndoable;
-            IsShortcutExecutable = serializedInfo.IsShortcutExecutable;
 
-            DefaultShortcut1 = serializedInfo.DefaultShortcut1;
-            DefaultShortcut2 = serializedInfo.DefaultShortcut2;
+            // TODO: Read saved shortcut from a text file
+            DefaultShortcut = serializedInfo.DefaultShortcut;
         }
 
 
-        ///// <summary> Rebinds the action's shortcut. </summary>
-        //public void Rebind(Shortcut newShortcut)
-        //{ if (IsShortcutExecutable) { Shortcut = newShortcut; } }
+        public void RebindAction(Shortcut shortcut)
+        {
+            if (Settings.ShortcutState == ActionShortcutState.Exists && Active)
+            {
+                Shortcut = shortcut;
+            }
+        }
     }
 }

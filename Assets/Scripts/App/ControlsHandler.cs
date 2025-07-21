@@ -1,8 +1,4 @@
 
-using System;
-using System.Linq;
-using System.Collections.Generic;
-
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -11,7 +7,7 @@ namespace SpriteMapper
 {
     /// <summary>
     /// <br/>   Handles app controls and <see cref="Shortcut"/> activation.
-    /// <br/>   Based on activated shortcuts, adds each corresponding <see cref="Action"/> to <see cref="ActionHandler"/> queue.
+    /// <br/>   Based on pressed shortcuts, adds each corresponding <see cref="Action"/> to <see cref="ActionHandler"/> queue.
     /// </summary>
     public class ControlsHandler
     {
@@ -31,7 +27,10 @@ namespace SpriteMapper
             {
                 if (!info.IsShortcutExecutable) { continue; }
 
-                InputAction inputAction = actionMap.AddAction(info.ActionType.FullName, InputActionType.Button, info.DefaultShortcut1.Binding);
+
+                InputAction inputAction = actionMap.AddAction(info.ActionType.FullName,
+                    InputActionType.Button, info.DefaultShortcut1.Binding, );
+                
                 inputAction.performed += callbackContext => { OnActionShortcutDown(callbackContext, info.DefaultShortcut1, info); };
 
                 if (info.IsLong)
@@ -55,7 +54,7 @@ namespace SpriteMapper
             ctrlHeld = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
             altHeld = Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt);
         }
-
+        
         #endregion Public Methods
 
 
@@ -74,6 +73,10 @@ namespace SpriteMapper
 
         private void OnLongActionShortcutUp(InputAction.CallbackContext context, ActionInfo info)
         {
+            App.Actions.ReleaseOngoingInput(info.Shortcut);
+
+            ILong<LongActionType> test = new();
+
             if (App.Actions.ActiveLongActions.ContainsKey(info.ActionType))
             {
                 App.Actions.ActiveLongActions[info.ActionType].longAction.ShortcutReleased = true;

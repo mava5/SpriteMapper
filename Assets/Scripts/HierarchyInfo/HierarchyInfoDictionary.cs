@@ -109,8 +109,6 @@ namespace SpriteMapper
         public bool IsUndoable = false;
         public bool IsShortcutExecutable = false;
 
-        public PriorityLevel Priority;
-
         public Shortcut DefaultShortcut1 = null;
         public Shortcut DefaultShortcut2 = null;
     }
@@ -291,7 +289,7 @@ namespace SpriteMapper
 
                     int currentDepth = context.Count(c => c == '.');
                     int pixelIndent = currentDepth * INDENT_WIDTH;
-                    string title = currentDepth > 0 ? context[context.LastIndexOf(".")..] : context;
+                    string title = currentDepth > 0 ? context[(context.LastIndexOf(".") + 1)..] : context;
 
                     menuStates[context] = ContextFoldout(menuStates[context], title, pixelIndent);
 
@@ -377,12 +375,12 @@ namespace SpriteMapper
                 string name = type.Name;
                 string fullName = type.FullName;
 
-                // All Actions and Tools should be in SpriteMapper namespace
+                // All Actions and Tools should be in SpriteMapper.Hierarchy namespace
                 if (!type.IsClass || string.IsNullOrEmpty(fullName) ||
-                    !fullName.StartsWith("SpriteMapper.")) { continue; }
+                    !fullName.StartsWith("SpriteMapper.Hierarchy.")) { continue; }
 
 
-                if (fullName.StartsWith("SpriteMapper.Actions."))
+                if (typeof(Action).IsAssignableFrom(type))
                 {
                     if (!actionInfosByFullName.TryGetValue(fullName, out SerializedActionInfo actionInfo)) { actionInfo = new(); }
 
@@ -394,14 +392,11 @@ namespace SpriteMapper
                     actionInfo.IsLong = typeof(ILong).IsAssignableFrom(type);
                     actionInfo.IsShort = typeof(IShort).IsAssignableFrom(type);
                     actionInfo.IsUndoable = typeof(IUndoable).IsAssignableFrom(type);
-                    actionInfo.IsShortcutExecutable = !type.HasAttribute<NotShortcutExecutable>();
-
-                    actionInfo.Priority = type.HasAttribute<ActionPriority>() ?
-                        type.GetCustomAttribute<ActionPriority>().Priority : PriorityLevel.Normal;
+                    actionInfo.IsShortcutExecutable = !type.HasAttribute<NonShortcutExecutable>();
 
                     actionInfosByFullName[fullName] = actionInfo;
                 }
-                else if (fullName.StartsWith("SpriteMapper.Tools."))
+                else if (typeof(Tool).IsAssignableFrom(type))
                 {
                     if (!toolInfosByFullName.TryGetValue(fullName, out SerializedToolInfo toolInfo)) { toolInfo = new(); }
 

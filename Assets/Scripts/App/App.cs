@@ -17,6 +17,8 @@ namespace SpriteMapper
         /// <summary> Currently open <see cref="SpriteMapper.Project"/>. </summary>
         public static Project Project { get; private set; } = null;
 
+        public static bool IsProjectOpen => Project != null;
+
         public static string CurrentContext
         {
             get
@@ -69,6 +71,7 @@ namespace SpriteMapper
             if (Project == null) { return; }
 
 
+            Actions.ProcessPrevious();
             Actions.ProcessQueue();
             Actions.UpdateLongActions();
 
@@ -82,7 +85,7 @@ namespace SpriteMapper
 
         public static void OpenProject(Project projectToOpen)
         {
-
+            
         }
 
         #endregion Public Methods
