@@ -30,13 +30,13 @@ namespace SpriteMapper
     /// <summary> Determines the base behaviour of an <see cref="Action"/>. </summary>
     public enum ActionBehaviourType
     {
-        /// <summary> <see cref="InstantAction"/> </summary>
+        /// <summary> Pressed short action. </summary>
         Instant,
 
-        /// <summary> <see cref="ToggleAction"/> </summary>
+        /// <summary> Pressed long action. </summary>
         Toggle,
 
-        /// <summary> <see cref="HoldAction"/> </summary>
+        /// <summary> Held long action. </summary>
         Hold,
     }
 

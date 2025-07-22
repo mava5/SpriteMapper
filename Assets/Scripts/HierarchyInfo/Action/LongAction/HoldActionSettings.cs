@@ -44,7 +44,7 @@ namespace SpriteMapper
             
             // Base --------------------------------------- Base
             bool conflictBehaviourForced,
-            bool executionPrioritized,
+            bool prioritized,
             ActionShortcutState shortcutState,
             ActionDescendantUsability descendantUsability,
 
@@ -55,7 +55,7 @@ namespace SpriteMapper
             HoldActionEnding endingBehaviour,
             HoldActionResolving conflictBehaviour
 
-            ) : base(conflictBehaviourForced, executionPrioritized, shortcutState, descendantUsability, contextUsedWhenActive)
+            ) : base(conflictBehaviourForced, prioritized, shortcutState, descendantUsability, contextUsedWhenActive)
         {
             EndingBehaviour = endingBehaviour;
             ConflictBehaviour = conflictBehaviour;

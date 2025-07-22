@@ -16,14 +16,14 @@ namespace SpriteMapper
 
             // Base --------------------------------------- Base
             bool conflictBehaviourForced,
-            bool executionPrioritized,
+            bool prioritized,
             ActionShortcutState shortcutState,
             ActionDescendantUsability descendantUsability,
 
             // Long --------------------------------------- Long
             Type contextUsedWhenActive
 
-            ) : base(conflictBehaviourForced, executionPrioritized, shortcutState, descendantUsability)
+            ) : base(conflictBehaviourForced, prioritized, shortcutState, descendantUsability)
         {
             ContextUsedWhenActive = HF.Hierarchy.FullNameToContext(contextUsedWhenActive.FullName);
         }

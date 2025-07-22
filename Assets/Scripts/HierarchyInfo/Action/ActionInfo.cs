@@ -48,5 +48,27 @@ namespace SpriteMapper
                 Shortcut = shortcut;
             }
         }
+
+        public bool CheckIfExecutableInContext(string contextToExecuteIn, bool isContextOverwrittenByLongAction)
+        {
+            bool isGlobal = Context == "Global" || Context.StartsWith("Global.");
+            bool canExecute = false;
+
+            switch (Settings.DescendantUsability)
+            {
+                case ActionDescendantUsability.None:
+                    canExecute = isGlobal || Context == contextToExecuteIn; break;
+
+                case ActionDescendantUsability.Limited:
+                    canExecute = isContextOverwrittenByLongAction ?
+                        Context == contextToExecuteIn :
+                        isGlobal || Context.StartsWith(contextToExecuteIn); break;
+
+                case ActionDescendantUsability.Full:
+                    canExecute = isGlobal || Context.StartsWith(contextToExecuteIn); break;
+            }
+
+            return canExecute;
+        }
     }
 }

@@ -58,10 +58,10 @@ namespace SpriteMapper
         public readonly bool ConflictBehaviourForced;
 
         /// <summary>
-        /// <br/>   Determines if action is prioritized over other conflicting actions.
-        /// <br/>   Other conflicting actions are considerend only if action is unsuccessful.
+        /// <br/>   Determines if action is prioritized over other actions.
+        /// <br/>   unprioritized actions are considerend only if this action is unsuccessful.
         /// </summary>
-        public readonly bool ExecutionPrioritized;
+        public readonly bool Prioritized;
 
         public readonly ActionShortcutState ShortcutState;
 
@@ -70,12 +70,12 @@ namespace SpriteMapper
 
         public ActionSettings(
             bool conflictBehaviourForced,
-            bool executionPrioritized,
+            bool prioritized,
             ActionShortcutState shortcutState,
             ActionDescendantUsability descendantUsability)
         {
             ConflictBehaviourForced = conflictBehaviourForced;
-            ExecutionPrioritized = executionPrioritized;
+            Prioritized = prioritized;
             ShortcutState = shortcutState;
             DescendantUsability = descendantUsability;
         }

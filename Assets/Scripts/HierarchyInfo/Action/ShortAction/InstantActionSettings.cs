@@ -17,11 +17,11 @@ namespace SpriteMapper
 
             // Base --------------------------------------- Base
             bool conflictBehaviourForced,
-            bool executionPrioritized,
+            bool prioritized,
             ActionShortcutState shortcutState,
             ActionDescendantUsability descendantUsability
 
-            ) : base(conflictBehaviourForced, executionPrioritized, shortcutState, descendantUsability)
+            ) : base(conflictBehaviourForced, prioritized, shortcutState, descendantUsability)
         {
 
         }

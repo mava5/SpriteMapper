@@ -7,6 +7,9 @@ namespace SpriteMapper
     /// <summary> Determines how a <see cref="ToggleAction"/> is cancelled or finished. </summary>
     public enum ToggleActionEnding
     {
+        /// <summary> Finished manually by action or from an outside source. </summary>
+        Manual,
+
         /// <summary> Finished when <see cref="Shortcut"/> is pressed again. </summary>
         Repress,
 
@@ -33,7 +36,7 @@ namespace SpriteMapper
 
             // Base --------------------------------------- Base
             bool conflictBehaviourForced,
-            bool executionPrioritized,
+            bool prioritized,
             ActionShortcutState shortcutState,
             ActionDescendantUsability descendantUsability,
 
@@ -43,7 +46,7 @@ namespace SpriteMapper
             // Specific ----------------------------------- Specific
             ToggleActionEnding endingBehaviour
             
-            ) : base(conflictBehaviourForced, executionPrioritized, shortcutState, descendantUsability, contextUsedWhenActive)
+            ) : base(conflictBehaviourForced, prioritized, shortcutState, descendantUsability, contextUsedWhenActive)
         {
             EndingBehaviour = endingBehaviour;
         }
