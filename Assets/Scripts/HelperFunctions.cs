@@ -1,5 +1,4 @@
 ﻿
-using System.Linq;
 using UnityEngine;
 
 
@@ -14,13 +13,14 @@ namespace SpriteMapper
             /// <summary>
             /// <br/>   Returns a hierarchy item type's FullName as a context name.
             /// <br/>   For example: "SpriteMapper.Hierarchy.Global.Undo" -> "Global"
+            /// <br/>   An empty string is returned if FullName couldn't be converted.
             /// </summary>
             public static string FullNameToContext(string fullName)
             {
                 if (!fullName.StartsWith("SpriteMapper.Hierarchy."))
                 {
                     Debug.LogWarning($"Hierarchy item {fullName} has invalid namespace!");
-                    return "Wrong Context";
+                    return "";
                 }
 
                 return fullName[(fullName.IndexOf(".", fullName.IndexOf(".") + 1) + 1)..fullName.LastIndexOf(".")];

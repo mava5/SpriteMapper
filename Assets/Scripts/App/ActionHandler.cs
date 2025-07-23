@@ -5,6 +5,8 @@ using System.Collections.Generic;
 
 using UnityEngine;
 using UnityEditor.ShaderGraph;
+using UnityEngine.SocialPlatforms;
+using Unity.VisualScripting;
 
 
 namespace SpriteMapper
@@ -107,71 +109,102 @@ namespace SpriteMapper
         | ┌ [Instant] NormalInstant   → Shortcut is pressed.
         | └ [Instant, CBF] CBFInstant → NormalInstant failed and shortcut is released.
         | or
-        | ┌ [Hold, DeadZone]   NonCBFHold   → Shortcut is pressed.
+        | ┌ [Hold, Timer]      NonCBFHold   → Shortcut is pressed.
         | └ [Hold, Timer, CBF] CBFTimerHold → NonCBFHold failed and user keeps holding shortcut after some time.
 
 
-        | CBF actions cannot be prioritized. In other words, CBF setting nullifies prioritized setting.
+        | Prioritizing a CBF action will only make it perform before any other similar CBF actions.
+        | The action will still act as if in a solvable conflict.
         |
-        | ┌ [Instant, CBF]              A_Instant → Shortcut is released.
-        | └ [Instant, Prioritized, CBF] B_Instant → A_Instant failed.
+        | ┌ [Instant, Prioritized, CBF] B_Instant → Shortcut is released.
+        | └ [Instant, CBF]              A_Instant → B_Instant failed.
         */
 
 
         /// <summary>
-        /// <br/>   Currently active long <see cref="Action"/>, which overwrites the context.
+        /// <br/>   Currently active <see cref="LongAction"/>, which overwrites the context.
         /// <br/>   While active, only actions within its specified context can be used.
         /// <br/>   Also <see cref="ActionDescendantUsability.Full"/> actions from parent contexts can be used.
         /// <br/>   
         /// <br/>   Starting new such action will have the previous one cancelled.
-        /// <br/>   Start mouse position is also trasnferred from the cancelled action.
+        /// <br/>   Start mouse position is also transferred from the cancelled action.
         /// </summary>
-        public Action ActiveContextOverwritingLongAction { get; private set; } = null;
+        public LongAction ActiveContextOverwritingLongAction { get; private set; } = null;
 
-        /// <summary> Context used while <see cref="ActiveContextOverwritingLongAction"/> remains active. </summary>
-        public string OverwrittenContext { get; private set; } = "";
 
         /// <summary>
-        /// <br/>   Each currently active long <see cref="Action"/>, which doesn't overwrite context.
+        /// <br/>   Each currently active <see cref="LongAction"/>, which doesn't overwrite context.
+        /// <br/>   Only one long action can be active at once for any <see cref="Shortcut"/>.
         /// <br/>   These actions get cancelled whenever the context changes.
         /// </summary>
-        public Dictionary<Type, Action> ActiveLongActions { get; private set; } = new();
+        private Dictionary<Type, LongAction> activeLongActions = new();
 
-
-        // Keep track of actions to execute based on their shortcut
+        /// <summary> Keeps track of actions to execute based on their shortcut. </summary>
         private Dictionary<Shortcut, Queue<ActionInfo>> actionQueues = new();
 
-        // An unresolved input is created if a solvable conflict is caused by shortcut
-        // Each unresolved input is then evaluated each frame
-        // Unresolved inputs get dropped when context changes
-        private Dictionary<Shortcut, (float startTime, Vector2 startPosition,
+        /// <summary>
+        /// <br/>   An unresolved input is created if a solvable conflict is caused by shortcut
+        /// <br/>   Each unresolved input is then evaluated each frame
+        /// <br/>   Unresolved inputs get dropped when context changes
+        /// </summary>
+        private Dictionary<Shortcut, (float startTime, Vector2 mouseStartPosition,
+            List<ActionInfo> releaseActionInfos,
             List<ActionInfo> deadZoneActionInfos,
-            List<ActionInfo> timerActionInfos,
-            List<ActionInfo> fallbackActionInfos)>
+            List<ActionInfo> timerActionInfos)>
             unresolvedInputs = new();
 
 
-        #region Public Methods ======================================================================================== Public Methods
+        #region Public Methods ================================================================================================== Public Methods
 
         /// <summary> Finishes unresolved input if one is ongoing for given shortcut. </summary>
         public void ReleaseInput(Shortcut shortcut)
         {
             if (unresolvedInputs.TryGetValue(shortcut, out var input))
             {
+                (bool succeeded, bool contextChanged) = TryExecuteActions(input.fallbackActionInfos);
 
+                if (contextChanged) { OnContextChanged(); }
+                else { unresolvedInputs.Remove(shortcut); }
             }
         }
 
         /// <summary>
         /// <br/>   Iterates through unresolved inputs and evaluates them.
-        /// <br/>   Executes action and finishes unresolved input if action specific conditions are met.
+        /// <br/>   Executes <see cref="Action"/> and finishes unresolved input if action specific conditions are met.
         /// </summary>
         public void ProcessUnresolvedInputs()
         {
-            foreach (var input in unresolvedInputs)
+            bool contextChanged = false;
+            List<Shortcut> resolvedInputs = new();
+            
+            foreach ((Shortcut shortcut, var input) in unresolvedInputs)
             {
+                bool succeeded = false;
 
+                if (input.deadZoneActionInfos.Count > 0)
+                {
+                    float distance = ((Vector2)Input.mousePosition - input.mouseStartPosition).magnitude;
+
+                    if (distance < Preferences.HoldDeadZoneRadius) { continue; }
+
+                    (succeeded, contextChanged) = TryExecuteActions(input.deadZoneActionInfos);
+                }
+
+                if (!succeeded && input.timerActionInfos.Count > 0)
+                {
+                    if (Time.time < input.startTime + Preferences.HoldTimerLength) { continue; }
+
+                    (succeeded, contextChanged) = TryExecuteActions(input.timerActionInfos);
+                }
+
+                if (contextChanged) { break; }
+                if (succeeded) { resolvedInputs.Add(shortcut); }
             }
+
+
+            if (contextChanged) { OnContextChanged(); return; }
+            
+            foreach (Shortcut shortcut in resolvedInputs) { unresolvedInputs.Remove(shortcut); }
         }
 
 
@@ -181,203 +214,208 @@ namespace SpriteMapper
         /// </summary>
         public void ProcessQueue()
         {
+            float time = Time.time;
+            Vector2 mousePosition = Input.mousePosition;
+            bool contextChanged = false;
+
             foreach ((Shortcut shortcut, Queue<ActionInfo> queue) in actionQueues)
             {
-                List<ActionInfo> prioritizedActionInfos = new();
-                List<ActionInfo> pressActivatedActionInfos = new();
-                List<ActionInfo> deadZoneActionInfos = new();
-                List<ActionInfo> timerActionInfos = new();
+                List<ActionInfo> prioritizedInfos = new();
+                List<ActionInfo> pressActivatedInfos = new();
+                List<ActionInfo> deadZoneInfos = new();
+                List<ActionInfo> timerInfos = new();
 
                 foreach (ActionInfo info in queue)
                 {
-                    if (info.CheckIfExecutableInContext(App.CurrentContext, ActiveContextOverwritingLongAction != null)) { continue; }
+                    if (!info.IsExecutableInContext(App.CurrentContext, ActiveContextOverwritingLongAction != null)) { continue; }
 
-                    if (info.Settings.Prioritized && !info.Settings.ConflictBehaviourForced) { prioritizedActionInfos.Add(info); }
-                    else if (info.Behaviour == ActionBehaviourType.Instant) { pressActivatedActionInfos.Add(info); }
-                    else if (info.Behaviour == ActionBehaviourType.Toggle) { pressActivatedActionInfos.Add(info); }
+                    if (info.Settings.Prioritized && !info.Settings.ConflictBehaviourForced) { prioritizedInfos.Add(info); }
+                    else if (info.Behaviour == ActionBehaviourType.Instant) { pressActivatedInfos.Add(info); }
+                    else if (info.Behaviour == ActionBehaviourType.Toggle) { pressActivatedInfos.Add(info); }
                     else if (info.Behaviour == ActionBehaviourType.Hold)
                     {
                         HoldActionSettings holdSettings = (HoldActionSettings)info.Settings;
 
-                        if (holdSettings.ConflictBehaviour == HoldActionResolving.UseDeadZone) { deadZoneActionInfos.Add(info); }
-                        else if (holdSettings.ConflictBehaviour == HoldActionResolving.UseTimer) { timerActionInfos.Add(info); }
+                        if (holdSettings.ConflictBehaviour == HoldActionResolving.UseDeadZone) { deadZoneInfos.Add(info); }
+                        else if (holdSettings.ConflictBehaviour == HoldActionResolving.UseTimer) { timerInfos.Add(info); }
                     }
                 }
 
 
-                (bool succeeded, bool contextChanged) = TryExecuteActions(prioritizedActionInfos);
+                bool succeeded = false;
+                (succeeded, contextChanged) = TryExecuteActions(prioritizedInfos);
 
-                if (contextChanged) { return; }
+                // Rest of inputs are ignored upon context change as they might cause undefined behaviour in new context
+                if (contextChanged) { break; }
                 if (succeeded) { continue; }
 
 
                 int uniqueActionTypes =
-                    (pressActivatedActionInfos.Count > 0 ?  1 : 0) +
-                    (deadZoneActionInfos.Count > 0 ?        1 : 0) +
-                    (timerActionInfos.Count > 0 ?           1 : 0);
+                    (pressActivatedInfos.Count > 0 ?  1 : 0) +
+                    (deadZoneInfos.Count > 0 ?        1 : 0) +
+                    (timerInfos.Count > 0 ?           1 : 0);
 
                 if (uniqueActionTypes == 1)
                 {
-                    if (pressActivatedActionInfos.Count > 0)
+                    List<ActionInfo> normalInfos = null;
+                    List<ActionInfo> cbfInfos = null;
+
+                    if (pressActivatedInfos.Count > 0) { (normalInfos, cbfInfos) = GetSortedActionInfos(pressActivatedInfos); }
+                    else if (deadZoneInfos.Count > 0) { (normalInfos, cbfInfos) = GetSortedActionInfos(deadZoneInfos); }
+                    else if (timerInfos.Count > 0) { (normalInfos, cbfInfos) = GetSortedActionInfos(timerInfos); }
+
+                    (succeeded, contextChanged) = TryExecuteActions(normalInfos);
+
+                    if (contextChanged) { break; }
+                    if (!succeeded && cbfInfos.Count > 0)
                     {
-                        (List<ActionInfo> normalActions, List<ActionInfo> cbfActions) = GetSortedActionInfos(pressActivatedActionInfos);
-
-                        pressActivatedActionInfos = pressActivatedActionInfos.OrderBy(info => info.ActionType.FullName).ToList();
-
-                        (succeeded, contextChanged) = TryExecuteActions(pressActivatedActionInfos);
-
-                        if (oneOrMoreCBF)
-                        {
-                            unresolvedInputs.Add(shortcut,
-                                (
-                                    Time.time, Input.mousePosition,
-                                    null, null, 
-                                ));
-                        }
+                        if (pressActivatedInfos.Count > 0) { unresolvedInputs.Add(shortcut, (time, mousePosition, cbfInfos, null, null)); }
+                        else if (deadZoneInfos.Count > 0) { unresolvedInputs.Add(shortcut, (time, mousePosition, null, cbfInfos, null)); }
+                        else if (timerInfos.Count > 0) { unresolvedInputs.Add(shortcut, (time, mousePosition, null, null, cbfInfos )); }
                     }
-                    else if (deadZoneActionInfos.Count > 0)
-                    {
-                        (succeeded, contextChanged) = TryExecuteActions(pressActivatedActionInfos);
-
-                        if (contextChanged) { return; }
-                        if (succeeded) { continue; }
-                    }
-                    else if (pressActivatedActionInfos.Count > 0)
-                    {
-                        (succeeded, contextChanged) = TryExecuteActions(pressActivatedActionInfos);
-
-                        if (contextChanged) { return; }
-                        if (succeeded) { continue; }
-                    }
-
-                    if (contextChanged) { return; }
-                    if (succeeded) { continue; }
                 }
-
-                if (uniqueActionTypes > 1)
+                else if (uniqueActionTypes > 1)
                 {
-                    unresolvedInputs.Add(shortcut,
-                        (
-                            Time.time, Input.mousePosition,
-                            deadZoneActionInfos,
-                            timerActionInfos,
-                            pressActivatedActionInfos
-                        ));
-
-                    continue;
+                    unresolvedInputs.Add(shortcut, (time, mousePosition, deadZoneInfos, timerInfos, pressActivatedInfos));
                 }
-
-
-
             }
             actionQueues.Clear();
+
+
+            if (contextChanged) { OnContextChanged(); }
         }
 
-        /// <summary> Updates each active <see cref="ILong"/> <see cref="Action"/> and re-evaluates them. </summary>
+        /// <summary> Updates each active <see cref="LongAction"/>. </summary>
         public void UpdateLongActions()
         {
-            // Evaluate currently active long actions
-            List<Type> longActionsToRemove = new();
-            foreach ((ILong action, Vector2 _) in ActiveLongActions.Values)
-            {
-                if (action != null)
-                {
-                    if (action.CancelPredicate)
-                    {
-                        action.Cancel();
-                        longActionsToRemove.Add(action.GetType());
-                    }
-                    else if (action.EndPredicate)
-                    {
-                        action.End();
-                        longActionsToRemove.Add(action.GetType());
-                    }
-                    else
-                    {
-                        action.Update();
-                    }
-                }
-            }
-
-            foreach (Type actionType in longActionsToRemove) { ActiveLongActions.Remove(actionType); }
+            foreach (LongAction action in activeLongActions.Values) { action.Update(); }
         }
 
-
-        /// <summary> Queues up <see cref="Action"/> based on given type. </summary>
-        /// <param name="shortcutOverride"> Shortcut used to execute action if not the action's own one. </param>
-        /// <param name="highPriority"> true = Action prioritized in queue <br/> false = Uses priority from <see cref="ActionInfo"/> </param>
-        public void AddToQueue<T>(Shortcut shortcutOverride = null, bool highPriority = false) where T : Action
-        {
-            AddToQueue(HierarchyInfoDictionary.ActionInfos[typeof(T)], shortcutOverride, highPriority);
-        }
-
-        /// <summary> Queues up <see cref="Action"/> based on given type. </summary>
-        /// <param name="shortcutOverride"> Shortcut used to execute action if not the action's own one. </param>
-        /// <param name="highPriority"> true = Action prioritized in queue <br/> false = Uses priority from <see cref="ActionInfo"/> </param>
-        public void AddToQueue(Type actionType, Shortcut shortcutOverride = null, bool highPriority = false)
-        {
-            AddToQueue(HierarchyInfoDictionary.ActionInfos[actionType], shortcutOverride, highPriority);
-        }
 
         /// <summary> Queues up <see cref="Action"/> based on given info. </summary>
-        /// <param name="shortcutOverride"> Shortcut used to execute action if not the action's own one. </param>
-        /// <param name="highPriority"> true = Action prioritized in queue <br/> false = Uses priority from <see cref="ActionInfo"/> </param>
-        public void AddToQueue(ActionInfo actionInfo, Shortcut shortcutOverride = null, bool highPriority = false)
+        /// <param name="shortcutOverride"> Shortcut used to execute action. Overrides the action's own one. </param>
+        public void AddToQueue(ActionInfo actionInfo, Shortcut shortcutOverride = null)
         {
-            Shortcut shortcut = shortcutOverride ?? actionInfo.DefaultShortcut1;
-            int priority = highPriority ? int.MaxValue : (int)actionInfo.Priority;
+            Shortcut shortcut = shortcutOverride ?? actionInfo.Shortcut;
 
             actionQueues.TryAdd(shortcut, new());
-            actionQueues[shortcut].Enqueue((actionInfo, priority));
+            actionQueues[shortcut].Enqueue(actionInfo);
         }
 
         #endregion Public Methods
 
 
-        #region Private Methods ======================================================================================= Private Methods
+        #region Private Methods ================================================================================================= Private Methods
 
-        /// <summary> Goes through given list of ActionInfos alphabetically and stops once an Action succeeds </summary>
-        private (bool succeeded, bool contextChanged) TryExecuteActions(List<ActionInfo> infos)
-        {
-            if (infos.Count == 0) { return (false, false); }
-
-
-            infos = infos.OrderBy(info => info.ActionType.FullName).ToList();
-
-
-            Action action = (Action)Activator.CreateInstance(info.ActionType);
-
-            if (info.IsShort && ((IShort)action).Do()) { break; }
-            if (info.IsLong && ((Ilong)action).Begin())
-            {
-                // Cancel currently active long action if there is one
-                if (ActiveLongActions.ContainsKey(info.ActionType))
-                {
-                    ActiveLongActions[info.ActionType].longAction.Cancel();
-                    ActiveLongActions.Remove(info.ActionType);
-                }
-
-                ActiveLongActions.Add(info.ActionType, ((ILong)action, Input.mousePosition));
-                break;
-            }
-        }
-
-        /// <summary> Sorts given list of actions into two lists, one for normal actions and one for CBF actions. </summary>
-        private (List<ActionInfo> normalActionInfos, List<ActionInfo> cbfActionInfos) GetSortedActionInfos(List<ActionInfo> infos)
+        /// <summary>
+        /// <br/>   Alphabetically sorts given <see cref="ActionInfo"/> list into normal and CBF lists.
+        /// <br/>   Prioritized actions are also put at the front of the two lists.
+        /// </summary>
+        private (List<ActionInfo> normalInfos, List<ActionInfo> cbfInfos) GetSortedActionInfos(List<ActionInfo> infos)
         {
             int cbfCount = 0;
             List<ActionInfo> sortedActionInfos = infos.
-                OrderBy(info => info.ActionType.FullName).
-                ThenBy(info =>
+                OrderBy(info =>
                 {
                     if (info.Settings.ConflictBehaviourForced) { cbfCount++; }
                     return !info.Settings.ConflictBehaviourForced;
-                }).ToList();
+                }).
+                ThenBy(info => info.Settings.Prioritized).
+                ThenBy(info => info.ActionType.FullName).ToList();
 
             List<ActionInfo> normalActionInfos = sortedActionInfos.GetRange(0, cbfCount);
             List<ActionInfo> cbfActionInfos = sortedActionInfos.GetRange(cbfCount, sortedActionInfos.Count - cbfCount);
 
             return (normalActionInfos, cbfActionInfos);
+        }
+
+
+        /// <summary> Goes through given <see cref="ActionInfo"/> list until one succeeds. </summary>
+        private (bool succeeded, bool contextChanged) TryExecuteActions(List<ActionInfo> infos)
+        {
+            bool succeeded = false;
+            string startContext = App.CurrentContext;
+            ActionInfo successfulInfo = null;
+
+            foreach (ActionInfo info in infos)
+            {
+                if (info.Settings.Duration == ActionDuration.Short) { succeeded = TryExecuteShortAction(info); }
+                else if (info.Settings.Duration == ActionDuration.Long) { succeeded = TryExecuteLongAction(info); }
+
+                if (succeeded) { successfulInfo = info; break; }
+            }
+
+            return (succeeded, startContext != App.CurrentContext);
+        }
+
+        private bool TryExecuteShortAction(ActionInfo info)
+        {
+            ShortAction shortAction = (ShortAction)Activator.CreateInstance(info.ActionType);
+
+            return shortAction.Do();
+        }
+
+        private bool TryExecuteLongAction(ActionInfo info)
+        {
+            LongAction longAction = (LongAction)Activator.CreateInstance(info.ActionType);
+            bool isContextOverwriting = ((LongActionSettings)info.Settings).ContextUsedWhenActive != "";
+            Vector2 mouseStartPosition = Input.mousePosition;
+
+            if (isContextOverwriting && ActiveContextOverwritingLongAction != null)
+            {
+                mouseStartPosition = ActiveContextOverwritingLongAction.MouseStartPosition;
+            }
+
+            if (!longAction.Begin(mouseStartPosition)) { return false; }
+
+
+            if (isContextOverwriting)
+            {
+                ActiveContextOverwritingLongAction?.Cancel();
+                ActiveContextOverwritingLongAction = longAction;
+            }
+            else
+            {
+                if (activeLongActions.ContainsKey(info.ActionType))
+                {
+                    activeLongActions[info.ActionType].Cancel();
+                    activeLongActions.Remove(info.ActionType);
+                }
+
+                activeLongActions.Add(info.ActionType, longAction);
+            }
+
+            return true;
+        }
+
+
+        /// <summary>
+        /// <br/>   Cancels each <see cref="LongAction"/> and unresolved input.
+        /// <br/>   This is done to prevent undefined behaviour with actions started in old context.
+        /// </summary>
+        private void OnContextChanged()
+        {
+            Debug.Log("Context changed: " + App.CurrentContext);
+
+            // Active context overwriting long action is only cancelled if it didn't begin this frame
+            // This is done so that the action wont immediately be cancelled after it overwrites the context
+            if (ActiveContextOverwritingLongAction != null &&
+                !ActiveContextOverwritingLongAction.BeganThisFrame)
+            {
+                ActiveContextOverwritingLongAction.Cancel();
+                ActiveContextOverwritingLongAction = null;
+            }
+
+            List<Type> longActionsToRemove = new();
+            foreach ((Type type, LongAction longAction) in activeLongActions)
+            {
+                longAction.Cancel();
+                longActionsToRemove.Add(type);
+            }
+
+            foreach (Type actionType in longActionsToRemove) { activeLongActions.Remove(actionType); }
+
+            unresolvedInputs.Clear();
         }
 
         #endregion Private Methods

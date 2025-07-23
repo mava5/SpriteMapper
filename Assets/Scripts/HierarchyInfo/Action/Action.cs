@@ -1,4 +1,4 @@
-
+﻿
 using System;
 
 
@@ -46,6 +46,31 @@ namespace SpriteMapper
     {
         public abstract ActionInfo Info { get; }
 
-        public virtual void Dispose() { }
+        /// <param name="manuallyCalled">
+        /// <br/>   true:
+        /// <br/>   • Called manually from <see cref="Dispose()"/>
+        /// <br/>   • Safe to free unmanaged resources
+        ///         (<see cref="UnityEngine.Texture2D"/>, <see cref="UnityEngine.Mesh"/>, etc.)
+        /// <br/>   • Safe to free managed resources
+        ///         (<see cref="int"/>, <see cref="string"/>, <see cref="System.Collections.Generic.List{T}"/>, etc.)
+        /// <br/>   → Action object still exists
+        /// <br/>
+        /// <br/>   false:
+        /// <br/>   • Called by garbage collector from action finalizer
+        /// <br/>   • Safe to free unmanaged resources
+        ///         (<see cref="UnityEngine.Texture2D"/>, <see cref="UnityEngine.Mesh"/>, etc.)
+        /// <br/>   → Action object may not exist
+        /// </param>
+        internal virtual void Dispose(bool manuallyCalled) { }
+
+        public void Dispose()
+        {
+            Dispose(true);
+
+            // Prevent garbage collector from disposing object a second time
+            GC.SuppressFinalize(this);
+        }
+
+        ~Action() { Dispose(false); }
     }
 }

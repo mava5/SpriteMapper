@@ -10,9 +10,6 @@ namespace SpriteMapper
         /// <summary> Finished manually by action or from an outside source. </summary>
         Manual,
 
-        /// <summary> Finished when <see cref="Shortcut"/> is pressed again. </summary>
-        Repress,
-
         /// <summary>
         /// <br/>   Cancelled when Rmb or Esc is pressed.
         /// <br/>   Finished when Lmb or Enter is pressed.

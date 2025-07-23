@@ -49,7 +49,7 @@ namespace SpriteMapper
             }
         }
 
-        public bool CheckIfExecutableInContext(string contextToExecuteIn, bool isContextOverwrittenByLongAction)
+        public bool IsExecutableInContext(string contextToExecuteIn, bool isContextOverwrittenByLongAction)
         {
             bool isGlobal = Context == "Global" || Context.StartsWith("Global.");
             bool canExecute = false;

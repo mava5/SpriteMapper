@@ -10,7 +10,7 @@ namespace SpriteMapper
         /// <summary> The type of the tool the info points to. </summary>
         public readonly Type ToolType;
 
-        /// <summary> The tool's context. Determined by its namespace. </summary>
+        /// <summary> The context used while tool is equipped. Determined by its namespace. </summary>
         public readonly string Context;
 
         /// <summary> Explanation for how the tool works. </summary>

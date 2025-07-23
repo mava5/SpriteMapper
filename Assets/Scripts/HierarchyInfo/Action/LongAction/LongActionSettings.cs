@@ -4,12 +4,13 @@ using System;
 
 namespace SpriteMapper
 {
-    /// <summary> Contains mandatory settings for a <see cref="HoldAction"/>. </summary>
+    /// <summary> Contains mandatory settings for a <see cref="LongAction"/>. </summary>
     [Serializable]
     [AttributeUsage(AttributeTargets.Class)]
     public abstract class LongActionSettings : ActionSettings
     {
-        public readonly string ContextUsedWhenActive;
+        /// <summary> If not left empty, long action will overwrite context to this while active. </summary>
+        public readonly string ContextUsedWhenActive = "";
 
 
         public LongActionSettings(

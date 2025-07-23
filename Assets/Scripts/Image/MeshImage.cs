@@ -6,8 +6,8 @@ namespace SpriteMapper
 {
     /// <summary>
     /// <br/>   Image type that:
-    /// <br/>   • derives data from a collection of 3D meshes,
-    /// <br/>   • contains both depth and normal data
+    /// <br/>   • Derives data from a collection of 3D meshes
+    /// <br/>   • Contains both depth and normal data
     /// </summary>
     public class MeshImage : Image
     {

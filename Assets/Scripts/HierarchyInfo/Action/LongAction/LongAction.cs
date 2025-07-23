@@ -1,4 +1,6 @@
 
+using UnityEngine;
+
 namespace SpriteMapper
 {
     /// <summary>
@@ -7,9 +9,14 @@ namespace SpriteMapper
     /// </summary>
     public abstract class LongAction : Action
     {
+        public bool BeganThisFrame { get; set; } = true;
+
+        public Vector2 MouseStartPosition { get; internal set; }
+
+
         /// <summary> Begins action execution. </summary>
         /// <returns> <see cref="bool"/>: Tells whether action began successfully. </returns>
-        public abstract bool Begin();
+        public abstract bool Begin(Vector2 mouseStartPosition);
 
         /// <summary> Gets called each MonoBehaviour Update(). </summary>
         public abstract void Update();

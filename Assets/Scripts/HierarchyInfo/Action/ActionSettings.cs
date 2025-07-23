@@ -4,7 +4,7 @@ using System;
 
 namespace SpriteMapper
 {
-    /// <summary> Determines if <see cref="Action"/> has a <see cref="Shortcut"/> and in what state it is. </summary>
+    /// <summary> Determines if <see cref="Action"/> has a <see cref="Shortcut"/> and in what state. </summary>
     public enum ActionShortcutState
     {
         /// <summary> Action has no shortcut. </summary>

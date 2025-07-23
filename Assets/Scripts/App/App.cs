@@ -25,13 +25,14 @@ namespace SpriteMapper
             {
                 if (Project != null && Project.Panel != null)
                 {
+                    if (Project.Action.ActiveContextOverwritingLongAction != null)
+                    {
+                        return ((LongActionSettings)Project.Action.ActiveContextOverwritingLongAction.Info.Settings).ContextUsedWhenActive;
+                    }
+
                     if (Project.Panel.Tool != null)
                     {
-                        if (Project.Panel.Tool.Active)
-                        {
-                            return Project.Panel.Tool.Info.Context + "Active";
-                        }
-                        return Project.Panel.Tool.Info.Context + "Equipped";
+                        return Project.Panel.Tool.Info.Context;
                     }
                     return Project.Panel.Context;
                 }
@@ -71,10 +72,11 @@ namespace SpriteMapper
             if (Project == null) { return; }
 
 
-            Actions.ProcessPrevious();
-            Actions.ProcessQueue();
             Actions.UpdateLongActions();
 
+            Actions.ProcessUnresolvedInputs();
+            Actions.ProcessQueue();
+            
             Controls.UpdateModifierKeys();
         }
 
