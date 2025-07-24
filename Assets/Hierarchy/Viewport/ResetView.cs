@@ -1,12 +1,16 @@
 
+using UnityEngine;
+
 namespace SpriteMapper.Hierarchy.Viewport
 {
     partial class Context
     {
-        public class ResetView : Action, IShort
+        [InstantActionSettings(false, false, ActionShortcutState.Exists, ActionDescendantUsability.Limited)]
+        public class ResetView : ShortAction
         {
-            public bool Do()
+            public override bool Do()
             {
+                Debug.Log(Info.ActionType.Name);
                 //(ViewportPanel)App.Project.Panel
 
                 return true;

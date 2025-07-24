@@ -25,7 +25,7 @@ namespace SpriteMapper
 
         /// <summary>
         /// <br/>   Action can be used in most descendant contexts.
-        /// <br/>   Not usable in descendant long actions' context.
+        /// <br/>   Not usable in context overwritten by a long action.
         /// </summary>
         Limited,
 
@@ -43,6 +43,7 @@ namespace SpriteMapper
     [AttributeUsage(AttributeTargets.Class)]
     public abstract class ActionSettings : Attribute
     {
+        public abstract ActionBehaviourType Behaviour { get; }
         public abstract ActionInputType InputType { get; }
         public abstract ActionDuration Duration { get; }
 

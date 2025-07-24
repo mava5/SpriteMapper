@@ -4,25 +4,26 @@ using System;
 
 namespace SpriteMapper
 {
-    /// <summary> Determines how a <see cref="ToggleAction"/> is cancelled or finished. </summary>
+    /// <summary> Determines how a pressed <see cref="LongAction"/> is cancelled or finished. </summary>
     public enum ToggleActionEnding
     {
         /// <summary> Finished manually by action or from an outside source. </summary>
         Manual,
 
         /// <summary>
-        /// <br/>   Cancelled when Rmb or Esc is pressed.
-        /// <br/>   Finished when Lmb or Enter is pressed.
+        /// <br/>   Cancelled by <see cref="Hierarchy.Global.Context.CancelLongActions"/>.
+        /// <br/>   Finished by <see cref="Hierarchy.Global.Context.FinishLongActions"/>.
         /// </summary>
-        HardcodedKeys,
+        CancelAndFinishAction,
     }
 
 
-    /// <summary> Contains mandatory settings for a <see cref="HoldAction"/>. </summary>
+    /// <summary> Contains mandatory settings for a pressed <see cref="LongAction"/>. </summary>
     [Serializable]
     [AttributeUsage(AttributeTargets.Class)]
     public class ToggleActionSettings : LongActionSettings
     {
+        public override ActionBehaviourType Behaviour => ActionBehaviourType.Toggle;
         public override ActionInputType InputType => ActionInputType.Pressed;
         public override ActionDuration Duration => ActionDuration.Long;
 

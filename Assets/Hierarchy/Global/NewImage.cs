@@ -1,10 +1,12 @@
 
+using UnityEngine;
+
 namespace SpriteMapper.Hierarchy.Global
 {
     partial class Context
     {
-
-        public class NewImage : Action, IShort, IUndoable
+        [InstantActionSettings(false, false, ActionShortcutState.Exists, ActionDescendantUsability.Limited)]
+        public class NewImage : ShortAction, IUndoable
         {
             private Image createdImage;
 
@@ -15,8 +17,12 @@ namespace SpriteMapper.Hierarchy.Global
 
             #region Action ================================================================== Action
 
-            public bool Do()
+            public override bool Do()
             {
+                Debug.Log(Info.ActionType.Name);
+
+                return true;
+
                 // TODO: Create a pop-up for putting in values
 
                 imageType = ImageType.Draw;
@@ -30,7 +36,7 @@ namespace SpriteMapper.Hierarchy.Global
                 return true;
             }
 
-            public override void Dispose() { createdImage.Dispose(); }
+            internal override void Dispose(bool manuallyCalled) { createdImage.Dispose(); }
 
             #endregion Action
 

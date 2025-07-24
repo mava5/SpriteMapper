@@ -1,11 +1,14 @@
 
+using UnityEngine;
+
 namespace SpriteMapper.Hierarchy.Global
 {
     partial class Context
     {
-        public class Redo : Action, IShort
+        [InstantActionSettings(false, false, ActionShortcutState.Exists, ActionDescendantUsability.Limited)]
+        public class Redo : ShortAction
         {
-            public bool Do() { App.Project.History.Redo(); return true; }
+            public override bool Do() { Debug.Log(Info.ActionType.Name); /*App.Project.History.Redo();*/ return true; }
         }
     }
 }

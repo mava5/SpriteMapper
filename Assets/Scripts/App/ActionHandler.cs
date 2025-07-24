@@ -4,9 +4,6 @@ using System.Linq;
 using System.Collections.Generic;
 
 using UnityEngine;
-using UnityEditor.ShaderGraph;
-using UnityEngine.SocialPlatforms;
-using Unity.VisualScripting;
 
 
 namespace SpriteMapper
@@ -161,7 +158,7 @@ namespace SpriteMapper
         {
             if (unresolvedInputs.TryGetValue(shortcut, out var input))
             {
-                (bool succeeded, bool contextChanged) = TryExecuteActions(input.fallbackActionInfos);
+                (bool _, bool contextChanged) = TryExecuteActions(input.releaseActionInfos);
 
                 if (contextChanged) { OnContextChanged(); }
                 else { unresolvedInputs.Remove(shortcut); }
@@ -230,9 +227,9 @@ namespace SpriteMapper
                     if (!info.IsExecutableInContext(App.CurrentContext, ActiveContextOverwritingLongAction != null)) { continue; }
 
                     if (info.Settings.Prioritized && !info.Settings.ConflictBehaviourForced) { prioritizedInfos.Add(info); }
-                    else if (info.Behaviour == ActionBehaviourType.Instant) { pressActivatedInfos.Add(info); }
-                    else if (info.Behaviour == ActionBehaviourType.Toggle) { pressActivatedInfos.Add(info); }
-                    else if (info.Behaviour == ActionBehaviourType.Hold)
+                    else if (info.Settings.Behaviour == ActionBehaviourType.Instant) { pressActivatedInfos.Add(info); }
+                    else if (info.Settings.Behaviour == ActionBehaviourType.Toggle) { pressActivatedInfos.Add(info); }
+                    else if (info.Settings.Behaviour == ActionBehaviourType.Hold)
                     {
                         HoldActionSettings holdSettings = (HoldActionSettings)info.Settings;
 
@@ -267,12 +264,11 @@ namespace SpriteMapper
                     (succeeded, contextChanged) = TryExecuteActions(normalInfos);
 
                     if (contextChanged) { break; }
-                    if (!succeeded && cbfInfos.Count > 0)
-                    {
-                        if (pressActivatedInfos.Count > 0) { unresolvedInputs.Add(shortcut, (time, mousePosition, cbfInfos, null, null)); }
-                        else if (deadZoneInfos.Count > 0) { unresolvedInputs.Add(shortcut, (time, mousePosition, null, cbfInfos, null)); }
-                        else if (timerInfos.Count > 0) { unresolvedInputs.Add(shortcut, (time, mousePosition, null, null, cbfInfos )); }
-                    }
+                    if (!succeeded && cbfInfos.Count > 0) { continue; }
+
+                    if (pressActivatedInfos.Count > 0) { unresolvedInputs.Add(shortcut, (time, mousePosition, cbfInfos, null, null)); }
+                    else if (deadZoneInfos.Count > 0) { unresolvedInputs.Add(shortcut, (time, mousePosition, null, cbfInfos, null)); }
+                    else if (timerInfos.Count > 0) { unresolvedInputs.Add(shortcut, (time, mousePosition, null, null, cbfInfos )); }
                 }
                 else if (uniqueActionTypes > 1)
                 {
@@ -288,7 +284,25 @@ namespace SpriteMapper
         /// <summary> Updates each active <see cref="LongAction"/>. </summary>
         public void UpdateLongActions()
         {
-            foreach (LongAction action in activeLongActions.Values) { action.Update(); }
+            if (ActiveContextOverwritingLongAction != null)
+            {
+                if (ActiveContextOverwritingLongAction.BeganThisFrame)
+                {
+                    ActiveContextOverwritingLongAction.BeganThisFrame = false;
+                }
+
+                ActiveContextOverwritingLongAction.Update();
+            }
+
+            foreach (LongAction longAction in activeLongActions.Values)
+            {
+                if (longAction.BeganThisFrame)
+                {
+                    longAction.BeganThisFrame = false;
+                }
+
+                longAction.Update();
+            }
         }
 
 
@@ -300,6 +314,21 @@ namespace SpriteMapper
 
             actionQueues.TryAdd(shortcut, new());
             actionQueues[shortcut].Enqueue(actionInfo);
+        }
+
+
+        /// <param name="calledByCancellingAction">
+        /// <br/>   Should be true when called by <see cref="Hierarchy.Global.Context.CancelLongActions"/>.
+        /// <br/>   true = <see cref="LongAction"/> gets cancelled if 
+        /// </param>
+        public void CancelLongActions(bool calledByCancellingAction = false)
+        {
+            EndLongActions(calledByCancellingAction, true);
+        }
+
+        public void FinishLongActions(bool calledByFinishingAction = false)
+        {
+            EndLongActions(calledByFinishingAction, false);
         }
 
         #endregion Public Methods
@@ -335,14 +364,13 @@ namespace SpriteMapper
         {
             bool succeeded = false;
             string startContext = App.CurrentContext;
-            ActionInfo successfulInfo = null;
 
             foreach (ActionInfo info in infos)
             {
                 if (info.Settings.Duration == ActionDuration.Short) { succeeded = TryExecuteShortAction(info); }
                 else if (info.Settings.Duration == ActionDuration.Long) { succeeded = TryExecuteLongAction(info); }
 
-                if (succeeded) { successfulInfo = info; break; }
+                if (succeeded) { break; }
             }
 
             return (succeeded, startContext != App.CurrentContext);
@@ -389,31 +417,45 @@ namespace SpriteMapper
         }
 
 
-        /// <summary>
-        /// <br/>   Cancels each <see cref="LongAction"/> and unresolved input.
-        /// <br/>   This is done to prevent undefined behaviour with actions started in old context.
-        /// </summary>
-        private void OnContextChanged()
+        private void EndLongActions(bool calledByEndingAction, bool cancel)
         {
-            Debug.Log("Context changed: " + App.CurrentContext);
+            List<Type> longActionsToRemove = new();
+            foreach ((Type actionType, LongAction longAction) in activeLongActions)
+            {
+                if (calledByEndingAction && cancel && !longAction.EndableByCancelAction) { continue; }
+                if (calledByEndingAction && !cancel && !longAction.EndableByFinishAction) { continue; }
+
+                if (cancel) { longAction.Cancel(); }
+                else        { longAction.Finish(); }
+
+                longActionsToRemove.Add(actionType);
+            }
+            foreach (Type actionType in longActionsToRemove) { activeLongActions.Remove(actionType); }
+
+
+            if (calledByEndingAction && cancel && !ActiveContextOverwritingLongAction.EndableByCancelAction) { return; }
+            if (calledByEndingAction && !cancel && !ActiveContextOverwritingLongAction.EndableByFinishAction) { return; }
 
             // Active context overwriting long action is only cancelled if it didn't begin this frame
             // This is done so that the action wont immediately be cancelled after it overwrites the context
             if (ActiveContextOverwritingLongAction != null &&
                 !ActiveContextOverwritingLongAction.BeganThisFrame)
             {
-                ActiveContextOverwritingLongAction.Cancel();
+                ActiveContextOverwritingLongAction.Finish();
                 ActiveContextOverwritingLongAction = null;
             }
+        }
 
-            List<Type> longActionsToRemove = new();
-            foreach ((Type type, LongAction longAction) in activeLongActions)
-            {
-                longAction.Cancel();
-                longActionsToRemove.Add(type);
-            }
 
-            foreach (Type actionType in longActionsToRemove) { activeLongActions.Remove(actionType); }
+        /// <summary>
+        /// <br/>   Cancels each <see cref="LongAction"/> and unresolved input.
+        /// <br/>   This is done to prevent undefined behaviour with actions and inputs started in old context.
+        /// </summary>
+        private void OnContextChanged()
+        {
+            Debug.Log("Context changed: " + App.CurrentContext);
+
+            CancelLongActions();
 
             unresolvedInputs.Clear();
         }

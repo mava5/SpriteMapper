@@ -17,7 +17,6 @@ namespace SpriteMapper
 
         public readonly GUIHandler GUI = new();
         public readonly DataHandler Data = new();
-        public readonly ActionHandler Action = new();
         public readonly SelectionHandler Selection = new();
 
         public readonly ActionHistory History = new();

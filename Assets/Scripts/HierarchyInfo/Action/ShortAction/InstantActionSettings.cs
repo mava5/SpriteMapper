@@ -9,6 +9,7 @@ namespace SpriteMapper
     [AttributeUsage(AttributeTargets.Class)]
     public class InstantActionSettings : ActionSettings
     {
+        public override ActionBehaviourType Behaviour => ActionBehaviourType.Instant;
         public override ActionInputType InputType => ActionInputType.Pressed;
         public override ActionDuration Duration => ActionDuration.Short;
 

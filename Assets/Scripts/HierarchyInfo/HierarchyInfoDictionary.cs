@@ -7,6 +7,7 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 using Unity.VisualScripting;
+using NUnit.Framework.Internal;
 
 
 namespace SpriteMapper
@@ -16,10 +17,10 @@ namespace SpriteMapper
     /// <br/>   The values within this info class can be modified in this ScriptableObject's inspector.
     /// <br/>   These info classes are then linked to each action based on their full name.
     /// </summary>
-    [CreateAssetMenu(fileName = "HierarchyInfoDictionary", menuName = "SO Singletons/HierarchyInfoDictionary")]
-    public class HierarchyInfoDictionary : ScriptableObject
+    [CreateAssetMenu(fileName = "HierarchyInfo", menuName = "SO Singletons/HierarchyInfo")]
+    public class HierarchyInfo : ScriptableObject
     {
-        public static HierarchyInfoDictionary Instance { get; private set; }
+        public static HierarchyInfo Instance { get; private set; }
 
         /// <summary> Contains an <see cref="ActionInfo"/> for each <see cref="Action"/>. </summary>
         public static Dictionary<Type, ActionInfo> ActionInfos => Instance.actionInfos;
@@ -27,11 +28,14 @@ namespace SpriteMapper
         /// <summary> Contains an <see cref="ToolInfo"/> for each <see cref="Tool"/>. </summary>
         public static Dictionary<Type, ToolInfo> ToolInfos => Instance.toolInfos;
 
-        /// <summary> Used by <see cref="HierarchyInfoDictionaryEditor"/>. </summary>
+        /// <summary> Used by <see cref="HierarchyInfoEditor"/>. </summary>
         public List<SerializedActionInfo> SerializedActionInfos = new();
 
-        /// <summary> Used by <see cref="HierarchyInfoDictionaryEditor"/>. </summary>
+        /// <summary> Used by <see cref="HierarchyInfoEditor"/>. </summary>
         public List<SerializedToolInfo> SerializedToolInfos = new();
+
+        public const string INVALID_CONTEXT = "Invalid Context";
+        public const string NO_TYPE_CONTEXT = "No Type";
 
 
         private Dictionary<Type, ActionInfo> actionInfos = new();
@@ -43,10 +47,10 @@ namespace SpriteMapper
         public static void Initialize()
         {
             // Get all ScriptableObjects from Unity Resources
-            HierarchyInfoDictionary[] assets = Resources.LoadAll<HierarchyInfoDictionary>("");
+            HierarchyInfo[] assets = Resources.LoadAll<HierarchyInfo>("");
             if (assets == null || assets.Length == 0)
             {
-                Debug.LogWarning($"No HierarchyInfoDictionary in Unity Resources.");
+                Debug.LogWarning($"No HierarchyInfo in Unity Resources.");
             }
             else if (assets.Length > 1)
             {
@@ -60,30 +64,60 @@ namespace SpriteMapper
             // Initialize data based on serialized infos
             foreach (SerializedActionInfo actionInfo in SerializedActionInfos)
             {
-                if (actionInfo.PointsToType)
+                if (!actionInfo.PointsToType)
                 {
-                    actionInfos.Add(Type.GetType(actionInfo.FullName), new ActionInfo(actionInfo));
+                    Debug.LogWarning($"Action {actionInfo.FullName} doesn't point to an Action class!");
+                    continue;
                 }
+                if (actionInfo.Settings == null)
+                {
+                    Debug.LogWarning($"Action {actionInfo.FullName} has no settings attribute!");
+                    continue;
+                }
+
+                actionInfos.Add(Type.GetType(actionInfo.FullName), new ActionInfo(actionInfo));
             }
             foreach (SerializedToolInfo toolInfo in SerializedToolInfos)
             {
-                if (toolInfo.PointsToType)
+                if (!toolInfo.PointsToType)
                 {
-                    toolInfos.Add(Type.GetType(toolInfo.FullName), new ToolInfo(toolInfo));
+                    Debug.LogWarning($"Tool {toolInfo.FullName} doesn't point to a Tool class!");
+                    continue;
                 }
+
+                toolInfos.Add(Type.GetType(toolInfo.FullName), new ToolInfo(toolInfo));
             }
         }
 
         #endregion Initialization
+
+
+        #region Public Methods ======================================================================================== Public Methods
+
+        /// <summary>
+        /// <br/>   Returns a hierarchy item type's FullName as a context name.
+        /// <br/>   For example: "SpriteMapper.Hierarchy.Global.Undo" -> "Global"
+        /// <br/>   INVALID_CONTEXT string is returned if FullName couldn't be converted.
+        /// </summary>
+        public static string FullNameToContext(string fullName)
+        {
+            if (!fullName.StartsWith("SpriteMapper.Hierarchy."))
+            {
+                Debug.LogWarning($"Hierarchy item {fullName} has invalid namespace!");
+                return INVALID_CONTEXT;
+            }
+
+            return fullName[(fullName.IndexOf(".", fullName.IndexOf(".") + 1) + 1)..fullName.LastIndexOf(".")];
+        }
+
+        public static string TypeToContext<T>() { return FullNameToContext(typeof(T).FullName); }
+
+
+        public static ActionInfo GetInfo(Action action) { return Instance.actionInfos[action.GetType()]; }
+        public static ToolInfo GetInfo(Tool tool) { return Instance.toolInfos[tool.GetType()]; }
+
+        #endregion Public Methods
     }
-
-
-    /// <summary> A static class with hierarchy info related helper functions </summary>
-    public static class HIH
-    {
-
-    }
-
 
 
     /// <summary> Contains information for hierarchy items. </summary>
@@ -104,13 +138,10 @@ namespace SpriteMapper
     [Serializable]
     public class SerializedActionInfo : SerializedHierarchyItemInfo
     {
-        public bool IsLong = false;
-        public bool IsShort = false;
+        public ActionSettings Settings;
         public bool IsUndoable = false;
-        public bool IsShortcutExecutable = false;
-
-        public Shortcut DefaultShortcut1 = null;
-        public Shortcut DefaultShortcut2 = null;
+        
+        public Shortcut DefaultShortcut = null;
     }
 
     /// <summary> Contains <see cref="Tool"/> specific information for creating a runtime <see cref="ToolInfo"/>. </summary>
@@ -121,10 +152,10 @@ namespace SpriteMapper
 
 #if UNITY_EDITOR
 
-    [CustomEditor(typeof(HierarchyInfoDictionary))]
-    public class HierarchyInfoDictionaryEditor : Editor
+    [CustomEditor(typeof(HierarchyInfo))]
+    public class HierarchyInfoEditor : Editor
     {
-        private HierarchyInfoDictionary data;
+        private HierarchyInfo data;
 
         // Keeps track of each context's foldout menu open state
         private static Dictionary<string, bool> menuStates = new();
@@ -159,7 +190,7 @@ namespace SpriteMapper
         private GUIStyle field;
 
 
-        private void OnEnable() { data = (HierarchyInfoDictionary)target; }
+        private void OnEnable() { data = (HierarchyInfo)target; }
 
         private void OnDisable() { EditorInputControls.StopReadingShortcut(); }
 
@@ -261,8 +292,8 @@ namespace SpriteMapper
                 {
                     return context switch
                     {
-                        "Wrong Context" => "",
-                        "No Type" => " ",
+                        HierarchyInfo.INVALID_CONTEXT => "",
+                        HierarchyInfo.NO_TYPE_CONTEXT => " ",
                         "Global" => "  ",
                         _ => context
                     };
@@ -316,7 +347,7 @@ namespace SpriteMapper
                     {
                         if (showActions)
                         {
-                            Undo.RecordObject(data, "HierarchyInfoDictionary updated");
+                            Undo.RecordObject(data, "HierarchyInfo updated");
                             data.SerializedActionInfos[actionIndex] = ActionInfoField(actionInfo, pixelIndent);
                         }
                         actionIndex++;
@@ -331,7 +362,7 @@ namespace SpriteMapper
                     {
                         if (showTools)
                         {
-                            Undo.RecordObject(data, "HierarchyInfoDictionary updated");
+                            Undo.RecordObject(data, "HierarchyInfo updated");
                             data.SerializedToolInfos[toolIndex] = HierarchyItemInfoField(toolInfo, pixelIndent);
                         }
                         toolIndex++;
@@ -365,8 +396,18 @@ namespace SpriteMapper
             // Assume that infos don't point to a type
             // Later when iterating through types with reflection, we can reassign the boolean
             // This way the infos that don't point to any type will be easily differentiated
-            foreach (var i in data.SerializedActionInfos) { actionInfosByFullName[i.FullName] = i; i.PointsToType = false; i.Context = "No Type"; }
-            foreach (var i in data.SerializedToolInfos) { toolInfosByFullName[i.FullName] = i; i.PointsToType = false; i.Context = "No Type"; }
+            foreach (SerializedActionInfo actionInfo in data.SerializedActionInfos)
+            {
+                actionInfosByFullName[actionInfo.FullName] = actionInfo;
+                actionInfo.PointsToType = false;
+                actionInfo.Context = HierarchyInfo.NO_TYPE_CONTEXT;
+            }
+            foreach (SerializedToolInfo toolInfo in data.SerializedToolInfos)
+            {
+                toolInfosByFullName[toolInfo.FullName] = toolInfo;
+                toolInfo.PointsToType = false;
+                toolInfo.Context = HierarchyInfo.NO_TYPE_CONTEXT;
+            }
 
 
             // Go through each Action and Tool type and add their infos to the list
@@ -384,15 +425,13 @@ namespace SpriteMapper
                 {
                     if (!actionInfosByFullName.TryGetValue(fullName, out SerializedActionInfo actionInfo)) { actionInfo = new(); }
 
-                    actionInfo.Context = HF.Hierarchy.FullNameToContext(fullName);
+                    actionInfo.Context = HierarchyInfo.FullNameToContext(fullName);
                     actionInfo.Name = name;
                     actionInfo.FullName = fullName;
                     actionInfo.PointsToType = true;
 
-                    actionInfo.IsLong = typeof(ILong).IsAssignableFrom(type);
-                    actionInfo.IsShort = typeof(IShort).IsAssignableFrom(type);
+                    actionInfo.Settings = type.GetCustomAttribute<ActionSettings>();
                     actionInfo.IsUndoable = typeof(IUndoable).IsAssignableFrom(type);
-                    actionInfo.IsShortcutExecutable = !type.HasAttribute<NonShortcutExecutable>();
 
                     actionInfosByFullName[fullName] = actionInfo;
                 }
@@ -400,7 +439,7 @@ namespace SpriteMapper
                 {
                     if (!toolInfosByFullName.TryGetValue(fullName, out SerializedToolInfo toolInfo)) { toolInfo = new(); }
 
-                    //toolInfo.Context = FullNameToContext(fullName);
+                    toolInfo.Context = HierarchyInfo.FullNameToContext(fullName);
                     toolInfo.Name = name;
                     toolInfo.FullName = fullName;
                     toolInfo.PointsToType = true;
@@ -421,28 +460,41 @@ namespace SpriteMapper
         private List<T> GetSortedHierarchyItemInfoList<T>(List<T> infos) where T : SerializedHierarchyItemInfo
         {
             infos = infos.
+                // Context
                 OrderBy(info =>
                 {
                     contexts.Add(info.Context);
                     return info.Context switch
                     {
-                        "Wrong Context" => "",
-                        "No Type"       => " ",
+                        HierarchyInfo.INVALID_CONTEXT => "",
+                        HierarchyInfo.NO_TYPE_CONTEXT => " ",
                         "Global"        => "  ",
                         _ => info.Context
                     };
                 }).
+                // First actions (based on shortcut state) then tools
                 ThenBy(info =>
                 {
-                    return true switch
+                    if (typeof(SerializedActionInfo).IsAssignableFrom(info.GetType()))
                     {
-                        true when typeof(SerializedActionInfo).IsAssignableFrom(info.GetType()) &&
-                        (info as SerializedActionInfo).IsShortcutExecutable                     => 0,
-                        true when typeof(SerializedActionInfo).IsAssignableFrom(info.GetType()) => 1,
-                        true when typeof(SerializedToolInfo).IsAssignableFrom(info.GetType())   => 2,
-                        _ => int.MaxValue
-                    };
+                        return (info as SerializedActionInfo).Settings?.ShortcutState switch
+                        {
+                            ActionShortcutState.Exists => 0,
+                            ActionShortcutState.Locked => 1,
+                            ActionShortcutState.None => 2,
+                            _ => 3,
+                        };
+                    }
+                    else if (typeof(SerializedToolInfo).IsAssignableFrom(info.GetType()))
+                    {
+                        return 1000;
+                    }
+                    else
+                    {
+                        return int.MaxValue;
+                    }
                 }).
+                // Index
                 ThenBy(info => info.Index).ToList();
 
             // Remove duplicates and gaps from hierarchy items' indices
@@ -542,17 +594,23 @@ namespace SpriteMapper
                 GUILayout.BeginHorizontal(field);
                 GUI.backgroundColor = Color.white;
                 {
-                    GUILayout.Label(new GUIContent(
-                        info.IsLong ? "L" :
-                        info.IsShort ? "S" :
-                        "?",
-                        info.IsLong ? "Long action" :
-                        info.IsShort ? "Short action" :
-                        "Action not long or short"), smallText, GUILayout.Width(10));
+                    if (info.Settings == null)
+                    {
+                        GUILayout.Label($"{info.Name} has no settings");
+                        return info;
+                    }
 
-                    GUILayout.Label(new GUIContent(
-                        info.IsUndoable ? "U" : "",
-                        info.IsUndoable ? "Undoable action" : ""), smallText, GUILayout.Width(10));
+                    GUILayout.Label(
+                        info.Settings.Behaviour switch
+                        {
+                            ActionBehaviourType.Instant => new GUIContent("I", "Instant action [Pressed, Short]"),
+                            ActionBehaviourType.Toggle => new GUIContent("T", "Toggle action [Pressed, Long]"),
+                            ActionBehaviourType.Hold => new GUIContent("H", "Hold action [Held, Long]"),
+                            _ => new()
+                        }, smallText, GUILayout.Width(10));
+
+                    GUILayout.Label(info.IsUndoable ? new GUIContent("U", "Action can be undone / redone") : new(),
+                        smallText, GUILayout.Width(10));
 
 
                     SelectableInfoLabel(info);
@@ -572,18 +630,17 @@ namespace SpriteMapper
                     //    if (GUI.Button(rightRect, "X")) { remove = true; }
                     //    GUI.backgroundColor = Color.white;
                     //}
-                    if (info.IsShortcutExecutable)
+                    if (info.Settings.ShortcutState != ActionShortcutState.None)
                     {
-                        if (info.DefaultShortcut1.IsEmpty && !info.DefaultShortcut2.IsEmpty)
+                        rightRect.width = rightRect.width;
+
+                        if (info.Settings.ShortcutState == ActionShortcutState.Locked)
                         {
-                            (info.DefaultShortcut1, info.DefaultShortcut2) = (info.DefaultShortcut2, new());
+                            Rect lockRect = new(rightRect) { width = 10, x = rightRect.x - 10 - S_PAD };
+                            GUI.Label(lockRect, "🔒", smallText);
                         }
-
-                        rightRect.width = (rightRect.width - S_PAD) / 2;
-                        info.DefaultShortcut1 = EditorInputControls.ShortcutField(rightRect, info.DefaultShortcut1);
-
-                        rightRect.x += rightRect.width + S_PAD;
-                        info.DefaultShortcut2 = EditorInputControls.ShortcutField(rightRect, info.DefaultShortcut2);
+                        
+                        info.DefaultShortcut = EditorInputControls.ShortcutField(rightRect, info.DefaultShortcut);
                     }
                 }
                 GUILayout.EndHorizontal();
@@ -633,7 +690,7 @@ namespace SpriteMapper
         private void SelectableInfoLabel(SerializedHierarchyItemInfo info)
         {
             if (GUILayout.Button(new GUIContent(info.Name, info.Name + ":\n" + info.Description), EditorStyles.label,
-                        GUILayout.Width(100), GUILayout.Height(FIELD_HEIGHT), GUILayout.MinWidth(0)))
+                        GUILayout.Width(120), GUILayout.Height(FIELD_HEIGHT), GUILayout.MinWidth(0)))
             {
                 if (info != selectedInfo) { selectedInfo = info; }
                 else { selectedInfo = null; }

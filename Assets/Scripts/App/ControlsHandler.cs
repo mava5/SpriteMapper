@@ -1,4 +1,5 @@
 
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -15,6 +16,8 @@ namespace SpriteMapper
         private bool ctrlHeld = false;
         private bool altHeld = false;
 
+        private HashSet<Shortcut> shortcutsReleasedThisFrame = new();
+
 
         #region Initialization ============================================================================== Initialization
 
@@ -23,23 +26,25 @@ namespace SpriteMapper
         {
             InputActionMap actionMap = new("Shortcuts");
 
-            foreach (ActionInfo info in HierarchyInfoDictionary.ActionInfos.Values)
+            foreach (ActionInfo info in HierarchyInfo.ActionInfos.Values)
             {
-                if (!info.IsShortcutExecutable) { continue; }
+                if (info.Settings.ShortcutState == ActionShortcutState.None) { continue; }
 
 
-                InputAction inputAction = actionMap.AddAction(info.ActionType.FullName,
-                    InputActionType.Button, info.DefaultShortcut1.Binding, );
+                InputAction inputAction = actionMap.AddAction(info.ActionType.FullName, InputActionType.Button, info.Shortcut.Binding);
                 
-                inputAction.performed += callbackContext => { OnActionShortcutDown(callbackContext, info.DefaultShortcut1, info); };
-
-                if (info.IsLong)
-                {
-                    inputAction.canceled += callbackContext => { OnLongActionShortcutUp(callbackContext, info); };
-                }
+                inputAction.performed += callbackContext => { OnActionShortcutDown(info); };
+                inputAction.performed += callbackContext => { OnActionShortcutUp(info); };
             }
 
+            actionMap.actionTriggered += ActionMap_actionTriggered;
+
             foreach (InputAction action in actionMap.actions) { action.Enable(); }
+        }
+
+        private void ActionMap_actionTriggered(InputAction.CallbackContext obj)
+        {
+            throw new System.NotImplementedException();
         }
 
         #endregion Initialization
@@ -47,9 +52,10 @@ namespace SpriteMapper
 
         #region Public Methods ============================================================================== Public Methods
 
-        /// <summary> Updates modifier key variables. </summary>
-        public void UpdateModifierKeys()
+        public void UpdateVariables()
         {
+            shortcutsReleasedThisFrame.Clear();
+
             shiftHeld = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
             ctrlHeld = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
             altHeld = Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt);
@@ -60,27 +66,27 @@ namespace SpriteMapper
 
         #region Private Methods ============================================================================= Private Methods
 
-        private void OnActionShortcutDown(InputAction.CallbackContext context, Shortcut shortcut, ActionInfo info)
+        private void OnActionShortcutDown(ActionInfo info)
         {
             Debug.Log(info.ActionType.FullName);
 
-            if ((shortcut.Shift && !shiftHeld) ||
-                (shortcut.Ctrl && !ctrlHeld) ||
-                (shortcut.Alt && !altHeld)) { return; }
+            if ((info.Shortcut.Shift && !shiftHeld) ||
+                (info.Shortcut.Ctrl && !ctrlHeld) ||
+                (info.Shortcut.Alt && !altHeld)) { return; }
 
             App.Actions.AddToQueue(info);
         }
 
-        private void OnLongActionShortcutUp(InputAction.CallbackContext context, ActionInfo info)
+        private void OnActionShortcutUp(ActionInfo info)
         {
-            App.Actions.ReleaseOngoingInput(info.Shortcut);
+            if (shortcutsReleasedThisFrame.Contains(info.Shortcut)) { return; }
 
-            ILong<LongActionType> test = new();
+            if ((info.Shortcut.Shift && !shiftHeld) ||
+                (info.Shortcut.Ctrl && !ctrlHeld) ||
+                (info.Shortcut.Alt && !altHeld)) { return; }
 
-            if (App.Actions.ActiveLongActions.ContainsKey(info.ActionType))
-            {
-                App.Actions.ActiveLongActions[info.ActionType].longAction.ShortcutReleased = true;
-            }
+            shortcutsReleasedThisFrame.Add(info.Shortcut);
+            App.Actions.ReleaseInput(info.Shortcut);
         }
 
         #endregion Private Methods

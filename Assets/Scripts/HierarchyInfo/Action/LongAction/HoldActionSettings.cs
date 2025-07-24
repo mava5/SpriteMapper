@@ -4,20 +4,20 @@ using System;
 
 namespace SpriteMapper
 {
-    /// <summary> Determines how a <see cref="HoldAction"/> is cancelled or finished. </summary>
+    /// <summary> Determines how a hold <see cref="Action"/> is cancelled or finished. </summary>
     public enum HoldActionEnding
     {
         /// <summary> Finished when <see cref="Shortcut"/> is released. </summary>
         Release,
 
         /// <summary>
-        /// <br/>   Cancelled when Rmb or Esc is pressed.
+        /// <br/>   Cancelled by <see cref="Hierarchy.Global.Context.CancelLongActions"/>.
         /// <br/>   Finished when <see cref="Shortcut"/> is released.
         /// </summary>
-        ReleaseAndHardcodedKeys,
+        CancelActionAndRelease,
     }
 
-    /// <summary> Determines how <see cref="HoldAction"/> is resolved when in a solvable conflict. </summary>
+    /// <summary> Determines how a hold <see cref="Action"/> is resolved when in a solvable conflict. </summary>
     public enum HoldActionResolving
     {
         /// <summary> Execute action if mouse leaves a circular dead zone. </summary>
@@ -28,11 +28,12 @@ namespace SpriteMapper
     }
 
 
-    /// <summary> Contains mandatory settings for a <see cref="HoldAction"/>. </summary>
+    /// <summary> Contains mandatory settings for a held <see cref="LongAction"/>. </summary>
     [Serializable]
     [AttributeUsage(AttributeTargets.Class)]
     public class HoldActionSettings : LongActionSettings
     {
+        public override ActionBehaviourType Behaviour => ActionBehaviourType.Hold;
         public override ActionInputType InputType => ActionInputType.Held;
         public override ActionDuration Duration => ActionDuration.Long;
 

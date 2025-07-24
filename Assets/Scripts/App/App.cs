@@ -23,13 +23,17 @@ namespace SpriteMapper
         {
             get
             {
-                if (Project != null && Project.Panel != null)
-                {
-                    if (Project.Action.ActiveContextOverwritingLongAction != null)
-                    {
-                        return ((LongActionSettings)Project.Action.ActiveContextOverwritingLongAction.Info.Settings).ContextUsedWhenActive;
-                    }
+                if (Project == null) { return ""; }
 
+                if (Actions.ActiveContextOverwritingLongAction != null)
+                {
+                    return ((LongActionSettings)Actions.ActiveContextOverwritingLongAction.Info.Settings).ContextUsedWhenActive;
+                }
+
+                return "Viewport.ImageEditor.DrawImage";
+
+                if (Project.Panel != null)
+                {
                     if (Project.Panel.Tool != null)
                     {
                         return Project.Panel.Tool.Info.Context;
@@ -55,7 +59,7 @@ namespace SpriteMapper
             Project.Enter();
 
 
-            HierarchyInfoDictionary.Initialize();
+            HierarchyInfo.Initialize();
             Controls.Initialize();
 
             UpdateCaller.SubscribeUpdateCallback(Update);
@@ -77,7 +81,7 @@ namespace SpriteMapper
             Actions.ProcessUnresolvedInputs();
             Actions.ProcessQueue();
             
-            Controls.UpdateModifierKeys();
+            Controls.UpdateVariables();
         }
 
         #endregion Update Loop

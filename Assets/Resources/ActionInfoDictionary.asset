@@ -19,395 +19,260 @@ MonoBehaviour:
     FullName: SpriteMapper.Actions.Viewport2D.DrawImage.DrawTool
     PointsToType: 0
     Description: 
-    IsLong: 1
-    IsShort: 0
     IsUndoable: 1
-    IsShortcutExecutable: 1
-    Priority: 1
-    DefaultShortcut1:
-      Shift: 0
-      Ctrl: 0
-      Alt: 0
-      Binding: 
-    DefaultShortcut2:
+    DefaultShortcut:
       Shift: 0
       Ctrl: 0
       Alt: 0
       Binding: 
   - Index: 4
     Context: No Type
-    Name: NewImage
-    FullName: SpriteMapper.Actions.Global.NewImage
+    Name: EquipDrawTool
+    FullName: SpriteMapper.Hierarchy.Viewport.DrawImage.Context+EquipDrawTool
     PointsToType: 0
     Description: 
-    IsLong: 0
-    IsShort: 0
-    IsUndoable: 1
-    IsShortcutExecutable: 1
-    Priority: 1
-    DefaultShortcut1:
-      Shift: 0
-      Ctrl: 0
-      Alt: 0
-      Binding: 
-    DefaultShortcut2:
+    IsUndoable: 0
+    DefaultShortcut:
       Shift: 0
       Ctrl: 0
       Alt: 0
       Binding: 
   - Index: 6
     Context: No Type
-    Name: FlipTool
-    FullName: SpriteMapper.Actions.Viewport2D.DrawImage.FlipTool
+    Name: Draw
+    FullName: SpriteMapper.Hierarchy.Viewport.DrawImage.DrawToolEquipped.Context+Draw
     PointsToType: 0
     Description: 
-    IsLong: 0
-    IsShort: 0
     IsUndoable: 1
-    IsShortcutExecutable: 1
-    Priority: 1
-    DefaultShortcut1:
-      Shift: 0
-      Ctrl: 0
-      Alt: 0
-      Binding: 
-    DefaultShortcut2:
+    DefaultShortcut:
       Shift: 0
       Ctrl: 0
       Alt: 0
       Binding: 
   - Index: 8
     Context: No Type
-    Name: Undo
-    FullName: SpriteMapper.Actions.Global.Undo
+    Name: FlipHorizontally
+    FullName: SpriteMapper.Hierarchy.Viewport.DrawImage.FlipToolEquipped.Context+FlipHorizontally
     PointsToType: 0
     Description: 
-    IsLong: 0
-    IsShort: 1
-    IsUndoable: 0
-    IsShortcutExecutable: 1
-    Priority: 1
-    DefaultShortcut1:
-      Shift: 0
-      Ctrl: 0
-      Alt: 0
-      Binding: 
-    DefaultShortcut2:
+    IsUndoable: 1
+    DefaultShortcut:
       Shift: 0
       Ctrl: 0
       Alt: 0
       Binding: 
   - Index: 10
     Context: No Type
-    Name: Redo
-    FullName: SpriteMapper.Actions.Global.Redo
+    Name: NewImage
+    FullName: SpriteMapper.Actions.Global.NewImage
     PointsToType: 0
     Description: 
-    IsLong: 0
-    IsShort: 1
-    IsUndoable: 0
-    IsShortcutExecutable: 1
-    Priority: 1
-    DefaultShortcut1:
-      Shift: 0
-      Ctrl: 0
-      Alt: 0
-      Binding: <Keyboard>/D
-    DefaultShortcut2:
+    IsUndoable: 1
+    DefaultShortcut:
       Shift: 0
       Ctrl: 0
       Alt: 0
       Binding: 
   - Index: 12
     Context: No Type
-    Name: 
-    FullName: 
+    Name: EquipFlipTool
+    FullName: SpriteMapper.Hierarchy.Viewport.DrawImage.Context+EquipFlipTool
     PointsToType: 0
     Description: 
-    IsLong: 0
-    IsShort: 0
     IsUndoable: 0
-    IsShortcutExecutable: 0
-    Priority: 0
-    DefaultShortcut1:
-      Shift: 0
-      Ctrl: 0
-      Alt: 0
-      Binding: 
-    DefaultShortcut2:
+    DefaultShortcut:
       Shift: 0
       Ctrl: 0
       Alt: 0
       Binding: 
   - Index: 14
     Context: No Type
-    Name: OpenContextMenuShort
-    FullName: SpriteMapper.Actions.Global.OpenContextMenuShort
+    Name: FlipVertically
+    FullName: SpriteMapper.Hierarchy.Viewport.DrawImage.FlipToolEquipped.Context+FlipVertically
     PointsToType: 0
     Description: 
-    IsLong: 0
-    IsShort: 1
-    IsUndoable: 0
-    IsShortcutExecutable: 0
-    Priority: 0
-    DefaultShortcut1:
-      Shift: 0
-      Ctrl: 0
-      Alt: 0
-      Binding: 
-    DefaultShortcut2:
+    IsUndoable: 1
+    DefaultShortcut:
       Shift: 0
       Ctrl: 0
       Alt: 0
       Binding: 
   - Index: 16
     Context: No Type
-    Name: OpenContextMenuLong
-    FullName: SpriteMapper.Actions.Global.OpenContextMenuLong
+    Name: FlipTool
+    FullName: SpriteMapper.Actions.Viewport2D.DrawImage.FlipTool
     PointsToType: 0
     Description: 
-    IsLong: 1
-    IsShort: 0
-    IsUndoable: 0
-    IsShortcutExecutable: 0
-    Priority: 0
-    DefaultShortcut1:
+    IsUndoable: 1
+    DefaultShortcut:
       Shift: 0
       Ctrl: 0
       Alt: 0
       Binding: 
-    DefaultShortcut2:
+  - Index: 18
+    Context: No Type
+    Name: Undo
+    FullName: SpriteMapper.Actions.Global.Undo
+    PointsToType: 0
+    Description: 
+    IsUndoable: 0
+    DefaultShortcut:
+      Shift: 0
+      Ctrl: 0
+      Alt: 0
+      Binding: 
+  - Index: 20
+    Context: No Type
+    Name: OpenContextMenuShort
+    FullName: SpriteMapper.Hierarchy.Global.Context+OpenContextMenuShort
+    PointsToType: 0
+    Description: 
+    IsUndoable: 0
+    DefaultShortcut:
+      Shift: 0
+      Ctrl: 0
+      Alt: 0
+      Binding: 
+  - Index: 22
+    Context: No Type
+    Name: Redo
+    FullName: SpriteMapper.Actions.Global.Redo
+    PointsToType: 0
+    Description: 
+    IsUndoable: 0
+    DefaultShortcut:
+      Shift: 0
+      Ctrl: 0
+      Alt: 0
+      Binding: 
+  - Index: 24
+    Context: No Type
+    Name: OpenContextMenuLong
+    FullName: SpriteMapper.Hierarchy.Global.Context+OpenContextMenuLong
+    PointsToType: 0
+    Description: 
+    IsUndoable: 0
+    DefaultShortcut:
+      Shift: 0
+      Ctrl: 0
+      Alt: 0
+      Binding: 
+  - Index: 26
+    Context: No Type
+    Name: 
+    FullName: 
+    PointsToType: 0
+    Description: 
+    IsUndoable: 0
+    DefaultShortcut:
+      Shift: 0
+      Ctrl: 0
+      Alt: 0
+      Binding: 
+  - Index: 28
+    Context: No Type
+    Name: OpenContextMenuShort
+    FullName: SpriteMapper.Actions.Global.OpenContextMenuShort
+    PointsToType: 0
+    Description: 
+    IsUndoable: 0
+    DefaultShortcut:
+      Shift: 0
+      Ctrl: 0
+      Alt: 0
+      Binding: 
+  - Index: 30
+    Context: No Type
+    Name: OpenContextMenuLong
+    FullName: SpriteMapper.Actions.Global.OpenContextMenuLong
+    PointsToType: 0
+    Description: 
+    IsUndoable: 0
+    DefaultShortcut:
       Shift: 0
       Ctrl: 0
       Alt: 0
       Binding: 
   - Index: 2
     Context: Global
-    Name: NewImage
-    FullName: SpriteMapper.Hierarchy.Global.Context+NewImage
+    Name: CancelLongActions
+    FullName: SpriteMapper.Hierarchy.Global.Context+CancelLongActions
     PointsToType: 1
     Description: 
-    IsLong: 0
-    IsShort: 1
-    IsUndoable: 1
-    IsShortcutExecutable: 1
-    Priority: 1
-    DefaultShortcut1:
-      Shift: 0
+    IsUndoable: 0
+    DefaultShortcut:
+      Shift: 1
       Ctrl: 1
       Alt: 0
-      Binding: <Keyboard>/N
-    DefaultShortcut2:
-      Shift: 0
-      Ctrl: 0
-      Alt: 0
-      Binding: 
+      Binding: <Keyboard>/D
   - Index: 4
     Context: Global
-    Name: Undo
-    FullName: SpriteMapper.Hierarchy.Global.Context+Undo
+    Name: FinishLongActions
+    FullName: SpriteMapper.Hierarchy.Global.Context+FinishLongActions
     PointsToType: 1
     Description: 
-    IsLong: 0
-    IsShort: 1
     IsUndoable: 0
-    IsShortcutExecutable: 1
-    Priority: 1
-    DefaultShortcut1:
-      Shift: 0
-      Ctrl: 0
-      Alt: 0
-      Binding: <Keyboard>/Y
-    DefaultShortcut2:
+    DefaultShortcut:
       Shift: 0
       Ctrl: 0
       Alt: 0
       Binding: 
   - Index: 6
     Context: Global
-    Name: Redo
-    FullName: SpriteMapper.Hierarchy.Global.Context+Redo
+    Name: OpenContextMenu
+    FullName: SpriteMapper.Hierarchy.Global.Context+OpenContextMenu
     PointsToType: 1
     Description: 
-    IsLong: 0
-    IsShort: 1
     IsUndoable: 0
-    IsShortcutExecutable: 1
-    Priority: 1
-    DefaultShortcut1:
-      Shift: 0
-      Ctrl: 0
-      Alt: 0
-      Binding: <Keyboard>/Z
-    DefaultShortcut2:
+    DefaultShortcut:
       Shift: 0
       Ctrl: 0
       Alt: 0
       Binding: 
   - Index: 8
     Context: Global
-    Name: OpenContextMenuShort
-    FullName: SpriteMapper.Hierarchy.Global.Context+OpenContextMenuShort
+    Name: Undo
+    FullName: SpriteMapper.Hierarchy.Global.Context+Undo
     PointsToType: 1
     Description: 
-    IsLong: 0
-    IsShort: 1
     IsUndoable: 0
-    IsShortcutExecutable: 0
-    Priority: 0
-    DefaultShortcut1:
-      Shift: 0
-      Ctrl: 0
-      Alt: 0
-      Binding: 
-    DefaultShortcut2:
+    DefaultShortcut:
       Shift: 0
       Ctrl: 0
       Alt: 0
       Binding: 
   - Index: 10
     Context: Global
-    Name: OpenContextMenuLong
-    FullName: SpriteMapper.Hierarchy.Global.Context+OpenContextMenuLong
+    Name: Redo
+    FullName: SpriteMapper.Hierarchy.Global.Context+Redo
     PointsToType: 1
     Description: 
-    IsLong: 1
-    IsShort: 0
     IsUndoable: 0
-    IsShortcutExecutable: 0
-    Priority: 0
-    DefaultShortcut1:
+    DefaultShortcut:
       Shift: 0
       Ctrl: 0
       Alt: 0
-      Binding: 
-    DefaultShortcut2:
-      Shift: 0
-      Ctrl: 0
+      Binding: <Mouse>/LeftButton
+  - Index: 12
+    Context: Global
+    Name: NewImage
+    FullName: SpriteMapper.Hierarchy.Global.Context+NewImage
+    PointsToType: 1
+    Description: 
+    IsUndoable: 1
+    DefaultShortcut:
+      Shift: 1
+      Ctrl: 1
       Alt: 0
-      Binding: 
+      Binding: <Keyboard>/D
   - Index: 2
     Context: Viewport
     Name: ResetView
     FullName: SpriteMapper.Hierarchy.Viewport.Context+ResetView
     PointsToType: 1
     Description: 
-    IsLong: 0
-    IsShort: 1
     IsUndoable: 0
-    IsShortcutExecutable: 1
-    Priority: 1
-    DefaultShortcut1:
-      Shift: 0
-      Ctrl: 0
-      Alt: 0
-      Binding: <Keyboard>/H
-    DefaultShortcut2:
-      Shift: 0
-      Ctrl: 0
-      Alt: 0
-      Binding: 
-  - Index: 2
-    Context: Viewport.DrawImage
-    Name: EquipDrawTool
-    FullName: SpriteMapper.Hierarchy.Viewport.DrawImage.Context+EquipDrawTool
-    PointsToType: 1
-    Description: 
-    IsLong: 0
-    IsShort: 1
-    IsUndoable: 0
-    IsShortcutExecutable: 1
-    Priority: 1
-    DefaultShortcut1:
-      Shift: 0
-      Ctrl: 0
-      Alt: 0
-      Binding: <Keyboard>/D
-    DefaultShortcut2:
-      Shift: 0
-      Ctrl: 0
-      Alt: 0
-      Binding: 
-  - Index: 4
-    Context: Viewport.DrawImage
-    Name: EquipFlipTool
-    FullName: SpriteMapper.Hierarchy.Viewport.DrawImage.Context+EquipFlipTool
-    PointsToType: 1
-    Description: 
-    IsLong: 0
-    IsShort: 1
-    IsUndoable: 0
-    IsShortcutExecutable: 1
-    Priority: 1
-    DefaultShortcut1:
-      Shift: 0
-      Ctrl: 0
-      Alt: 0
-      Binding: <Keyboard>/F
-    DefaultShortcut2:
-      Shift: 0
-      Ctrl: 0
-      Alt: 0
-      Binding: 
-  - Index: 2
-    Context: Viewport.DrawImage.DrawToolEquipped
-    Name: Draw
-    FullName: SpriteMapper.Hierarchy.Viewport.DrawImage.DrawToolEquipped.Context+Draw
-    PointsToType: 1
-    Description: 
-    IsLong: 1
-    IsShort: 0
-    IsUndoable: 1
-    IsShortcutExecutable: 1
-    Priority: 1
-    DefaultShortcut1:
-      Shift: 0
-      Ctrl: 0
-      Alt: 0
-      Binding: <Mouse>/LeftButton
-    DefaultShortcut2:
-      Shift: 0
-      Ctrl: 0
-      Alt: 0
-      Binding: 
-  - Index: 2
-    Context: Viewport.DrawImage.FlipToolEquipped
-    Name: FlipHorizontally
-    FullName: SpriteMapper.Hierarchy.Viewport.DrawImage.FlipToolEquipped.Context+FlipHorizontally
-    PointsToType: 1
-    Description: 
-    IsLong: 0
-    IsShort: 1
-    IsUndoable: 1
-    IsShortcutExecutable: 1
-    Priority: 1
-    DefaultShortcut1:
-      Shift: 0
-      Ctrl: 0
-      Alt: 0
-      Binding: <Mouse>/LeftButton
-    DefaultShortcut2:
-      Shift: 0
-      Ctrl: 0
-      Alt: 0
-      Binding: 
-  - Index: 4
-    Context: Viewport.DrawImage.FlipToolEquipped
-    Name: FlipVertically
-    FullName: SpriteMapper.Hierarchy.Viewport.DrawImage.FlipToolEquipped.Context+FlipVertically
-    PointsToType: 1
-    Description: 
-    IsLong: 0
-    IsShort: 1
-    IsUndoable: 1
-    IsShortcutExecutable: 1
-    Priority: 1
-    DefaultShortcut1:
-      Shift: 0
-      Ctrl: 1
-      Alt: 0
-      Binding: <Mouse>/LeftButton
-    DefaultShortcut2:
+    DefaultShortcut:
       Shift: 0
       Ctrl: 0
       Alt: 0
@@ -417,7 +282,7 @@ MonoBehaviour:
     Context: No Type
     Name: DrawTool
     FullName: SpriteMapper.Hierarchy.Viewport.DrawImage.Context+DrawTool
-    PointsToType: 1
+    PointsToType: 0
     Description: 
   - Index: 4
     Context: No Type
@@ -429,7 +294,7 @@ MonoBehaviour:
     Context: No Type
     Name: FlipTool
     FullName: SpriteMapper.Hierarchy.Viewport.DrawImage.Context+FlipTool
-    PointsToType: 1
+    PointsToType: 0
     Description: 
   - Index: 8
     Context: No Type

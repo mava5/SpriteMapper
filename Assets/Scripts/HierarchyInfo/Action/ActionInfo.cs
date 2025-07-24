@@ -15,7 +15,6 @@ namespace SpriteMapper
 
         public readonly string Description = "";
         
-        public readonly ActionBehaviourType Behaviour;
         public readonly ActionSettings Settings = null;
         public readonly bool IsUndoable = false;
 
@@ -32,11 +31,11 @@ namespace SpriteMapper
             Context = serializedInfo.Context;
             Description = serializedInfo.Description;
 
-            Behaviour = serializedInfo.Behaviour;
             Settings = serializedInfo.Settings;
             IsUndoable = serializedInfo.IsUndoable;
 
             // TODO: Read saved shortcut from a text file
+            Shortcut = serializedInfo.DefaultShortcut;
             DefaultShortcut = serializedInfo.DefaultShortcut;
         }
 

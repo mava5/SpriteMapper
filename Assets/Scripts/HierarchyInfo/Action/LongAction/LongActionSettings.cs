@@ -26,7 +26,7 @@ namespace SpriteMapper
 
             ) : base(conflictBehaviourForced, prioritized, shortcutState, descendantUsability)
         {
-            ContextUsedWhenActive = HF.Hierarchy.FullNameToContext(contextUsedWhenActive.FullName);
+            ContextUsedWhenActive = HierarchyInfo.FullNameToContext(contextUsedWhenActive.FullName);
         }
     }
 }

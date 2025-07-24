@@ -21,7 +21,7 @@ namespace SpriteMapper.Panels
 
         private List<string> contexts = new()
         {
-            HF.Hierarchy.TypeToContext<Hierarchy.Viewport.DrawImage.Context>(),
+            //HF.Hierarchy.TypeToContext<Hierarchy.Viewport.DrawImage.Context>(),
             //HF.Hierarchy.TypeToContext<Hierarchy.Viewport.MeshImage.Context>(),
         };
 

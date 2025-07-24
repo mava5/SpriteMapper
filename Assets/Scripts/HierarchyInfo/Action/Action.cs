@@ -44,7 +44,7 @@ namespace SpriteMapper
     /// <summary> Actions are used to interact with different parts of the application. </summary>
     public abstract class Action : IDisposable
     {
-        public abstract ActionInfo Info { get; }
+        public ActionInfo Info => HierarchyInfo.GetInfo(this);
 
         /// <param name="manuallyCalled">
         /// <br/>   true:
