@@ -41,20 +41,20 @@ namespace SpriteMapper
     /// </summary>
     [Serializable]
     [AttributeUsage(AttributeTargets.Class)]
-    public abstract class ActionSettings : Attribute
+    public class ActionSettings : Attribute
     {
-        public abstract ActionBehaviourType Behaviour { get; }
-        public abstract ActionInputType InputType { get; }
-        public abstract ActionDuration Duration { get; }
+        public virtual ActionBehaviourType Behaviour { get; }
+        public virtual ActionInputType InputType { get; }
+        public virtual ActionDuration Duration { get; }
 
         /// <summary>
         /// <br/>   Determines if action always behaves as if in a solvable <see cref="Shortcut"/> conflict.
         /// <br/>   
         /// <br/>   Differnet action types behave in the following way in a solvable conflict:
-        /// <br/>   • <see cref="InstantAction"/>: Only executes on shortcut release
-        /// <br/>   • <see cref="ToggleAction"/>: Only begins execution on shortcut release
-        /// <br/>   • [Timer] <see cref="HoldAction"/>: Only executes after holding shortcut for certain time
-        /// <br/>   • [DeadZone] <see cref="HoldAction"/>: Only executes when mouse exits circular dead zone
+        /// <br/>   • Instant action: Only executes on shortcut release
+        /// <br/>   • Toggle action: Only begins execution on shortcut release
+        /// <br/>   • Timer hold action: Only executes after holding shortcut for certain time
+        /// <br/>   • Dead zone hold action: Only executes when mouse exits circular dead zone
         /// </summary>
         public readonly bool ConflictBehaviourForced;
 

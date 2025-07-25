@@ -34,7 +34,7 @@ namespace SpriteMapper
                 InputAction inputAction = actionMap.AddAction(info.ActionType.FullName, InputActionType.Button, info.Shortcut.Binding);
                 
                 inputAction.performed += callbackContext => { OnActionShortcutDown(info); };
-                inputAction.performed += callbackContext => { OnActionShortcutUp(info); };
+                inputAction.canceled += callbackContext => { OnActionShortcutUp(info); };
             }
 
             actionMap.actionTriggered += ActionMap_actionTriggered;
@@ -68,7 +68,7 @@ namespace SpriteMapper
 
         private void OnActionShortcutDown(ActionInfo info)
         {
-            Debug.Log(info.ActionType.FullName);
+            Debug.Log("Pressed: " + info.ActionType.FullName);
 
             if ((info.Shortcut.Shift && !shiftHeld) ||
                 (info.Shortcut.Ctrl && !ctrlHeld) ||
@@ -80,6 +80,8 @@ namespace SpriteMapper
         private void OnActionShortcutUp(ActionInfo info)
         {
             if (shortcutsReleasedThisFrame.Contains(info.Shortcut)) { return; }
+
+            Debug.Log("Released: " + info.ActionType.FullName);
 
             if ((info.Shortcut.Shift && !shiftHeld) ||
                 (info.Shortcut.Ctrl && !ctrlHeld) ||

@@ -6,8 +6,6 @@ using System.Reflection;
 
 using UnityEditor;
 using UnityEngine;
-using Unity.VisualScripting;
-using NUnit.Framework.Internal;
 
 
 namespace SpriteMapper
@@ -20,53 +18,56 @@ namespace SpriteMapper
     [CreateAssetMenu(fileName = "HierarchyInfo", menuName = "SO Singletons/HierarchyInfo")]
     public class HierarchyInfo : ScriptableObject
     {
-        public static HierarchyInfo Instance { get; private set; }
-
-        /// <summary> Contains an <see cref="ActionInfo"/> for each <see cref="Action"/>. </summary>
-        public static Dictionary<Type, ActionInfo> ActionInfos => Instance.actionInfos;
+        public const string INVALID_CONTEXT = "Invalid Context";
+        public const string NO_TYPE_CONTEXT = "No Type";
 
         /// <summary> Contains an <see cref="ToolInfo"/> for each <see cref="Tool"/>. </summary>
-        public static Dictionary<Type, ToolInfo> ToolInfos => Instance.toolInfos;
+        public static Dictionary<Type, ToolInfo> ToolInfos { get; private set; } = new();
 
-        /// <summary> Used by <see cref="HierarchyInfoEditor"/>. </summary>
-        public List<SerializedActionInfo> SerializedActionInfos = new();
+        /// <summary> Contains an <see cref="ActionInfo"/> for each <see cref="Action"/>. </summary>
+        public static Dictionary<Type, ActionInfo> ActionInfos { get; private set; } = new();
 
         /// <summary> Used by <see cref="HierarchyInfoEditor"/>. </summary>
         public List<SerializedToolInfo> SerializedToolInfos = new();
 
-        public const string INVALID_CONTEXT = "Invalid Context";
-        public const string NO_TYPE_CONTEXT = "No Type";
-
-
-        private Dictionary<Type, ActionInfo> actionInfos = new();
-        private Dictionary<Type, ToolInfo> toolInfos = new();
+        /// <summary> Used by <see cref="HierarchyInfoEditor"/>. </summary>
+        public List<SerializedActionInfo> SerializedActionInfos = new();
 
 
         #region Initialization ======================================================================================== Initialization
 
-        public static void Initialize()
+        /// <summary> Initializes static variables with serialized data stored to this object. </summary>
+        public void InitializeData()
         {
-            // Get all ScriptableObjects from Unity Resources
-            HierarchyInfo[] assets = Resources.LoadAll<HierarchyInfo>("");
-            if (assets == null || assets.Length == 0)
-            {
-                Debug.LogWarning($"No HierarchyInfo in Unity Resources.");
-            }
-            else if (assets.Length > 1)
-            {
-                Debug.LogWarning($"Multiple ActionInfoDictionaries in Unity Resources.");
-            }
-            else { Instance = assets[0]; Instance.InitializeData(); }
-        }
+            ToolInfos.Clear();
+            ActionInfos.Clear();
 
-        private void InitializeData()
-        {
             // Initialize data based on serialized infos
+            foreach (SerializedToolInfo toolInfo in SerializedToolInfos)
+            {
+                if (toolInfo.Context == INVALID_CONTEXT)
+                {
+                    Debug.LogWarning($"Action {toolInfo.FullName} has invalid context!");
+                    continue;
+                }
+                if (!toolInfo.PointsToType)
+                {
+                    Debug.LogWarning($"Tool {toolInfo.FullName} doesn't point to a Tool type!");
+                    continue;
+                }
+
+                ToolInfos.Add(Type.GetType(toolInfo.FullName), new ToolInfo(toolInfo));
+            }
             foreach (SerializedActionInfo actionInfo in SerializedActionInfos)
             {
+                if (actionInfo.Context == INVALID_CONTEXT)
+                {
+                    Debug.LogWarning($"Action {actionInfo.FullName} has invalid context!");
+                    continue;
+                }
                 if (!actionInfo.PointsToType)
                 {
-                    Debug.LogWarning($"Action {actionInfo.FullName} doesn't point to an Action class!");
+                    Debug.LogWarning($"Action {actionInfo.FullName} doesn't point to an Action type!");
                     continue;
                 }
                 if (actionInfo.Settings == null)
@@ -75,17 +76,13 @@ namespace SpriteMapper
                     continue;
                 }
 
-                actionInfos.Add(Type.GetType(actionInfo.FullName), new ActionInfo(actionInfo));
-            }
-            foreach (SerializedToolInfo toolInfo in SerializedToolInfos)
-            {
-                if (!toolInfo.PointsToType)
-                {
-                    Debug.LogWarning($"Tool {toolInfo.FullName} doesn't point to a Tool class!");
-                    continue;
-                }
 
-                toolInfos.Add(Type.GetType(toolInfo.FullName), new ToolInfo(toolInfo));
+                Debug.Log(actionInfo.FullName);
+                Debug.Log(actionInfo.Settings.Behaviour);
+                Debug.Log(actionInfo.Settings.ShortcutState);
+                Debug.Log(actionInfo.Settings.DescendantUsability);
+
+                ActionInfos.Add(Type.GetType(actionInfo.FullName), new ActionInfo(actionInfo));
             }
         }
 
@@ -113,8 +110,8 @@ namespace SpriteMapper
         public static string TypeToContext<T>() { return FullNameToContext(typeof(T).FullName); }
 
 
-        public static ActionInfo GetInfo(Action action) { return Instance.actionInfos[action.GetType()]; }
-        public static ToolInfo GetInfo(Tool tool) { return Instance.toolInfos[tool.GetType()]; }
+        public static ActionInfo GetInfo(Action action) { return ActionInfos[action.GetType()]; }
+        public static ToolInfo GetInfo(Tool tool) { return ToolInfos[tool.GetType()]; }
 
         #endregion Public Methods
     }
@@ -134,19 +131,20 @@ namespace SpriteMapper
         public string Description = "";
     }
 
+    /// <summary> Contains <see cref="Tool"/> specific information for creating a runtime <see cref="ToolInfo"/>. </summary>
+    [Serializable]
+    public class SerializedToolInfo : SerializedHierarchyItemInfo { }
+
     /// <summary> Contains <see cref="Action"/> specific information for creating a runtime <see cref="ActionInfo"/>. </summary>
     [Serializable]
     public class SerializedActionInfo : SerializedHierarchyItemInfo
     {
+        // SerializeReference attribute is used as ActionSettings is an abstract class
         public ActionSettings Settings;
         public bool IsUndoable = false;
         
         public Shortcut DefaultShortcut = null;
     }
-
-    /// <summary> Contains <see cref="Tool"/> specific information for creating a runtime <see cref="ToolInfo"/>. </summary>
-    [Serializable]
-    public class SerializedToolInfo : SerializedHierarchyItemInfo { }
 
 
 
@@ -164,7 +162,7 @@ namespace SpriteMapper
 
         private static Vector2 scroll = new();
 
-        private static bool showActions = true, showTools = true;
+        private static bool showTools = true, showActions = true;
 
         
         private const int TOP_BAR_HEIGHT = 40;
@@ -263,12 +261,12 @@ namespace SpriteMapper
         {
             GUILayout.BeginHorizontal(GUILayout.Height(TOP_BAR_HEIGHT - PAD));
             {
-                showActions = GUILayout.Toggle(showActions, "Actions", button,
+                showTools = GUILayout.Toggle(showTools, "Tools", button,
                     GUILayout.Width((width - PAD) / 2), GUILayout.Height(TOP_BAR_HEIGHT - PAD));
 
                 GUILayout.Label("", GUIStyle.none, GUILayout.Width(PAD));
 
-                showTools = GUILayout.Toggle(showTools, "Tools", button,
+                showActions = GUILayout.Toggle(showActions, "Actions", button,
                     GUILayout.Width((width - PAD) / 2), GUILayout.Height(TOP_BAR_HEIGHT - PAD));
             }
             GUILayout.EndHorizontal();
@@ -305,9 +303,11 @@ namespace SpriteMapper
             scrollViewHeight = Mathf.Max(scrollViewHeight, MIN_SCROLL_VIEW_HEIGHT);
 
 
-            string lastClosedContext = "NULL";
+            string lastClosedContext = "<NULL>";
             int actionIndex = 0;
             int toolIndex = 0;
+
+            Undo.RecordObject(data, "HierarchyInfo updated");
 
             scroll = GUILayout.BeginScrollView(scroll, scrollView, GUILayout.Width(width), GUILayout.Height(scrollViewHeight));
             {
@@ -329,28 +329,13 @@ namespace SpriteMapper
                         lastClosedContext = context;
                         GUILayout.Space(PAD);
 
-                        while (actionIndex < data.SerializedActionInfos.Count &&
-                            data.SerializedActionInfos[actionIndex].Context.StartsWith(lastClosedContext)) { actionIndex++; }
-                        
                         while (toolIndex < data.SerializedToolInfos.Count &&
                             data.SerializedToolInfos[toolIndex].Context.StartsWith(lastClosedContext)) { toolIndex++; }
 
+                        while (actionIndex < data.SerializedActionInfos.Count &&
+                            data.SerializedActionInfos[actionIndex].Context.StartsWith(lastClosedContext)) { actionIndex++; }
+
                         continue;
-                    }
-
-
-                    // Actions ------------------------------------------------------------------------------ Actions
-
-                    SerializedActionInfo actionInfo;
-                    while (actionIndex < data.SerializedActionInfos.Count &&
-                        (actionInfo = data.SerializedActionInfos[actionIndex]).Context == context)
-                    {
-                        if (showActions)
-                        {
-                            Undo.RecordObject(data, "HierarchyInfo updated");
-                            data.SerializedActionInfos[actionIndex] = ActionInfoField(actionInfo, pixelIndent);
-                        }
-                        actionIndex++;
                     }
 
 
@@ -362,10 +347,39 @@ namespace SpriteMapper
                     {
                         if (showTools)
                         {
-                            Undo.RecordObject(data, "HierarchyInfo updated");
-                            data.SerializedToolInfos[toolIndex] = HierarchyItemInfoField(toolInfo, pixelIndent);
+                            toolInfo = HierarchyItemInfoField(toolInfo, pixelIndent);
+
+                            if (toolInfo == null)
+                            {
+                                data.SerializedToolInfos.RemoveAt(toolIndex);
+                                continue;
+                            }
+
+                            data.SerializedToolInfos[toolIndex] = toolInfo;
                         }
                         toolIndex++;
+                    }
+
+
+                    // Actions ------------------------------------------------------------------------------ Actions
+
+                    SerializedActionInfo actionInfo;
+                    while (actionIndex < data.SerializedActionInfos.Count &&
+                        (actionInfo = data.SerializedActionInfos[actionIndex]).Context == context)
+                    {
+                        if (showActions)
+                        {
+                            actionInfo = HierarchyItemInfoField(actionInfo, pixelIndent);
+
+                            if (actionInfo == null)
+                            {
+                                data.SerializedActionInfos.RemoveAt(actionIndex);
+                                continue;
+                            }
+
+                            data.SerializedActionInfos[actionIndex] = actionInfo;
+                        }
+                        actionIndex++;
                     }
 
 
@@ -390,23 +404,23 @@ namespace SpriteMapper
         {
             // Organize pre-existing serialized infos into dictionaries based on the stored FullNames
             // This helps speed up matching types found via reflection to already existing infos
-            Dictionary<string, SerializedActionInfo> actionInfosByFullName = new();
             Dictionary<string, SerializedToolInfo> toolInfosByFullName = new();
+            Dictionary<string, SerializedActionInfo> actionInfosByFullName = new();
 
             // Assume that infos don't point to a type
             // Later when iterating through types with reflection, we can reassign the boolean
             // This way the infos that don't point to any type will be easily differentiated
-            foreach (SerializedActionInfo actionInfo in data.SerializedActionInfos)
-            {
-                actionInfosByFullName[actionInfo.FullName] = actionInfo;
-                actionInfo.PointsToType = false;
-                actionInfo.Context = HierarchyInfo.NO_TYPE_CONTEXT;
-            }
             foreach (SerializedToolInfo toolInfo in data.SerializedToolInfos)
             {
                 toolInfosByFullName[toolInfo.FullName] = toolInfo;
                 toolInfo.PointsToType = false;
                 toolInfo.Context = HierarchyInfo.NO_TYPE_CONTEXT;
+            }
+            foreach (SerializedActionInfo actionInfo in data.SerializedActionInfos)
+            {
+                actionInfosByFullName[actionInfo.FullName] = actionInfo;
+                actionInfo.PointsToType = false;
+                actionInfo.Context = HierarchyInfo.NO_TYPE_CONTEXT;
             }
 
 
@@ -421,7 +435,18 @@ namespace SpriteMapper
                     !fullName.StartsWith("SpriteMapper.Hierarchy.")) { continue; }
 
 
-                if (typeof(Action).IsAssignableFrom(type))
+                if (typeof(Tool).IsAssignableFrom(type))
+                {
+                    if (!toolInfosByFullName.TryGetValue(fullName, out SerializedToolInfo toolInfo)) { toolInfo = new(); }
+
+                    toolInfo.Context = HierarchyInfo.FullNameToContext(fullName);
+                    toolInfo.Name = name;
+                    toolInfo.FullName = fullName;
+                    toolInfo.PointsToType = true;
+
+                    toolInfosByFullName[fullName] = toolInfo;
+                }
+                else if (typeof(Action).IsAssignableFrom(type))
                 {
                     if (!actionInfosByFullName.TryGetValue(fullName, out SerializedActionInfo actionInfo)) { actionInfo = new(); }
 
@@ -434,17 +459,6 @@ namespace SpriteMapper
                     actionInfo.IsUndoable = typeof(IUndoable).IsAssignableFrom(type);
 
                     actionInfosByFullName[fullName] = actionInfo;
-                }
-                else if (typeof(Tool).IsAssignableFrom(type))
-                {
-                    if (!toolInfosByFullName.TryGetValue(fullName, out SerializedToolInfo toolInfo)) { toolInfo = new(); }
-
-                    toolInfo.Context = HierarchyInfo.FullNameToContext(fullName);
-                    toolInfo.Name = name;
-                    toolInfo.FullName = fullName;
-                    toolInfo.PointsToType = true;
-
-                    toolInfosByFullName[fullName] = toolInfo;
                 }
             }
 
@@ -475,7 +489,11 @@ namespace SpriteMapper
                 // First actions (based on shortcut state) then tools
                 ThenBy(info =>
                 {
-                    if (typeof(SerializedActionInfo).IsAssignableFrom(info.GetType()))
+                    if (typeof(SerializedToolInfo).IsAssignableFrom(info.GetType()))
+                    {
+                        return -1;
+                    }
+                    else if (typeof(SerializedActionInfo).IsAssignableFrom(info.GetType()))
                     {
                         return (info as SerializedActionInfo).Settings?.ShortcutState switch
                         {
@@ -485,14 +503,7 @@ namespace SpriteMapper
                             _ => 3,
                         };
                     }
-                    else if (typeof(SerializedToolInfo).IsAssignableFrom(info.GetType()))
-                    {
-                        return 1000;
-                    }
-                    else
-                    {
-                        return int.MaxValue;
-                    }
+                    else { return int.MaxValue; }
                 }).
                 // Index
                 ThenBy(info => info.Index).ToList();
@@ -534,7 +545,7 @@ namespace SpriteMapper
         #region Properties ============================================================================================ Properties
 
 
-        #endregion Properties GUI
+        #endregion Properties
 
 
         #region Private Methods ======================================================================================= Private Methods
@@ -568,9 +579,15 @@ namespace SpriteMapper
         }
 
 
-        /// <summary> Handles the drawing and modification of a given SerializedActionInfo. </summary>
-        private SerializedActionInfo ActionInfoField(SerializedActionInfo info, int pixelIndent)
+        /// <summary> Handles the drawing and modification of a given SerializedHierarchyItemInfo. </summary>
+        private T HierarchyItemInfoField<T>(T info, int pixelIndent) where T : SerializedHierarchyItemInfo
         {
+            bool isTool = typeof(SerializedToolInfo).IsAssignableFrom(typeof(T));
+            bool isAction = typeof(SerializedActionInfo).IsAssignableFrom(typeof(T));
+
+            SerializedToolInfo toolInfo = isTool ? info as SerializedToolInfo : null;
+            SerializedActionInfo actionInfo = isAction ? info as SerializedActionInfo : null;
+
             GUILayout.BeginHorizontal();
             {
                 GUILayout.Label("", GUIStyle.none, GUILayout.Width(pixelIndent));
@@ -594,89 +611,69 @@ namespace SpriteMapper
                 GUILayout.BeginHorizontal(field);
                 GUI.backgroundColor = Color.white;
                 {
-                    if (info.Settings == null)
+                    if (isTool)
                     {
-                        GUILayout.Label($"{info.Name} has no settings");
-                        return info;
+                        GUILayout.Label("", GUIStyle.none, GUILayout.Width(20));
+
+                        SelectableInfoLabel(toolInfo);
+                    }
+                    else if (isAction)
+                    {
+                        GUILayout.Label(
+                            actionInfo.Settings?.Behaviour switch
+                            {
+                                ActionBehaviourType.Instant => new GUIContent("I", "Instant action [Pressed, Short]"),
+                                ActionBehaviourType.Toggle => new GUIContent("T", "Toggle action [Pressed, Long]"),
+                                ActionBehaviourType.Hold => new GUIContent("H", "Hold action [Held, Long]"),
+                                null => new GUIContent("?", "Action has no settings"),
+                                _ => new GUIContent()
+                            }, smallText, GUILayout.Width(10));
+
+                        GUILayout.Label(actionInfo.IsUndoable ? new GUIContent("U", "Action can be undone / redone") : new(),
+                            smallText, GUILayout.Width(10));
+
+                        SelectableInfoLabel(actionInfo);
                     }
 
-                    GUILayout.Label(
-                        info.Settings.Behaviour switch
-                        {
-                            ActionBehaviourType.Instant => new GUIContent("I", "Instant action [Pressed, Short]"),
-                            ActionBehaviourType.Toggle => new GUIContent("T", "Toggle action [Pressed, Long]"),
-                            ActionBehaviourType.Hold => new GUIContent("H", "Hold action [Held, Long]"),
-                            _ => new()
-                        }, smallText, GUILayout.Width(10));
-
-                    GUILayout.Label(info.IsUndoable ? new GUIContent("U", "Action can be undone / redone") : new(),
-                        smallText, GUILayout.Width(10));
-
-
-                    SelectableInfoLabel(info);
 
                     GUILayout.Label("", GUIStyle.none, GUILayout.Height(FIELD_HEIGHT), GUILayout.ExpandWidth(true));
                     Rect rightRect = GUILayoutUtility.GetLastRect();
                     rightRect.height = FIELD_HEIGHT;
 
-                    //if (!info.PointsToType)
-                    //{
-                    //    rightRect.width -= FIELD_HEIGHT;
-                    //    GUI.Label(rightRect, "Action not found");
-
-                    //    rightRect.x += rightRect.width;
-                    //    rightRect.width = FIELD_HEIGHT;
-                    //    GUI.backgroundColor = new(1.6f, 0.8f, 0.8f);
-                    //    if (GUI.Button(rightRect, "X")) { remove = true; }
-                    //    GUI.backgroundColor = Color.white;
-                    //}
-                    if (info.Settings.ShortcutState != ActionShortcutState.None)
+                    if (!info.PointsToType)
                     {
-                        rightRect.width = rightRect.width;
+                        rightRect.width -= FIELD_HEIGHT;
+                        GUI.Label(rightRect, "Doesn't point to type");
 
-                        if (info.Settings.ShortcutState == ActionShortcutState.Locked)
+                        rightRect.x += rightRect.width;
+                        rightRect.width = FIELD_HEIGHT;
+                        GUI.backgroundColor = new(1.6f, 0.8f, 0.8f);
+                        if (GUI.Button(rightRect, "X")) { info = null; }
+                        GUI.backgroundColor = Color.white;
+                    }
+                    else if (isTool)
+                    {
+
+                    }
+                    else if (isAction)
+                    {
+                        if (actionInfo.Settings == null)
                         {
-                            Rect lockRect = new(rightRect) { width = 10, x = rightRect.x - 10 - S_PAD };
-                            GUI.Label(lockRect, "🔒", smallText);
+                            GUI.Label(rightRect, "Action has no settings");
                         }
-                        
-                        info.DefaultShortcut = EditorInputControls.ShortcutField(rightRect, info.DefaultShortcut);
+                        else if (actionInfo.Settings.ShortcutState != ActionShortcutState.None)
+                        {
+                            rightRect.width = rightRect.width;
+
+                            if (actionInfo.Settings.ShortcutState == ActionShortcutState.Locked)
+                            {
+                                Rect lockRect = new(rightRect) { width = 10, x = rightRect.x - 10 - S_PAD };
+                                GUI.Label(lockRect, "🔒", smallText);
+                            }
+
+                            actionInfo.DefaultShortcut = EditorInputControls.ShortcutField(rightRect, actionInfo.DefaultShortcut);
+                        }
                     }
-                }
-                GUILayout.EndHorizontal();
-            }
-            GUILayout.EndHorizontal();
-
-            return info;
-        }
-
-        /// <summary> Handles the drawing and modification of a given SerializedHierarchyItemInfo. </summary>
-        private T HierarchyItemInfoField<T>(T info, int pixelIndent) where T : SerializedHierarchyItemInfo
-        {
-            GUILayout.BeginHorizontal();
-            {
-                GUILayout.Label("", GUIStyle.none, GUILayout.Width(pixelIndent));
-
-                GUILayout.BeginVertical(GUILayout.Width(ORDER_ARROW_WIDTH));
-                {
-                    if (GUILayout.Button("Λ", button, GUILayout.Width(ORDER_ARROW_WIDTH),
-                        GUILayout.Height(FIELD_HEIGHT / 2 + S_PAD)))
-                    {
-                        info.Index -= 3;
-                    }
-                    if (GUILayout.Button("V", button, GUILayout.Width(ORDER_ARROW_WIDTH),
-                        GUILayout.Height(FIELD_HEIGHT / 2 + S_PAD)))
-                    {
-                        info.Index += 3;
-                    }
-                }
-                GUILayout.EndVertical();
-
-                GUI.backgroundColor = Color.white * (info == selectedInfo ? 1.25f : 1);
-                GUILayout.BeginHorizontal(field);
-                GUI.backgroundColor = Color.white;
-                {
-                    SelectableInfoLabel(info);
                 }
                 GUILayout.EndHorizontal();
             }

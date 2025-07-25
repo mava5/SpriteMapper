@@ -1,4 +1,5 @@
 
+using System.Collections;
 using System.Collections.Generic;
 
 using UnityEngine;
@@ -52,17 +53,43 @@ namespace SpriteMapper
 
         /// <summary> Sets up application before first scene loads. </summary>
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void InitializeApp()
+        private static void StartAppInitialization()
+        {
+            MonoBehaviourCaller.Instance.StartCoroutine(InitializeApp());
+
+            MonoBehaviourCaller.Instance.UpdateCallback += Update;
+        }
+
+        private static IEnumerator InitializeApp()
         {
             // DEBUG
             Project = new();
             Project.Enter();
 
+            // For some reason loading the HierarchyInfo ScriptableObject from Resources
+            // doesn't load its contents properly right away.
+            HierarchyInfo hierarchyInfo = Resources.Load<HierarchyInfo>("HierarchyInfo");
+            while (true)
+            {
+                int nonInstantCount = 0;
 
-            HierarchyInfo.Initialize();
-            Controls.Initialize();
+                foreach (SerializedActionInfo info in hierarchyInfo.SerializedActionInfos)
+                {
+                    Debug.Log(info.FullName);
+                    Debug.Log(info.Settings.Behaviour);
+                    Debug.Log(info.Settings.ShortcutState);
+                    Debug.Log(info.Settings.DescendantUsability);
+                }
 
-            UpdateCaller.SubscribeUpdateCallback(Update);
+                if (hierarchyInfo.SerializedActionInfos[0].Settings.DescendantUsability != ActionDescendantUsability.None) { break; }
+
+                yield return new WaitForSeconds(0.5f);
+            }
+
+            Debug.Log("TEST");
+            //hierarchyInfo.InitializeData();
+
+            yield break;
         }
 
         #endregion
@@ -72,6 +99,24 @@ namespace SpriteMapper
 
         private static void Update()
         {
+            //// HierarchyInfo's serialized data might not be present yet when app is initialized
+            //// That's why data is fetched in update loop until it has properly loaded
+            //if (!hierarchyInfoFetched)
+            //{
+            //    Resources.Load("HierarchyInfo");
+
+            //    foreach (SerializedActionInfo info in HierarchyInfo.Instance.SerializedActionInfos)
+            //    {
+            //        Debug.LogWarning(info.Settings.DescendantUsability);
+            //    }
+
+
+            //    HierarchyInfo.Instance.InitializeData();
+            //    Controls.Initialize();
+
+            //    return;
+            //}
+
             // Wait until a project is open
             if (Project == null) { return; }
 
