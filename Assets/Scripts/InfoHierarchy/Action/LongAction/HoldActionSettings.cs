@@ -31,7 +31,7 @@ namespace SpriteMapper
     /// <summary> Contains mandatory settings for a held <see cref="LongAction"/>. </summary>
     [Serializable]
     [AttributeUsage(AttributeTargets.Class)]
-    public class HoldActionSettings : LongActionSettings
+    public class HoldActionSettings : ActionSettings
     {
         public override ActionBehaviourType Behaviour => ActionBehaviourType.Hold;
         public override ActionInputType InputType => ActionInputType.Held;
@@ -49,14 +49,11 @@ namespace SpriteMapper
             ActionShortcutState shortcutState,
             ActionDescendantUsability descendantUsability,
 
-            // Long --------------------------------------- Long
-            Type contextUsedWhenActive,
-
             // Specific ----------------------------------- Specific
             HoldActionEnding endingBehaviour,
             HoldActionResolving conflictBehaviour
 
-            ) : base(conflictBehaviourForced, prioritized, shortcutState, descendantUsability, contextUsedWhenActive)
+            ) : base(conflictBehaviourForced, prioritized, shortcutState, descendantUsability)
         {
             EndingBehaviour = endingBehaviour;
             ConflictBehaviour = conflictBehaviour;

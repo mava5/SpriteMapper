@@ -26,7 +26,7 @@ namespace SpriteMapper
         {
             InputActionMap actionMap = new("Shortcuts");
 
-            foreach (ActionInfo actionInfo in HierarchyInfo.ActionInfos.Values)
+            foreach (ActionInfo actionInfo in InfoHierarchy.GetActionInfos())
             {
                 if (actionInfo.Settings.ShortcutState == ActionShortcutState.None) { continue; }
 

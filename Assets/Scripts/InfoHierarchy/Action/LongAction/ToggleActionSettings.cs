@@ -11,8 +11,8 @@ namespace SpriteMapper
         Manual,
 
         /// <summary>
-        /// <br/>   Cancelled by <see cref="Hierarchy.Global.Context.CancelLongActions"/>.
-        /// <br/>   Finished by <see cref="Hierarchy.Global.Context.FinishLongActions"/>.
+        /// <br/>   Cancelled by <see cref="Actions.CancelLongActions"/>.
+        /// <br/>   Finished by <see cref="Actions.FinishLongActions"/>.
         /// </summary>
         CancelAndFinishAction,
     }
@@ -21,7 +21,7 @@ namespace SpriteMapper
     /// <summary> Contains mandatory settings for a pressed <see cref="LongAction"/>. </summary>
     [Serializable]
     [AttributeUsage(AttributeTargets.Class)]
-    public class ToggleActionSettings : LongActionSettings
+    public class ToggleActionSettings : ActionSettings
     {
         public override ActionBehaviourType Behaviour => ActionBehaviourType.Toggle;
         public override ActionInputType InputType => ActionInputType.Pressed;
@@ -38,13 +38,10 @@ namespace SpriteMapper
             ActionShortcutState shortcutState,
             ActionDescendantUsability descendantUsability,
 
-            // Long --------------------------------------- Long
-            Type contextUsedWhenActive,
-
             // Specific ----------------------------------- Specific
             ToggleActionEnding endingBehaviour
             
-            ) : base(conflictBehaviourForced, prioritized, shortcutState, descendantUsability, contextUsedWhenActive)
+            ) : base(conflictBehaviourForced, prioritized, shortcutState, descendantUsability)
         {
             EndingBehaviour = endingBehaviour;
         }
