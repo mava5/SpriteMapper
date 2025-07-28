@@ -222,19 +222,19 @@ namespace SpriteMapper
                 List<ActionInfo> deadZoneInfos = new();
                 List<ActionInfo> timerInfos = new();
 
-                foreach (ActionInfo info in queue)
+                foreach (ActionInfo actionInfo in queue)
                 {
-                    if (!info.IsExecutableInContext(App.CurrentContext, ActiveContextOverwritingLongAction != null)) { continue; }
+                    if (!actionInfo.ExecutableIn(App.Hierarchy.CurrentContext)) { continue; }
 
-                    if (info.Settings.Prioritized && !info.Settings.ConflictBehaviourForced) { prioritizedInfos.Add(info); }
-                    else if (info.Settings.Behaviour == ActionBehaviourType.Instant) { pressActivatedInfos.Add(info); }
-                    else if (info.Settings.Behaviour == ActionBehaviourType.Toggle) { pressActivatedInfos.Add(info); }
-                    else if (info.Settings.Behaviour == ActionBehaviourType.Hold)
+                    if (actionInfo.Settings.Prioritized && !actionInfo.Settings.ConflictBehaviourForced) { prioritizedInfos.Add(actionInfo); }
+                    else if (actionInfo.Settings.Behaviour == ActionBehaviourType.Instant) { pressActivatedInfos.Add(actionInfo); }
+                    else if (actionInfo.Settings.Behaviour == ActionBehaviourType.Toggle) { pressActivatedInfos.Add(actionInfo); }
+                    else if (actionInfo.Settings.Behaviour == ActionBehaviourType.Hold)
                     {
-                        HoldActionSettings holdSettings = (HoldActionSettings)info.Settings;
+                        HoldActionSettings holdSettings = (HoldActionSettings)actionInfo.Settings;
 
-                        if (holdSettings.ConflictBehaviour == HoldActionResolving.UseDeadZone) { deadZoneInfos.Add(info); }
-                        else if (holdSettings.ConflictBehaviour == HoldActionResolving.UseTimer) { timerInfos.Add(info); }
+                        if (holdSettings.ConflictBehaviour == HoldActionResolving.UseDeadZone) { deadZoneInfos.Add(actionInfo); }
+                        else if (holdSettings.ConflictBehaviour == HoldActionResolving.UseTimer) { timerInfos.Add(actionInfo); }
                     }
                 }
 
@@ -308,8 +308,10 @@ namespace SpriteMapper
 
         /// <summary> Queues up <see cref="Action"/> based on given info. </summary>
         /// <param name="shortcutOverride"> Shortcut used to execute action. Overrides the action's own one. </param>
-        public void AddToQueue(ActionInfo actionInfo, Shortcut shortcutOverride = null)
+        public void TryAddToQueue(ActionInfo actionInfo, Shortcut shortcutOverride = null)
         {
+            if (!actionInfo.Context.CanAccess(App.Hierarchy.CurrentContext)) { return; }
+
             Shortcut shortcut = shortcutOverride ?? actionInfo.Shortcut;
 
             actionQueues.TryAdd(shortcut, new());
@@ -350,7 +352,7 @@ namespace SpriteMapper
                     return !info.Settings.ConflictBehaviourForced;
                 }).
                 ThenBy(info => info.Settings.Prioritized).
-                ThenBy(info => info.ActionType.FullName).ToList();
+                ThenBy(info => info.Type.FullName).ToList();
 
             List<ActionInfo> normalActionInfos = sortedActionInfos.GetRange(0, cbfCount);
             List<ActionInfo> cbfActionInfos = sortedActionInfos.GetRange(cbfCount, sortedActionInfos.Count - cbfCount);
@@ -360,33 +362,32 @@ namespace SpriteMapper
 
 
         /// <summary> Goes through given <see cref="ActionInfo"/> list until one succeeds. </summary>
-        private (bool succeeded, bool contextChanged) TryExecuteActions(List<ActionInfo> infos)
+        private bool TryExecuteActions(List<ActionInfo> infos)
         {
             bool succeeded = false;
-            string startContext = App.CurrentContext;
 
-            foreach (ActionInfo info in infos)
+            foreach (ActionInfo actionInfo in infos)
             {
-                if (info.Settings.Duration == ActionDuration.Short) { succeeded = TryExecuteShortAction(info); }
-                else if (info.Settings.Duration == ActionDuration.Long) { succeeded = TryExecuteLongAction(info); }
+                if (actionInfo.Settings.Duration == ActionDuration.Short) { succeeded = TryExecuteShortAction(actionInfo); }
+                else if (actionInfo.Settings.Duration == ActionDuration.Long) { succeeded = TryExecuteLongAction(actionInfo); }
 
                 if (succeeded) { break; }
             }
 
-            return (succeeded, startContext != App.CurrentContext);
+            return succeeded;
         }
 
-        private bool TryExecuteShortAction(ActionInfo info)
+        private bool TryExecuteShortAction(ActionInfo actionInfo)
         {
-            ShortAction shortAction = (ShortAction)Activator.CreateInstance(info.ActionType);
+            ShortAction shortAction = (ShortAction)Activator.CreateInstance(actionInfo.Type);
 
             return shortAction.Do();
         }
 
-        private bool TryExecuteLongAction(ActionInfo info)
+        private bool TryExecuteLongAction(ActionInfo actionInfo)
         {
-            LongAction longAction = (LongAction)Activator.CreateInstance(info.ActionType);
-            bool isContextOverwriting = ((LongActionSettings)info.Settings).ContextUsedWhenActive != "";
+            LongAction longAction = (LongAction)Activator.CreateInstance(actionInfo.Type);
+            bool isContextOverwriting = ((LongActionSettings)actionInfo.Settings).ContextUsedWhenActive != "";
             Vector2 mouseStartPosition = Input.mousePosition;
 
             if (isContextOverwriting && ActiveContextOverwritingLongAction != null)
@@ -404,13 +405,13 @@ namespace SpriteMapper
             }
             else
             {
-                if (activeLongActions.ContainsKey(info.ActionType))
+                if (activeLongActions.ContainsKey(actionInfo.Type))
                 {
-                    activeLongActions[info.ActionType].Cancel();
-                    activeLongActions.Remove(info.ActionType);
+                    activeLongActions[actionInfo.Type].Cancel();
+                    activeLongActions.Remove(actionInfo.Type);
                 }
 
-                activeLongActions.Add(info.ActionType, longAction);
+                activeLongActions.Add(actionInfo.Type, longAction);
             }
 
             return true;

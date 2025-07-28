@@ -1,95 +1,58 @@
 
-using System.Collections;
 using System.Collections.Generic;
 
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 
 
 namespace SpriteMapper
 {
     /// <summary>
-    /// <br/>   Contains each open <see cref="SpriteMapper.Project"/> and information about application.
+    /// <br/>   Contains each loaded <see cref="Project"/> and information about application.
     /// <br/>   Also contains <see cref="ActionHandler"/> and <see cref="ControlsHandler"/> for processing user input.
     /// </summary>
-    public static class App
+    public class App : MonoBehaviour
     {
-        public static List<Project> OpenProjects { get; private set; } = new();
+        public static App Instance = null;
 
-        /// <summary> Currently open <see cref="SpriteMapper.Project"/>. </summary>
-        public static Project Project { get; private set; } = null;
+        public static Hierarchy Hierarchy => Instance.hierarchy;
+        public static ActionHandler Actions => Instance.actions;
+        public static ControlsHandler Controls => Instance.controls;
 
-        public static bool IsProjectOpen => Project != null;
+        public static Project OpenedProject => Instance.openedProject;
+        public static List<Project> LoadedProjects => Instance.loadedProjects;
 
-        public static string CurrentContext
-        {
-            get
-            {
-                if (Project == null) { return ""; }
+        public static bool IsProjectOpen => OpenedProject != null;
 
-                if (Actions.ActiveContextOverwritingLongAction != null)
-                {
-                    return ((LongActionSettings)Actions.ActiveContextOverwritingLongAction.Info.Settings).ContextUsedWhenActive;
-                }
 
-                return "Viewport.ImageEditor.DrawImage";
+        private readonly Hierarchy hierarchy = new();
+        private readonly ActionHandler actions = new();
+        private readonly ControlsHandler controls = new();
 
-                if (Project.Panel != null)
-                {
-                    if (Project.Panel.Tool != null)
-                    {
-                        return Project.Panel.Tool.Info.Context;
-                    }
-                    return Project.Panel.Context;
-                }
-                return "";
-            }
-        }
-
-        public static readonly ActionHandler Actions = new();
-        public static readonly ControlsHandler Controls = new();
+        private Project openedProject;
+        private List<Project> loadedProjects = new();
 
 
         #region App Initialization ================================================================ App Initialization
 
         /// <summary> Sets up application before first scene loads. </summary>
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void StartAppInitialization()
+        private static void StartApp()
         {
-            MonoBehaviourCaller.Instance.StartCoroutine(InitializeApp());
+            GameObject gameObject = new("[App]");
+            Instance = gameObject.AddComponent<App>();
 
-            MonoBehaviourCaller.Instance.UpdateCallback += Update;
+            DontDestroyOnLoad(gameObject);
         }
 
-        private static IEnumerator InitializeApp()
+        private async void Start()
         {
             // DEBUG
-            Project = new();
-            Project.Enter();
+            //Project = new();
+            //Project.Enter();
 
-            // For some reason loading the HierarchyInfo ScriptableObject from Resources
-            // doesn't load its contents properly right away.
-            HierarchyInfo hierarchyInfo = Resources.Load<HierarchyInfo>("HierarchyInfo");
-            while (true)
-            {
-                int nonInstantCount = 0;
-
-                foreach (SerializedActionInfo info in hierarchyInfo.SerializedActionInfos)
-                {
-                    Debug.Log(info.FullName);
-                    Debug.Log(info.Settings.Behaviour);
-                    Debug.Log(info.Settings.ShortcutState);
-                    Debug.Log(info.Settings.DescendantUsability);
-                }
-
-                if (hierarchyInfo.SerializedActionInfos[0].Settings.DescendantUsability != ActionDescendantUsability.None) { break; }
-
-                yield return new WaitForSeconds(0.5f);
-            }
-
-            Debug.Log("TEST");
-            //hierarchyInfo.InitializeData();
-
-            yield break;
+            var hierarchyInfo = await Addressables.LoadAssetAsync<HierarchyInfo>("HierarchyInfo").Task;
+            hierarchyInfo.InitializeStaticData();
         }
 
         #endregion
@@ -97,36 +60,18 @@ namespace SpriteMapper
 
         #region Update Loop ======================================================================= Update Loop
 
-        private static void Update()
+        private void Update()
         {
-            //// HierarchyInfo's serialized data might not be present yet when app is initialized
-            //// That's why data is fetched in update loop until it has properly loaded
-            //if (!hierarchyInfoFetched)
-            //{
-            //    Resources.Load("HierarchyInfo");
-
-            //    foreach (SerializedActionInfo info in HierarchyInfo.Instance.SerializedActionInfos)
-            //    {
-            //        Debug.LogWarning(info.Settings.DescendantUsability);
-            //    }
+            //// Wait until a project is open
+            //if (Project == null) { return; }
 
 
-            //    HierarchyInfo.Instance.InitializeData();
-            //    Controls.Initialize();
+            //Actions.UpdateLongActions();
 
-            //    return;
-            //}
-
-            // Wait until a project is open
-            if (Project == null) { return; }
-
-
-            Actions.UpdateLongActions();
-
-            Actions.ProcessUnresolvedInputs();
-            Actions.ProcessQueue();
+            //Actions.ProcessUnresolvedInputs();
+            //Actions.ProcessQueue();
             
-            Controls.UpdateVariables();
+            //Controls.UpdateVariables();
         }
 
         #endregion Update Loop

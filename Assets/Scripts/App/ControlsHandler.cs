@@ -26,15 +26,16 @@ namespace SpriteMapper
         {
             InputActionMap actionMap = new("Shortcuts");
 
-            foreach (ActionInfo info in HierarchyInfo.ActionInfos.Values)
+            foreach (ActionInfo actionInfo in HierarchyInfo.ActionInfos.Values)
             {
-                if (info.Settings.ShortcutState == ActionShortcutState.None) { continue; }
+                if (actionInfo.Settings.ShortcutState == ActionShortcutState.None) { continue; }
 
 
-                InputAction inputAction = actionMap.AddAction(info.ActionType.FullName, InputActionType.Button, info.Shortcut.Binding);
+                InputAction inputAction = actionMap.AddAction(actionInfo.Type.FullName,
+                    InputActionType.Button, actionInfo.Shortcut.Binding);
                 
-                inputAction.performed += callbackContext => { OnActionShortcutDown(info); };
-                inputAction.canceled += callbackContext => { OnActionShortcutUp(info); };
+                inputAction.performed += callbackContext => { OnActionShortcutDown(actionInfo); };
+                inputAction.canceled += callbackContext => { OnActionShortcutUp(actionInfo); };
             }
 
             actionMap.actionTriggered += ActionMap_actionTriggered;
@@ -66,29 +67,29 @@ namespace SpriteMapper
 
         #region Private Methods ============================================================================= Private Methods
 
-        private void OnActionShortcutDown(ActionInfo info)
+        private void OnActionShortcutDown(ActionInfo actionInfo)
         {
-            Debug.Log("Pressed: " + info.ActionType.FullName);
+            Debug.Log("Pressed: " + actionInfo.Type.FullName);
 
-            if ((info.Shortcut.Shift && !shiftHeld) ||
-                (info.Shortcut.Ctrl && !ctrlHeld) ||
-                (info.Shortcut.Alt && !altHeld)) { return; }
+            if ((actionInfo.Shortcut.Shift && !shiftHeld) ||
+                (actionInfo.Shortcut.Ctrl && !ctrlHeld) ||
+                (actionInfo.Shortcut.Alt && !altHeld)) { return; }
 
-            App.Actions.AddToQueue(info);
+            App.Actions.TryAddToQueue(actionInfo);
         }
 
-        private void OnActionShortcutUp(ActionInfo info)
+        private void OnActionShortcutUp(ActionInfo actionInfo)
         {
-            if (shortcutsReleasedThisFrame.Contains(info.Shortcut)) { return; }
+            if (shortcutsReleasedThisFrame.Contains(actionInfo.Shortcut)) { return; }
 
-            Debug.Log("Released: " + info.ActionType.FullName);
+            Debug.Log("Released: " + actionInfo.Type.FullName);
 
-            if ((info.Shortcut.Shift && !shiftHeld) ||
-                (info.Shortcut.Ctrl && !ctrlHeld) ||
-                (info.Shortcut.Alt && !altHeld)) { return; }
+            if ((actionInfo.Shortcut.Shift && !shiftHeld) ||
+                (actionInfo.Shortcut.Ctrl && !ctrlHeld) ||
+                (actionInfo.Shortcut.Alt && !altHeld)) { return; }
 
-            shortcutsReleasedThisFrame.Add(info.Shortcut);
-            App.Actions.ReleaseInput(info.Shortcut);
+            shortcutsReleasedThisFrame.Add(actionInfo.Shortcut);
+            App.Actions.ReleaseInput(actionInfo.Shortcut);
         }
 
         #endregion Private Methods
