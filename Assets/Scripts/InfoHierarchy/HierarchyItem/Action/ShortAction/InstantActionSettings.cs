@@ -1,12 +1,7 @@
 
-using System;
-
-
 namespace SpriteMapper
 {
-    /// <summary> Contains mandatory settings for an <see cref="InstantAction"/>. </summary>
-    [Serializable]
-    [AttributeUsage(AttributeTargets.Class)]
+    /// <summary> Contains mandatory settings for a pressed <see cref="ShortAction"/>. </summary>
     public class InstantActionSettings : ActionSettings
     {
         public override ActionBehaviourType Behaviour => ActionBehaviourType.Instant;
@@ -17,12 +12,13 @@ namespace SpriteMapper
         public InstantActionSettings(
 
             // Base --------------------------------------- Base
+            string description,
             bool conflictBehaviourForced,
             bool prioritized,
             ActionShortcutState shortcutState,
             ActionDescendantUsability descendantUsability
 
-            ) : base(conflictBehaviourForced, prioritized, shortcutState, descendantUsability)
+            ) : base(description, conflictBehaviourForced, prioritized, shortcutState, descendantUsability)
         {
 
         }

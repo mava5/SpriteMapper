@@ -33,6 +33,7 @@ namespace SpriteMapper
         public ToggleActionSettings(
 
             // Base --------------------------------------- Base
+            string description,
             bool conflictBehaviourForced,
             bool prioritized,
             ActionShortcutState shortcutState,
@@ -41,7 +42,7 @@ namespace SpriteMapper
             // Specific ----------------------------------- Specific
             ToggleActionEnding endingBehaviour
             
-            ) : base(conflictBehaviourForced, prioritized, shortcutState, descendantUsability)
+            ) : base(description, conflictBehaviourForced, prioritized, shortcutState, descendantUsability)
         {
             EndingBehaviour = endingBehaviour;
         }

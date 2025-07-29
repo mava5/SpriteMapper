@@ -44,6 +44,7 @@ namespace SpriteMapper
         public HoldActionSettings(
             
             // Base --------------------------------------- Base
+            string description,
             bool conflictBehaviourForced,
             bool prioritized,
             ActionShortcutState shortcutState,
@@ -53,7 +54,7 @@ namespace SpriteMapper
             HoldActionEnding endingBehaviour,
             HoldActionResolving conflictBehaviour
 
-            ) : base(conflictBehaviourForced, prioritized, shortcutState, descendantUsability)
+            ) : base(description, conflictBehaviourForced, prioritized, shortcutState, descendantUsability)
         {
             EndingBehaviour = endingBehaviour;
             ConflictBehaviour = conflictBehaviour;

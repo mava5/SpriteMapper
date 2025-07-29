@@ -42,10 +42,8 @@ namespace SpriteMapper
 
 
     /// <summary> Actions are used to interact with different parts of the application. </summary>
-    public abstract class Action : IDisposable
+    public abstract class Action : HierarchyItem, IDisposable
     {
-        public ActionInfo Info => HierarchyInfo.ActionInfos[GetType()];
-
         /// <param name="manuallyCalled">
         /// <br/>   true:
         /// <br/>   • Called manually from <see cref="Dispose()"/>

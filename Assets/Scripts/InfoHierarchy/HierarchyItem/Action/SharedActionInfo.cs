@@ -5,15 +5,13 @@ using System;
 namespace SpriteMapper
 {
     /// <summary> Contains necessary information for an <see cref="Action"/>. </summary>
-    public class ActionInfo
+    public class ActionInfo : HierarchyItemInfo
     {
         public readonly ActionSettings Settings = null;
 
         /// <summary> The type of the action the info points to. </summary>
-        public readonly Type Type;
+        public readonly Type ActionType;
 
-        public readonly Context Context;
-        public readonly string Description;
         public readonly bool IsUndoable;
 
         public readonly Shortcut DefaultShortcut = null;
@@ -23,13 +21,11 @@ namespace SpriteMapper
         public bool Active { get; private set; } = true;
 
 
-        public ActionInfo(SerializedActionInfo serializedInfo, ActionSettings settings)
+        public ActionInfo(ActionSettings settings)
         {
             Settings = settings;
 
-            Type = Type.GetType(serializedInfo.FullName);
-            Context = serializedInfo.Context;
-            Description = serializedInfo.Description;
+            ActionType = Type.GetType(serializedInfo.FullName);
             IsUndoable = serializedInfo.IsUndoable;
 
             // TODO: Read saved shortcut from a text file

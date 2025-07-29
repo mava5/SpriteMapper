@@ -3,8 +3,11 @@ namespace SpriteMapper
 {
     /// <summary>
     /// <br/>   Contains the nested structure of each <see cref="InfoHierarchyNode"/>.
-    /// <br/>   Keeps track of the current context and handles its changing.
-    /// <br/>   The context then determines each usable <see cref="Action"/> for the user.
+    /// <br/>   Each of these infos point to a <see cref="HierarchyItem"/>.
+    /// <br/>   Same item can appear multiple times in the hierarchy.
+    /// <br/>   
+    /// <br/>   Also keeps track of the current context and handles its changing.
+    /// <br/>   The context then determines each <see cref="Action"/> at the user's disposal.
     /// </summary>
     public partial class InfoHierarchy
     {
@@ -16,7 +19,7 @@ namespace SpriteMapper
 
         public InfoHierarchy()
         {
-            foreach (InfoHierarchyItem root in Roots)
+            foreach (InfoHierarchyNode root in Roots)
             {
                 root.SetParentRecursive(null);
             }

@@ -23,14 +23,11 @@ namespace SpriteMapper
         /// <summary> Action is only usable within its context </summary>
         None,
 
-        /// <summary>
-        /// <br/>   Action can be used in most descendant contexts.
-        /// <br/>   Not usable in context overwritten by a long action.
-        /// </summary>
-        Limited,
+        /// <summary> Action can be used in all descendant contexts up to any detachments. </summary>
+        UpToDetachment,
 
-        /// <summary> Action can be used in all descendant contexts. </summary>
-        Full,
+        /// <summary> Action can be used in all descendant contexts even through detachments. </summary>
+        PastDetachments,
     }
     
 
@@ -39,8 +36,7 @@ namespace SpriteMapper
     /// <br/>   Inherited with more specific information for each <see cref="ActionBehaviourType"/>.
     /// <br/>   Further specifies the behaviour of an action.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class)]
-    public abstract class ActionSettings : Attribute
+    public abstract class ActionSettings : HierarchyItemSettings
     {
         public abstract ActionBehaviourType Behaviour { get; }
         public abstract ActionInputType InputType { get; }
@@ -69,10 +65,14 @@ namespace SpriteMapper
 
 
         public ActionSettings(
+
+            string description,
             bool conflictBehaviourForced,
             bool prioritized,
             ActionShortcutState shortcutState,
-            ActionDescendantUsability descendantUsability)
+            ActionDescendantUsability descendantUsability
+            
+            ) : base(description)
         {
             ConflictBehaviourForced = conflictBehaviourForced;
             Prioritized = prioritized;

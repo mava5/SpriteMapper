@@ -8,32 +8,29 @@ namespace SpriteMapper
 {
     /// <summary>
     /// <br/>   Used to create a nested structure for the <see cref="InfoHierarchy"/>.
-    /// <br/>   Stores hierarchy item's information and its position in hierarchy.
+    /// <br/>   Stores context and both shared and unique information for a <see cref="HierarchyItem"/>.
     /// </summary>
-    public class InfoHierarchyItem
+    public class InfoHierarchyNode
     {
         public string Path { get; private set; }
-        public string FullName { get; private set; }
-        public readonly string Name;
-        public readonly string Description;
+
+        public InfoHierarchyNode Parent { get; private set; }
 
         /// <summary> Detached hierarchy items cannot access their ancestor items. </summary>
         public readonly bool Detached;
 
-        public InfoHierarchyItem Parent { get; private set; }
+        public readonly HierarchyItemInfo<HierarchyItem> Info;
 
         /// <summary> Children are separated based on the type of a hierarchy item they are. </summary>
-        public readonly Dictionary<Type, List<InfoHierarchyItem>> SortedChildren;
-
-        public List<InfoHierarchyItem> Children => SortedChildren.Values.SelectMany(i => i).Distinct().ToList();
+        public readonly Dictionary<Type, List<InfoHierarchyNode>> SortedChildren;
 
 
-        public InfoHierarchyItem(string name, bool detached, List<InfoHierarchyItem> children)
+        public InfoHierarchyNode(bool detached, HierarchyItemInfo<HierarchyItem> info, List<InfoHierarchyNode> children)
         {
-            Name = name;
             Detached = detached;
+            Info = info;
 
-            foreach (InfoHierarchyItem child in children)
+            foreach (InfoHierarchyNode child in children)
             {
                 SortedChildren.TryAdd(child.GetType(), new());
                 SortedChildren[child.GetType()].Add(child);
@@ -43,7 +40,7 @@ namespace SpriteMapper
 
         #region Public Methods ==================================================================== Public Methods
 
-        public void SetParentRecursive(InfoHierarchyItem parent)
+        public void SetParentRecursive(InfoHierarchyNode parent)
         {
             if (Parent != null) { return; }
 
@@ -51,29 +48,34 @@ namespace SpriteMapper
             Parent = parent;
 
             Path = Parent?.Path ?? "";
-            FullName = Path + (Detached ? "/" : ".") + Name;
 
-            foreach (InfoHierarchyItem child in Children)
+            foreach (InfoHierarchyNode child in GetChildrenUnsorted())
             {
                 child.SetParentRecursive(this);
             }
         }
+
+        public List<InfoHierarchyNode> GetChildrenUnsorted()
+        {
+            return SortedChildren.Values.SelectMany(i => i).Distinct().ToList();
+        }
+
 
         /// <summary>
         /// <br/>   Tells if this context can access given ancestor context.
         /// <br/>   Ancestor contexts cannot be seen through detachments.
         /// <br/>   This applies to global contexts as well.
         /// </summary>
-        public bool CanAccess(InfoHierarchyItem item)
+        public bool CanAccess(InfoHierarchyNode item)
         {
             return
                 Path == item.Path ||
-                item.Name == "Global" && !Path.Contains('/') ||
+                item.Path.StartsWith("Global.") && !Path.Contains("/") ||
                 Path.StartsWith(item.Path) && Path.LastIndexOf('/', item.Path.Length) == -1;
         }
 
         /// <summary> Tells if this item shares path with given item. </summary>
-        public bool IsUnder(InfoHierarchyItem item)
+        public bool IsUnder(InfoHierarchyNode item)
         {
             return Path.StartsWith(item.Path);
         }
