@@ -19,9 +19,9 @@ namespace SpriteMapper
 
         public InfoHierarchy()
         {
-            foreach (InfoHierarchyNode root in Roots)
+            foreach (InfoHierarchyNode root in RootNodes)
             {
-                root.SetParentRecursive(null);
+                root.SetParentRecursive(null, 0);
             }
         }
 

@@ -1,20 +1,12 @@
 
-using UnityEngine;
-
-
 namespace SpriteMapper
 {
     /// <summary>
-    /// <br/>   A focusable rectangular area with a given context, actions and tools.
-    /// <br/>   Inherits parent and ancestor panels' actions and tools as well.
+    /// <br/>   A focusable rectangular area with a given actions and tools.
+    /// <br/>   Inherits ancestor panels' actions and tools as well.
     /// </summary>
-    public abstract class Panel : MonoBehaviour
+    public abstract class Panel : HierarchyItem
     {
-        public abstract string Description { get; }
-
-        /// <summary> Currently active context. </summary>
-        public abstract string Context { get; internal set; }
-
         public bool IsToolEquipped => Tool != null;
 
         /// <summary> Currently equipped <see cref="SpriteMapper.Tool"/>. </summary>

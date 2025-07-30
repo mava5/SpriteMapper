@@ -1,19 +1,13 @@
 
-using System;
-
-
 namespace SpriteMapper
 {
     /// <summary> Contains necessary information for a <see cref="Tool"/>. </summary>
-    public class ToolInfo : InfoHierarchyItem
+    public class ToolInfo<T> : HierarchyItemInfo<T> where T : Tool
     {
-        /// <summary> The type of the tool the info points to. </summary>
-        public readonly Type ToolType;
-
-
-        public ToolInfo()
+        public ToolInfo(Shortcut defaultEquipShortcut, string nameOverwrite = "", string descriptionOverwrite = "")
+            : base(nameOverwrite, descriptionOverwrite)
         {
-            ToolType = Type.GetType(FullName);
+
         }
     }
 }

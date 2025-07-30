@@ -9,41 +9,60 @@ using Info = SpriteMapper.HierarchyItemInfo<SpriteMapper.HierarchyItem>;
 
 namespace SpriteMapper
 {
-
     public partial class InfoHierarchy
     {
+        /// <summary> Contains static methods for creating a specific type of <see cref="Node"/>. </summary>
         public static class Builder
         {
             #region Creation Methods ================================================================================================ Creation Methods
 
-            public static InfoGroup Group(string name, AllowedNodes<InfoGroup, MultiPanel, Panel, LongAction, Action> children)
+            public static GroupNode Group(string name, string description = "",
+                AllowedNodes<GroupNode, MultiPanelNode, PanelNode, LongActionNode, ActionNode> children = null)
             {
-                return new(name, false, new(name), children.Nodes);
+                Info groupInfo = new(name, description);
+                return new(false, groupInfo, children.Nodes);
             }
 
-            //public static MultiPanel For<T>(bool detached = false, AllowedNodes<Panel, LongAction, Action> children = null) where T : SpriteMapper.MultiPanel
+            //public static MultiPanelNode MultiPanel(
+            //    string nameOverwrite = "", string descriptionOverwrite = "", bool detached = false,
+            //    AllowedNodes<PanelNode, LongActionNode, ActionNode> children = null)
             //{
-            //    return new(InfoHierarchy.GetMultiPanelInfo<T>().Type.Name, detached, children.Nodes);
+            //    PanelInfo<MultiPanel> multiPanelInfo = new(nameOverwrite, descriptionOverwrite);
+            //    return new(detached, multiPanelInfo as Info, children.Nodes);
             //}
 
-            public static Panel For<T>(bool detached = false, AllowedNodes<Tool, LongAction, Action> children = null) where T : SpriteMapper.Panel
+            public static PanelNode For<T>(
+                string nameOverwrite = "", string descriptionOverwrite = "", bool detached = false,
+                AllowedNodes<ToolNode, LongActionNode, ActionNode> children = null) where T : Panel
             {
-                return null; //new(InfoHierarchy.GetPanelInfo<T>().Type.Name, detached, children.Nodes);
+                PanelInfo<T> panelInfo = new(nameOverwrite, descriptionOverwrite);
+                return new(detached, panelInfo as Info, children.Nodes);
             }
 
-            public static Tool For<T>(bool detached = false, AllowedNodes<LongAction, Action> children = null) where T : SpriteMapper.Tool
+            public static ToolNode For<T>(
+                Shortcut defaultEquipShortcut,
+                string nameOverwrite = "", string descriptionOverwrite = "", bool detached = false,
+                AllowedNodes<LongActionNode, ActionNode> children = null) where T : Tool
             {
-                return null; //new(InfoHierarchy.GetToolInfo<T>().Type.Name, detached, children.Nodes);
+                ToolInfo<T> toolInfo = new(defaultEquipShortcut, descriptionOverwrite);
+                return new(detached, toolInfo as Info, children.Nodes);
             }
 
-            public static LongAction For<T>(bool detached = false, AllowedNodes<Action> children = null) where T : SpriteMapper.LongAction
+            public static LongActionNode For<T>(
+                Shortcut defaultShortcut,
+                string nameOverwrite = "", string descriptionOverwrite = "", bool detached = false,
+                AllowedNodes<ActionNode> children = null) where T : LongAction
             {
-                return null; //new(InfoHierarchy.GetActionInfo<T>().Type.Name, detached, children.Nodes);
+                ActionInfo<T> longActionInfo = new(defaultShortcut, descriptionOverwrite);
+                return new(detached, longActionInfo as Info, children.Nodes);
             }
 
-            public static Action For<T>() where T : SpriteMapper.Action
+            public static ActionNode For<T>(
+                Shortcut defaultShortcut,
+                string nameOverwrite = "", string descriptionOverwrite = "") where T : Action
             {
-                return null; //new(InfoHierarchy.GetActionInfo<T>().Type.Name, false, null);
+                ActionInfo<T> actionInfo = new(defaultShortcut, descriptionOverwrite);
+                return new(false, actionInfo as Info, null);
             }
 
             #endregion Creation Methods
@@ -51,12 +70,12 @@ namespace SpriteMapper
 
             #region Node Types ====================================================================================================== Node Types
 
-            public class InfoGroup : Node   { public InfoGroup  (string n, bool d, Info i, List<Node> c) : base(n, d, i, c) { } }
-            public class LongAction : Node  { public LongAction (string n, bool d, Info i, List<Node> c) : base(n, d, i, c) { } }
-            public class Action : Node      { public Action     (string n, bool d, Info i, List<Node> c) : base(n, d, i, c) { } }
-            public class MultiPanel : Node  { public MultiPanel (string n, bool d, Info i, List<Node> c) : base(n, d, i, c) { } }
-            public class Panel : Node       { public Panel      (string n, bool d, Info i, List<Node> c) : base(n, d, i, c) { } }
-            public class Tool : Node        { public Tool       (string n, bool d, Info i, List<Node> c) : base(n, d, i, c) { } }
+            public class GroupNode : Node       { public GroupNode      (bool d, Info i, List<Node> c) : base(d, i, c) { } }
+            public class LongActionNode : Node  { public LongActionNode (bool d, Info i, List<Node> c) : base(d, i, c) { } }
+            public class ActionNode : Node      { public ActionNode     (bool d, Info i, List<Node> c) : base(d, i, c) { } }
+            public class MultiPanelNode : Node  { public MultiPanelNode (bool d, Info i, List<Node> c) : base(d, i, c) { } }
+            public class PanelNode : Node       { public PanelNode      (bool d, Info i, List<Node> c) : base(d, i, c) { } }
+            public class ToolNode : Node        { public ToolNode       (bool d, Info i, List<Node> c) : base(d, i, c) { } }
 
             public class AllowedNodes : IEnumerable<Node>
             {

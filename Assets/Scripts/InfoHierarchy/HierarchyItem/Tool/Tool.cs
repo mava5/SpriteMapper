@@ -1,14 +1,12 @@
 
-using UnityEngine;
-
-
 namespace SpriteMapper
 {
-
-    public class Tool
+    /// <summary>
+    /// <br/>   A focusable rectangular area with a given actions and tools.
+    /// <br/>   Inherits ancestor panels' actions and tools as well.
+    /// </summary>
+    public class Tool : HierarchyItem
     {
-        public ToolInfo Info { get; internal set; } = null;
 
-        public bool Active { get; internal set; } = false;
     }
 }

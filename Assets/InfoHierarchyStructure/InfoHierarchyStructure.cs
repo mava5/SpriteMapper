@@ -8,7 +8,7 @@ namespace SpriteMapper
 {
     public partial class InfoHierarchy
     {
-        public static List<InfoHierarchyNode> Roots = new()
+        public static List<InfoHierarchyNode> RootNodes = new()
         {
             Group(GlobalContext, new()
             {

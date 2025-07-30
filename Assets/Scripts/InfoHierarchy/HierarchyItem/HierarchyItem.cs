@@ -6,10 +6,6 @@ namespace SpriteMapper
     {
         public HierarchyItemInfo<HierarchyItem> Info { get; private set; }
 
-
-        public void Initialize(HierarchyItemInfo<HierarchyItem> info)
-        {
-            Info = info;
-        }
+        public void SetInfo(HierarchyItemInfo<HierarchyItem> info) { Info = info; }
     }
 }

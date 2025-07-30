@@ -12,7 +12,10 @@ namespace SpriteMapper
     /// </summary>
     public class InfoHierarchyNode
     {
-        public string Path { get; private set; }
+        /// <summary> The path (concatenation of ancestor items' names) leading up to the item. </summary>
+        public string Context { get; private set; }
+
+        public int TotalDetachments { get; private set; }
 
         public InfoHierarchyNode Parent { get; private set; }
 
@@ -40,18 +43,21 @@ namespace SpriteMapper
 
         #region Public Methods ==================================================================== Public Methods
 
-        public void SetParentRecursive(InfoHierarchyNode parent)
+        public void SetParentRecursive(InfoHierarchyNode parent, int totalDetachments)
         {
             if (Parent != null) { return; }
 
 
             Parent = parent;
 
-            Path = Parent?.Path ?? "";
+            if (Parent == null) { Context = ""; }
+            else { Context = Parent.Context + (Parent.Detached ? "/" : ".") + Parent.Info.Name; }
+
+            if (Detached) { totalDetachments++; }
 
             foreach (InfoHierarchyNode child in GetChildrenUnsorted())
             {
-                child.SetParentRecursive(this);
+                child.SetParentRecursive(this, totalDetachments);
             }
         }
 
@@ -60,24 +66,23 @@ namespace SpriteMapper
             return SortedChildren.Values.SelectMany(i => i).Distinct().ToList();
         }
 
-
         /// <summary>
-        /// <br/>   Tells if this context can access given ancestor context.
-        /// <br/>   Ancestor contexts cannot be seen through detachments.
+        /// <br/>   Tells if this node can access other ancestor node.
+        /// <br/>   Ancestor nodes cannot be seen through detachments.
         /// <br/>   This applies to global contexts as well.
         /// </summary>
-        public bool CanAccess(InfoHierarchyNode item)
+        public bool CanAccess(InfoHierarchyNode other)
         {
             return
-                Path == item.Path ||
-                item.Path.StartsWith("Global.") && !Path.Contains("/") ||
-                Path.StartsWith(item.Path) && Path.LastIndexOf('/', item.Path.Length) == -1;
+                Context == other.Context ||
+                other.Context.Contains(InfoHierarchy.GlobalContext) && TotalDetachments == 0 ||
+                Context.StartsWith(other.Context) && TotalDetachments == other.TotalDetachments;
         }
 
-        /// <summary> Tells if this item shares path with given item. </summary>
-        public bool IsUnder(InfoHierarchyNode item)
+        /// <summary> Tells if this node shares path with other node. </summary>
+        public bool IsUnder(InfoHierarchyNode other)
         {
-            return Path.StartsWith(item.Path);
+            return Context.StartsWith(other.Context);
         }
 
         #endregion Public Methods

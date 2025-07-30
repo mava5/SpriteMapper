@@ -1,37 +1,34 @@
 
 using System;
+using System.Reflection;
 
 
 namespace SpriteMapper
 {
     /// <summary> Contains necessary information for an <see cref="Action"/>. </summary>
-    public class ActionInfo : HierarchyItemInfo
+    public class ActionInfo<T> : HierarchyItemInfo<T> where T : Action
     {
-        public readonly ActionSettings Settings = null;
+        public ActionSettings Settings => BaseSettings as ActionSettings;
 
-        /// <summary> The type of the action the info points to. </summary>
-        public readonly Type ActionType;
+        /// <summary> Determines if action can be used. </summary>
+        public bool Active { get; private set; } = true;
 
         public readonly bool IsUndoable;
 
         public readonly Shortcut DefaultShortcut = null;
         public Shortcut Shortcut { get; private set; } = null;
 
-        /// <summary> Determines if action can be used. </summary>
-        public bool Active { get; private set; } = true;
 
-
-        public ActionInfo(ActionSettings settings)
+        public ActionInfo(Shortcut defaultShortcut, string nameOverwrite = "", string descriptionOverwrite = "")
+            : base(nameOverwrite, descriptionOverwrite)
         {
-            Settings = settings;
-
-            ActionType = Type.GetType(serializedInfo.FullName);
-            IsUndoable = serializedInfo.IsUndoable;
-
+            IsUndoable = typeof(IUndoable).IsAssignableFrom(typeof(T));
+            
             // TODO: Read saved shortcut from a text file
-            Shortcut = serializedInfo.DefaultShortcut;
-            DefaultShortcut = serializedInfo.DefaultShortcut;
+            Shortcut = defaultShortcut;
+            DefaultShortcut = defaultShortcut;
         }
+
 
 
         public void RebindAction(Shortcut shortcut)
